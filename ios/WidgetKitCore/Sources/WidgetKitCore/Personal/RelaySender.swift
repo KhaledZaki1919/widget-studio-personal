@@ -16,7 +16,7 @@ public struct RelaySender: Sendable {
         public init() {}
     }
 
-    let client: RelayClient
+    public let client: RelayClient
     let keychain: KeychainStore
     let cache: DataCache
 

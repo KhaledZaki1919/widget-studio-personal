@@ -10,6 +10,7 @@ struct MyWidgetsView: View {
     @State private var renaming: SavedDesign?
     @State private var newName = ""
     @State private var deleting: SavedDesign?
+    @State private var sendingHome: SavedDesign? // Personal build (docs/personal.md)
     private let language = RenderContext.preferredLanguage
 
     var body: some View {
@@ -64,6 +65,7 @@ struct MyWidgetsView: View {
         .sheet(item: $editing) { design in
             EditorView(design: design, isNew: false)
         }
+        .sheet(item: $sendingHome) { UseOnHomeScreenSheet(design: $0, photo: designs.image(for: $0)) }
         .alert("mywidgets.rename.title", isPresented: renameBinding) {
             TextField("mywidgets.rename.placeholder", text: $newName)
                 .accessibilityIdentifier("ax.mywidgets.rename.field")
@@ -112,7 +114,9 @@ struct MyWidgetsView: View {
             Button { startRename(design) } label: { Label("mywidgets.rename", systemImage: "pencil") }
                 .tint(.orange)
         }
+        .swipeActions(edge: .leading) { UseOnHomeScreenButton { sendingHome = design }.tint(.blue) }
         .contextMenu {
+            UseOnHomeScreenButton { sendingHome = design }
             Button { editing = design } label: { Label("mywidgets.edit", systemImage: "slider.horizontal.3") }
             Button { startRename(design) } label: { Label("mywidgets.rename", systemImage: "pencil") }
             Button { designs.duplicate(design, name: copyName(design)) } label: {

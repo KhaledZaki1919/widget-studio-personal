@@ -33,6 +33,7 @@ struct SettingsView: View {
             } footer: {
                 Text("ai.settings.footer")
             }
+            PairWidgetSection() // Personal build (docs/personal.md)
             Section {
                 Picker("settings.clock", selection: binding(\.clockFormat)) {
                     Text("settings.clock.device").tag(ClockFormat.device)
