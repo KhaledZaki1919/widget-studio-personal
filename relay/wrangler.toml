@@ -1,0 +1,23 @@
+# Widget Studio P relay (docs/personal.md). Deploy: `npx wrangler@4 deploy` in relay/.
+# Free plan only: Workers + KV (no R2). No secrets here or anywhere in the repo.
+name = "widget-studio-relay"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+# KV namespace "RELAY" (created with `npx wrangler@4 kv namespace create RELAY`; an ID, not a secret).
+[[kv_namespaces]]
+binding = "RELAY"
+id = "62c6e298bb124726940845f8fc2e497c"
+
+# Rate limits (Workers rate-limiting binding): 60 requests a minute per item ID, and 10 uploads
+# or deletes a minute per client IP. relay.js falls back to per-isolate counters without them.
+[[ratelimits]]
+name = "LIMITER"
+namespace_id = "2601"
+simple = { limit = 60, period = 60 }
+
+[[ratelimits]]
+name = "WRITE_LIMITER"
+namespace_id = "2602"
+simple = { limit = 10, period = 60 }

@@ -17,7 +17,7 @@ targets:
         WSAppGroup: group.com.khaled.widgetstudio.personal
         ALTAppGroups:REPLACE: [group.com.khaled.widgetstudio.personal]
         # Cloudflare Worker relay (relay/, docs/personal.md). Not a secret.
-        WSRelayURL: ""
+        WSRelayURL: "https://widget-studio-relay.att-gad.workers.dev"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.khaled.widgetstudio.personal
@@ -31,7 +31,7 @@ targets:
         CFBundleDisplayName: "Widget Studio P"
         WSAppGroup: group.com.khaled.widgetstudio.personal
         ALTAppGroups:REPLACE: [group.com.khaled.widgetstudio.personal]
-        WSRelayURL: ""
+        WSRelayURL: "https://widget-studio-relay.att-gad.workers.dev"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.khaled.widgetstudio.personal.widgets

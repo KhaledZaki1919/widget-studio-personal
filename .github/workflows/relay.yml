@@ -1,0 +1,51 @@
+# Personal build: the Cloudflare Worker relay (relay/, docs/personal.md).
+# Every change under relay/: unit tests (node --test, no network).
+# Manual run: tests, then `wrangler deploy` with the repo secrets CLOUDFLARE_API_TOKEN
+# (token template "Edit Cloudflare Workers") and CLOUDFLARE_ACCOUNT_ID.
+name: Relay
+
+on:
+  push:
+    branches: [main]
+    paths: ["relay/**", ".github/workflows/relay.yml"]
+  pull_request:
+    paths: ["relay/**"]
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: relay
+
+jobs:
+  test:
+    name: Relay unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+
+  deploy:
+    name: Deploy (wrangler)
+    needs: test
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::Add the repo secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID (docs/personal.md)"
+            exit 1
+          fi
+          npx --yes wrangler@4 deploy

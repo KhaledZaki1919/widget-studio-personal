@@ -1,0 +1,10 @@
+{
+  "name": "widget-studio-relay",
+  "private": true,
+  "type": "module",
+  "description": "Widget Studio P relay: Cloudflare Worker + KV, end-to-end encrypted items (docs/personal.md).",
+  "scripts": {
+    "test": "node --test",
+    "deploy": "npx wrangler@4 deploy"
+  }
+}
