@@ -20,7 +20,7 @@ struct WidgetStudioWidgetsBundle: WidgetBundle {
         PhotoTemplateWidgets().body
         TilesTemplateWidgets().body
         CounterTemplateWidgets().body
-        MyWidgets().body
+        PersonalWidgets().body
         #endif
         #if DEBUG || WS_DEVELOPER
         // Install checks (Diagnostics, ADR-005); large shows the widget step log. Not in release

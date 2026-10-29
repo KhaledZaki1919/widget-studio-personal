@@ -88,6 +88,9 @@ final class FakeRelayProtocol: URLProtocol {
     }
 }
 
+/// Whole seconds: JSON dates (ISO 8601) drop fractions.
+private let fixedDate = Date(timeIntervalSince1970: 1_800_000_000)
+
 private func tempCache() throws -> DataCache {
     let url = FileManager.default.temporaryDirectory.appendingPathComponent("RelayTests-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
@@ -161,7 +164,7 @@ struct RelayKeysTests {
 struct RelayPayloadTests {
     @Test func designRoundTripsWithItsPhotoUnderTheLimit() throws {
         let template = try TemplateLibrary.load(id: "mono.photo.square").get()
-        let design = SavedDesign.new(from: template, language: "en")
+        let design = SavedDesign.new(from: template, language: "en", now: fixedDate)
         let photo = try #require(noisyImage(side: 1600))
         let payload = try RelayPayload.design(design, photo: photo)
         let sealed = try RelayKeys.derive(code: "ABCDEFGH", slot: .small).seal(try payload.encoded())
@@ -173,8 +176,8 @@ struct RelayPayloadTests {
     }
 
     @Test func designWithoutPhoto() throws {
-        let design = SavedDesign.new(from: try TemplateLibrary.load(id: "mono.clock.digital").get(), language: "ar")
-        let payload = try RelayPayload.design(design, photo: nil)
+        let design = SavedDesign.new(from: try TemplateLibrary.load(id: "mono.clock.digital").get(), language: "ar", now: fixedDate)
+        let payload = try RelayPayload.design(design, photo: nil, now: fixedDate)
         #expect(payload.image == nil)
         #expect(try RelayPayload.decode(payload.encoded()) == payload)
     }
@@ -227,7 +230,7 @@ struct RelaySyncTests {
     @Test func newDesignIsCachedAndShown() async throws {
         let cache = try tempCache()
         let code = WidgetPairing.loadOrCreate(cache).code
-        let design = SavedDesign.new(from: try TemplateLibrary.load(id: "mono.photo.square").get(), language: "en")
+        let design = SavedDesign.new(from: try TemplateLibrary.load(id: "mono.photo.square").get(), language: "en", now: fixedDate)
         try await upload(try RelayPayload.design(design, photo: noisyImage(side: 300)), code: code, slot: .medium)
 
         let outcome = await RelaySync.refresh(size: .medium, client: try client(), cache: cache)

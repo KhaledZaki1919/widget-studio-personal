@@ -155,6 +155,9 @@ public struct RelayedStore: Sendable {
 public enum SwitcherCatalog {
     public static let pairingKey = "pair"
 
+    /// The switcher widget's kind; the app reloads it after an upload.
+    public static func widgetKind(_ size: SpecFamily) -> String { "WidgetStudio.switcher.\(size.rawValue)" }
+
     public static func designKey(_ id: String) -> String { "d:\(id)" }
     public static func templateKey(_ id: String) -> String { "t:\(id)" }
 
