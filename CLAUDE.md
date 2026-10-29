@@ -1,5 +1,18 @@
 # CLAUDE.md — Widget Studio
 
+> **This is the owner's PERSONAL build, "Widget Studio P"** (`com.khaled.widgetstudio.personal`, App Group `group.com.khaled.widgetstudio.personal`), repo `KhaledZaki1919/widget-studio-personal`. Everything personal is described in `docs/personal.md`; read it first. Rules that override the official ones below:
+> - `origin` = github.com/KhaledZaki1919/widget-studio-personal (push here). `upstream` = the official github.com/KhaledZaki1919/widget-studio. **NEVER push to upstream** (its push URL is set to `DISABLED-never-push-to-upstream`; keep it that way).
+> - Personal code lives only in its own files: `ios/personal.yml`, `ios/**/Personal/`, `relay/`, `docs/personal.md`, `.github/workflows/relay.yml`. Official files get only small hook lines (listed in `docs/personal.md`), so upstream merges stay easy. Never move or reformat official code.
+> - CI generates the project with `xcodegen generate --spec personal.yml` (includes `project.yml` unchanged).
+> - Store mode, installed with Fast Store, like the official app.
+>
+> **Pulling official updates:**
+> ```
+> git fetch upstream
+> git merge upstream/main          # never rebase: main is pushed
+> ```
+> On conflicts (`git status` lists them): keep **both** sides where the official change and a personal hook line touch the same spot (official code + our one-line hook), keep this personal block at the top of CLAUDE.md, and keep the personal values in `ios/WidgetStudio/Resources/InfoPlist.xcstrings` ("Widget Studio P") and in `.github/workflows/ios.yml` (`--spec personal.yml`, `WidgetStudioP.ipa`). If upstream adds a widget bundle line to `WidgetStudioWidgetsBundle.swift`, keep `PersonalWidgets().body` instead of `MyWidgets().body` (it contains it) and stay within 10 lines. Then `git add <files> && git commit`, push to origin (CI: compile + unit tests) and fix what breaks.
+
 Home-screen widget builder for iOS 17+ (native Swift / SwiftUI). Arabic default (RTL) + English. Every widget is a **spec JSON + optional user image**, drawn by one renderer shared by the app preview and the widget. Templates are bundled; an optional AI flow uses the user's own key (BYOK). No backend, no accounts, no analytics. App Store later.
 
 **Install method (owner, every build since M0):** every IPA is installed with **Fast Store**, a paid signing store that re-signs the app and the widget extension with its own certificate and profile. No Sideloadly. The store decides bundle IDs, team, profile and entitlements (the App Group was not granted in the M0 or M2 tests), so never assume the compiled values at runtime (ADR-004) and check Diagnostics → Signing when a capability fails.

@@ -52,7 +52,7 @@ jobs:
         run: python3 scripts/check-strings.py
 
       - name: Generate project
-        run: xcodegen generate
+        run: xcodegen generate --spec personal.yml
 
       - name: Build app, extension and test bundles (no tests)
         run: |
@@ -148,7 +148,7 @@ jobs:
         run: brew install xcodegen
 
       - name: Generate project
-        run: xcodegen generate
+        run: xcodegen generate --spec personal.yml
 
       - name: App tests (renders, snapshots) and UI smoke test (Simulator)
         env:
@@ -209,7 +209,7 @@ jobs:
         run: brew install xcodegen
 
       - name: Generate project
-        run: xcodegen generate
+        run: xcodegen generate --spec personal.yml
 
       - name: Build (unsigned, Release)
         run: |
@@ -224,11 +224,11 @@ jobs:
       - name: Package IPA
         run: |
           APP=build/DerivedData/Build/Products/Release-iphoneos/WidgetStudio.app
-          bash scripts/build-ipa.sh "$APP" build/ipa/WidgetStudio.ipa
+          bash scripts/build-ipa.sh "$APP" build/ipa/WidgetStudioP.ipa
 
       - uses: actions/upload-artifact@v4
         with:
-          name: WidgetStudio-ipa
+          name: WidgetStudioP-ipa
           path: ios/build/ipa/*.ipa
           if-no-files-found: error
           retention-days: 30

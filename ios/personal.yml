@@ -1,0 +1,47 @@
+# Personal build "Widget Studio P" (docs/personal.md). CI generates the project from this file:
+#   xcodegen generate --spec personal.yml
+# It includes the official project.yml unchanged and overrides only what makes this a separate
+# app: bundle IDs, name, App Group and the relay URL. Values here win over project.yml;
+# a key ending in ":REPLACE" replaces a list instead of appending to it.
+include:
+  - path: project.yml
+
+targets:
+  WidgetStudio:
+    entitlements:
+      properties:
+        com.apple.security.application-groups:REPLACE: [group.com.khaled.widgetstudio.personal]
+    info:
+      properties:
+        CFBundleDisplayName: "Widget Studio P"
+        WSAppGroup: group.com.khaled.widgetstudio.personal
+        ALTAppGroups:REPLACE: [group.com.khaled.widgetstudio.personal]
+        # Cloudflare Worker relay (relay/, docs/personal.md). Not a secret.
+        WSRelayURL: ""
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.khaled.widgetstudio.personal
+
+  WidgetStudioWidgets:
+    entitlements:
+      properties:
+        com.apple.security.application-groups:REPLACE: [group.com.khaled.widgetstudio.personal]
+    info:
+      properties:
+        CFBundleDisplayName: "Widget Studio P"
+        WSAppGroup: group.com.khaled.widgetstudio.personal
+        ALTAppGroups:REPLACE: [group.com.khaled.widgetstudio.personal]
+        WSRelayURL: ""
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.khaled.widgetstudio.personal.widgets
+
+  WidgetStudioTests:
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.khaled.widgetstudio.personal.tests
+
+  WidgetStudioUITests:
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.khaled.widgetstudio.personal.uitests
