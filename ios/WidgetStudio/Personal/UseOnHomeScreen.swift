@@ -104,7 +104,7 @@ struct UseOnHomeScreenSheet: View {
     private var sizesSection: some View {
         Section {
             // The design's own size and larger ones (it's never shrunk).
-            ForEach(design.spec.supportedFamilies, id: \.self) { size in
+            ForEach(design.spec.family.supportedFamilies, id: \.self) { size in
                 Button {
                     send(to: size)
                 } label: {
