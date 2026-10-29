@@ -32,16 +32,16 @@ final class FakeRelayProtocol: URLProtocol {
         }
     }
 
-    override class func canInit(with request: URLRequest) -> Bool { true }
-    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override static func canInit(with request: URLRequest) -> Bool { true }
+    override static func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
     override func startLoading() {
         let url = request.url ?? URL(fileURLWithPath: "/")
         let parts = url.path.split(separator: "/").map(String.init)
         let body = request.httpBody ?? request.httpBodyStream.map(Self.read) ?? Data()
-        let (status, data, headers): (Int, Data, [String: String]) = Self.lock.withLock {
-            if Self.failing { return (500, Data(), [:]) }
-            guard parts.count >= 3, parts[0] == "v1", parts[1] == "items" else { return (404, Data(), [:]) }
+        let reply: Reply = Self.lock.withLock {
+            if Self.failing { return .empty(500) }
+            guard parts.count >= 3, parts[0] == "v1", parts[1] == "items" else { return .empty(404) }
             let id = parts[2]
             if parts.count == 4 {
                 let item = Self.items[id]
@@ -49,30 +49,42 @@ final class FakeRelayProtocol: URLProtocol {
                 {"exists":\(item != nil),"size":\(item.map { "\($0.data.count)" } ?? "null"),\
                 "uploaded":\(item.map { "\($0.version)" } ?? "null"),"lastDownload":\(Self.downloads[id].map { "\($0)" } ?? "null")}
                 """
-                return (200, Data(json.utf8), [:])
+                return Reply(status: 200, data: Data(json.utf8), headers: [:])
             }
             Self.clock += 1
             switch request.httpMethod ?? "GET" {
             case "PUT":
-                if body.count > RelayPayload.maxSealedBytes { return (413, Data(), [:]) }
+                if body.count > RelayPayload.maxSealedBytes { return .empty(413) }
                 Self.items[id] = (body, Self.clock)
-                return (201, Data(#"{"version":"\#(Self.clock)"}"#.utf8), [:])
+                return Reply(status: 201, data: Data(#"{"version":"\#(Self.clock)"}"#.utf8), headers: [:])
             default:
-                guard let item = Self.items[id] else { return (404, Data(), [:]) }
+                guard let item = Self.items[id] else { return .empty(404) }
                 let etag = "\"\(item.version)\""
-                if request.value(forHTTPHeaderField: "If-None-Match") == etag { return (304, Data(), ["ETag": etag]) }
+                if request.value(forHTTPHeaderField: "If-None-Match") == etag {
+                    return Reply(status: 304, data: Data(), headers: ["ETag": etag])
+                }
                 Self.downloads[id] = Self.clock
-                return (200, item.data, ["ETag": etag])
+                return Reply(status: 200, data: item.data, headers: ["ETag": etag])
             }
         }
-        if let response = HTTPURLResponse(url: url, statusCode: status, httpVersion: "HTTP/1.1", headerFields: headers) {
+        if let response = HTTPURLResponse(url: url, statusCode: reply.status, httpVersion: "HTTP/1.1", headerFields: reply.headers) {
             client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
         }
-        client?.urlProtocol(self, didLoad: data)
+        client?.urlProtocol(self, didLoad: reply.data)
         client?.urlProtocolDidFinishLoading(self)
     }
 
     override func stopLoading() {}
+
+    private struct Reply {
+        let status: Int
+        let data: Data
+        let headers: [String: String]
+
+        static func empty(_ status: Int) -> Reply {
+            Reply(status: status, data: Data(), headers: [:])
+        }
+    }
 
     private static func read(_ stream: InputStream) -> Data {
         stream.open()

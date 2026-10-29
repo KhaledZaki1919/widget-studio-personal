@@ -54,9 +54,9 @@ public struct RelayKeys: Sendable {
     /// PBKDF2 stretches the short code (slows down guessing it from a stored ID), then HKDF
     /// gives independent outputs for the ID and the key: knowing one says nothing about the other.
     public static func derive(code: String, slot: RelaySlot) -> RelayKeys {
-        let master = SymmetricKey(data: stretched(code))
-        let id = HKDF<SHA256>.deriveKey(inputKeyMaterial: master, info: Data("id/\(slot.rawValue)".utf8), outputByteCount: 32)
-        let key = HKDF<SHA256>.deriveKey(inputKeyMaterial: master, info: Data("key/\(slot.rawValue)".utf8), outputByteCount: 32)
+        let root = SymmetricKey(data: stretched(code))
+        let id = HKDF<SHA256>.deriveKey(inputKeyMaterial: root, info: Data("id/\(slot.rawValue)".utf8), outputByteCount: 32)
+        let key = HKDF<SHA256>.deriveKey(inputKeyMaterial: root, info: Data("key/\(slot.rawValue)".utf8), outputByteCount: 32)
         return RelayKeys(id: id.withUnsafeBytes { Data($0) }.map { String(format: "%02x", $0) }.joined(), key: key)
     }
 

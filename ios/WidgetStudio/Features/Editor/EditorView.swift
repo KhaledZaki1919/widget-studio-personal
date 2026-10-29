@@ -35,7 +35,8 @@ struct EditorView: View {
                     }
                 }
                 // Personal build (docs/personal.md)
-                UseOnHomeScreenSection(design: model.design, photo: model.newPhoto ?? designs.image(for: model.design), enabled: model.canSave)
+                UseOnHomeScreenSection(design: model.design, photo: model.newPhoto ?? designs.image(for: model.design),
+                                       enabled: model.canSave)
                 Section("editor.name") {
                     TextField("editor.name", text: $model.design.name)
                         .accessibilityIdentifier("ax.editor.name")

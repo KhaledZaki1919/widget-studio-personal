@@ -60,8 +60,8 @@ App ──(encrypt)──PUT /v1/items/<id>──▶ Worker + KV ◀──GET (E
 - **Pairing.** The unpaired widget shows an 8-character code (alphabet without 0/O/1/I/L, kept in
   its container). Settings → Pair widget: the user types it once; the app stores it in the
   Keychain and uploads an encrypted `pair` item. The widget sees it, stops showing the card.
-- **Keys.** `PBKDF2-SHA256(code, 100 000 rounds)` → master; `HKDF(master, "id/<slot>")` = storage ID
-  (64 hex), `HKDF(master, "key/<slot>")` = AES-256-GCM key. Slots: `pair`, `small`, `medium`, `large`.
+- **Keys.** `PBKDF2-SHA256(code, 100 000 rounds)` → root key; `HKDF(root, "id/<slot>")` = storage ID
+  (64 hex), `HKDF(root, "key/<slot>")` = AES-256-GCM key. Slots: `pair`, `small`, `medium`, `large`.
   The relay sees only IDs and ciphertext; the ID doesn't reveal the key or the code.
 - **Use on home screen** (My widgets: context menu / swipe right; editor incl. the AI result):
   pick a size (the design's size or larger) → `RelayPayload` (design JSON + photo, JPEG or PNG for

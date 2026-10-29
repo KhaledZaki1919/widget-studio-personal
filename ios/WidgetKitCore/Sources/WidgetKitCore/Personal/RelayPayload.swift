@@ -55,7 +55,8 @@ public struct RelayPayload: Codable, Sendable, Equatable {
                 payload.image = encode(image, lossless: attempt.lossless, quality: attempt.quality)
                 if try payload.encoded().count <= budget { return payload }
             }
-            guard let smaller = ImageProcessing.fit(image, in: CGSize(width: image.width * 3 / 4, height: image.height * 3 / 4)) else { break }
+            let next = CGSize(width: image.width * 3 / 4, height: image.height * 3 / 4)
+            guard let smaller = ImageProcessing.fit(image, in: next) else { break }
             image = smaller
         }
         throw RelayError.tooLarge
