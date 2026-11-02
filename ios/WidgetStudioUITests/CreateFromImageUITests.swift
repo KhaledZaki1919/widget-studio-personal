@@ -42,6 +42,20 @@ final class CreateFromImageUITests: XCTestCase {
         XCTAssertTrue(save.waitForExistence(timeout: 30), "editor didn't open with the result")
         XCTAssertTrue(app.buttons["ax.editor.regenerate"].exists, "Regenerate missing on the result")
         XCTAssertTrue(save.isEnabled, "Save is disabled for the generated design")
+
+        // The layer editor (M6.1): open the list and the first layer, then come back.
+        let layers = app.buttons["ax.editor.layers"]
+        for _ in 0..<8 where !(layers.exists && layers.isHittable) { app.swipeUp() }
+        XCTAssertTrue(layers.exists, "Layers entry missing in the editor")
+        layers.tap()
+        let firstLayer = app.buttons["ax.editor.layers.row.0"]
+        XCTAssertTrue(firstLayer.waitForExistence(timeout: 10), "layer list is empty")
+        firstLayer.tap()
+        XCTAssertTrue(app.textFields.firstMatch.waitForExistence(timeout: 10), "layer detail has no frame fields")
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(firstLayer.waitForExistence(timeout: 10), "didn't return to the layer list")
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(save.waitForExistence(timeout: 10), "didn't return to the editor")
         save.tap()
 
         let row = app.descendants(matching: .any).matching(identifier: "ax.mywidgets.design").firstMatch

@@ -218,13 +218,22 @@ struct WidgetGenerationTests {
         }
         #expect(try AIWidgetParser.parse(invented, options: GenerationOptions(), id: "gen.icon").spec.layers.count == 5)
 
-        // ADR-019: text frames that cover each other go back to the model.
+        // M6.1: text frames that cover each other are a validator error in AI mode.
         let overlapping = try editedReply { object in
             var all = layers(object)
             all[4]["frame"] = ["x": 20, "y": 70, "w": 120, "h": 40]
             object["layers"] = all
         }
-        #expect(try parseError(overlapping).contains("layers[2] and layers[4]: frames overlap"))
+        #expect(try parseError(overlapping).contains("its text overlaps layers[2]"))
+        // ADR-022: on the last attempt the overlap is repaired locally (the two texts in one stack).
+        let soft = try AIWidgetParser.parseWidget(overlapping, options: GenerationOptions(), id: "gen.soft", enforceLayout: false)
+        guard case .fixed = soft.layout else {
+            Issue.record("expected a local layout fix, got \(soft.layout)")
+            return
+        }
+        #expect(soft.spec.layers.count == 5)
+        #expect(SpecLayout.textOverlaps(in: soft.spec.layers).isEmpty)
+        #expect(soft.spec.layers.contains { if case .stack(let stack) = $0.content { stack.axis == .vertical } else { false } })
     }
 
     func parseError(_ text: String, options: GenerationOptions = GenerationOptions()) throws -> String {
@@ -251,11 +260,12 @@ struct WidgetGenerationTests {
         #expect(provider.requests[0].request.images == [image.jpeg])
     }
 
-    /// Overlaps send the retry; if the retry still overlaps, it's accepted (eval run 6).
+    /// Layout problems (an oversized icon) send the retry; if the retry still has them, it's
+    /// accepted (eval run 6). Overlapping text is never accepted (M6.1).
     @Test func layoutProblemsAreSoftOnTheRetry() async throws {
         let overlapping = try editedReply { object in
             var all = layers(object)
-            all[4]["frame"] = ["x": 20, "y": 70, "w": 120, "h": 40]
+            all[3]["size"] = 40
             object["layers"] = all
         }
         let provider = ScriptedProvider([.success(overlapping), .success(overlapping)])
@@ -263,7 +273,10 @@ struct WidgetGenerationTests {
                                                            provider: provider))
         let result = try await generator.generate(image: image, options: GenerationOptions())
         #expect(result.attempts == 2)
-        #expect(provider.requests[1].request.userText.contains("frames overlap"))
+        #expect(provider.requests[1].request.userText.contains("bigger than its frame"))
+        // ADR-022: the retry's oversized icon is shrunk to its frame.
+        if case .icon(let icon) = result.spec.layers[3].content { #expect(icon.size <= 22) }
+        if case .fixed = result.layout {} else { Issue.record("expected a local layout fix") }
         #expect(throws: AIValidationError.self) {
             try AIWidgetParser.parse(overlapping, options: GenerationOptions(), id: "gen.strict")
         }

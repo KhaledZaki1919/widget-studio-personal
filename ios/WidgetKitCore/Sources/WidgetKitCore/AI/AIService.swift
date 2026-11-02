@@ -31,7 +31,11 @@ public final class AIService: @unchecked Sendable {
 
     public var settings: AISettings { AISettings.load(from: defaults) }
 
-    public var hasKey: Bool { activeOverride != nil || keyStore.hasKey(for: settings.provider) }
+    public var hasKey: Bool {
+        if activeOverride != nil { return true }
+        let settings = settings
+        return keyStore.hasKey(for: settings.provider) && (settings.provider != .custom || settings.isCustomReady)
+    }
 
     private var activeOverride: AIProvider? { fixedProvider ?? Self.overrideProvider }
 
@@ -45,8 +49,9 @@ public final class AIService: @unchecked Sendable {
         if let override = activeOverride {
             provider = override
         } else {
-            guard let key = keyStore.key(for: settings.provider) else { throw AIError.noKey }
-            provider = settings.provider.makeProvider(apiKey: key, session: session)
+            guard let key = keyStore.key(for: settings.provider),
+                  settings.provider != .custom || settings.isCustomReady else { throw AIError.noKey }
+            provider = settings.provider.makeProvider(apiKey: key, session: session, customBaseURL: settings.customBaseURL)
             secrets = [key]
         }
         return try await guarded(request: request, feature: feature, provider: provider, model: settings.model,
@@ -55,12 +60,12 @@ public final class AIService: @unchecked Sendable {
 
     /// Settings → AI "Test connection" with the given provider, key and model. Returns within
     /// `testTimeout`; cancelling the calling task returns `.cancelled`.
-    public func testConnection(provider: AIProviderKind, key: String, model: String) async -> Result<String, AIError> {
+    public func testConnection(provider: AIProviderKind, key: String, model: String, customBaseURL: String = "") async -> Result<String, AIError> {
         let clean = AIKeyStore.sanitize(key)
         do {
             let result = try await guarded(
                 request: ConnectionTest.request, feature: .connectionTest,
-                provider: provider.makeProvider(apiKey: clean, session: session), model: model,
+                provider: provider.makeProvider(apiKey: clean, session: session, customBaseURL: customBaseURL), model: model,
                 secrets: [clean, key], seconds: testTimeout
             ) { text in
                 let reply = try StructuredAI.decode(ConnectionTest.Reply.self, from: text)
@@ -76,8 +81,8 @@ public final class AIService: @unchecked Sendable {
     }
 
     /// The provider's live model list, or [] on any failure or after `testTimeout`.
-    public func listModels(provider: AIProviderKind, key: String) async -> [String] {
-        let client = provider.makeProvider(apiKey: AIKeyStore.sanitize(key), session: session)
+    public func listModels(provider: AIProviderKind, key: String, customBaseURL: String = "") async -> [String] {
+        let client = provider.makeProvider(apiKey: AIKeyStore.sanitize(key), session: session, customBaseURL: customBaseURL)
         return (try? await AIDeadline.run(seconds: testTimeout) { try await client.listModels() }) ?? []
     }
 

@@ -25,10 +25,12 @@ struct ReviewRoundTests {
         WidgetGenerator(service: AIService(keyStore: AIKeyStore(storage: MemoryKeyStorage()), defaults: testDefaults(), provider: provider))
     }
 
-    // MARK: Prompt v2
+    // MARK: Prompt v3 (v2 + stacks, M6.1)
 
-    @Test func promptV2AsksForInventoryAndFidelity() {
-        #expect(WidgetPrompt.version == "generate_v2")
+    @Test func promptAsksForInventoryFidelityAndStacks() {
+        #expect(WidgetPrompt.version == "generate_v3")
+        #expect(WidgetPrompt.system.contains("Never give a text its own absolute frame"))
+        #expect(WidgetPrompt.system.contains("`spacer`") && WidgetPrompt.system.contains("`alignItems`"))
         let system = WidgetPrompt.system
         #expect(system.contains("Inventory first"))
         #expect(system.contains("Never replace visible text or numbers with dots"))

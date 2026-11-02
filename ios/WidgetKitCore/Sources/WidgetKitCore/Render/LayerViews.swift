@@ -6,6 +6,8 @@ struct TextLayerView: View {
     let scale: CGFloat
     /// Swaps leading and trailing alignment (RTL `mirror`); the text itself is never flipped.
     let mirrored: Bool
+    /// The axes the text fills (its frame); inside a stack it keeps its natural size (M6.1).
+    var fill: Axis.Set = [.horizontal, .vertical]
 
     var body: some View {
         let raw = layer.value.resolved(language: resolver.context.language)
@@ -21,7 +23,8 @@ struct TextLayerView: View {
             .multilineTextAlignment(textAlignment)
             .lineLimit(layer.maxLines ?? 1)
             .minimumScaleFactor(0.5)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: frameAlignment)
+            .frame(maxWidth: fill.contains(.horizontal) ? .infinity : nil,
+                   maxHeight: fill.contains(.vertical) ? .infinity : nil, alignment: frameAlignment)
     }
 
     @ViewBuilder private func content(_ value: String) -> some View {

@@ -86,11 +86,21 @@ final class AppState {
     var isCreatingFromImage = false
     /// The introduction (M6): shown on first launch, reopenable from Settings.
     var isShowingOnboarding = !UserDefaults.standard.bool(forKey: AppState.onboardingDoneKey)
+        || !UserDefaults.standard.bool(forKey: AppState.permissionsSeenKey)
+    /// Users who finished the M6 introduction see only the permissions page, once (M6.1).
+    var onboardingPermissionsOnly = UserDefaults.standard.bool(forKey: AppState.onboardingDoneKey)
 
     static let onboardingDoneKey = "onboardingDone"
+    static let permissionsSeenKey = "permissionsPageSeen"
+
+    func showIntroduction() {
+        onboardingPermissionsOnly = false
+        isShowingOnboarding = true
+    }
 
     func finishOnboarding() {
         UserDefaults.standard.set(true, forKey: Self.onboardingDoneKey)
+        UserDefaults.standard.set(true, forKey: Self.permissionsSeenKey)
         isShowingOnboarding = false
     }
 }

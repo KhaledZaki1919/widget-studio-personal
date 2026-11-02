@@ -62,7 +62,7 @@ final class SpecRenderTests: XCTestCase {
     /// size and both languages, and the result isn't blank.
     func testEverySpecRendersThroughTheWidgetView() throws {
         let specs = TestSpecs.load()
-        XCTAssertEqual(specs.count, 11)
+        XCTAssertEqual(specs.count, 12)
         for entry in specs {
             guard case .success(let spec) = entry.result else {
                 XCTFail("\(entry.fileName) is invalid")

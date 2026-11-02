@@ -1,6 +1,6 @@
 import Foundation
 
-/// The hand-written test specs (10 from M1, one for the ADR-019 layers) in `Resources/TestSpecs` (brief §10, M1). Together they use
+/// The hand-written test specs (10 from M1, one for the ADR-019 layers, one for M6.1 stacks) in `Resources/TestSpecs` (brief §10, M1). Together they use
 /// every layer type, both themes, all three families and both languages. They are bundled, so
 /// the widget can show them even without an App Group (ADR-005 device findings).
 public enum TestSpecs {

@@ -307,7 +307,9 @@ struct SpecValidatorTests {
         let event: [[String: Any]] = [["key": "event", "type": "date", "label": ["en": "Event", "ar": "الموعد"], "default": "2026-12-31T09:00:00"]]
         var timer = text("x")
         timer["live"] = ["kind": "timer", "target": "{{field.event}}"]
-        #expect(try issues(layers: [timer, text("{{days.event}}")], fields: event, mode: .ai).isEmpty)
+        var days = text("{{days.event}}")
+        days["frame"] = ["x": 0, "y": 60, "w": 50, "h": 50]   // AI text must not overlap (M6.1)
+        #expect(try issues(layers: [timer, days], fields: event, mode: .ai).isEmpty)
         #expect(try issues(layers: [layer("image", ["source": "asset:logo"])], fields: [], mode: .ai).contains { $0.path == "layers[0].source" })
     }
 

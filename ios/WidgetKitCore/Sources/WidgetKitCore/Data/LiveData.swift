@@ -4,7 +4,7 @@ import Foundation
 /// draw real numbers (ADR-016).
 public enum DataRequirements {
     public static func groups(for spec: WidgetSpec) -> Set<Bindings.Group> {
-        var groups: Set<Bindings.Group> = spec.layers.contains { if case .forecastRow = $0.content { true } else { false } } ? [.weather] : []
+        var groups: Set<Bindings.Group> = spec.allLayers.contains { if case .forecastRow = $0.content { true } else { false } } ? [.weather] : []
         for name in bindingNames(in: spec) {
             if let parsed = Bindings.Name(name) { groups.insert(parsed.group) }
         }
@@ -19,7 +19,7 @@ public enum DataRequirements {
     /// Every binding name in the spec's layers.
     static func bindingNames(in spec: WidgetSpec) -> [String] {
         var strings: [String] = []
-        for layer in spec.layers {
+        for layer in spec.allLayers {
             strings += [layer.when, layer.rotation].compactMap { $0 }
             switch layer.content {
             case .text(let text):
@@ -34,7 +34,7 @@ public enum DataRequirements {
             case .list(let list):
                 strings += list.items.flatMap { $0.title.allValues + ($0.detail?.allValues ?? []) }
             case .progressBar(let bar): strings.append(bar.progress)
-            case .image, .shape, .calendarMonth, .unknown: break
+            case .image, .shape, .calendarMonth, .stack, .spacer, .unknown: break
             }
         }
         return strings.flatMap(Bindings.names(in:))

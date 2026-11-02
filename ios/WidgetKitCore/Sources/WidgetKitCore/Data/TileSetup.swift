@@ -169,7 +169,7 @@ public enum ShortcutLinks {
     /// The Shortcut names of a spec's tiles (its `shortcut.run` buttons), resolved with the
     /// design's field values.
     public static func names(in spec: WidgetSpec, fieldValues: [String: LocalizedText] = [:], language: String) -> [String] {
-        spec.layers.compactMap { layer -> String? in
+        spec.allLayers.compactMap { layer -> String? in
             guard case .button(let button) = layer.content, button.action == .shortcutRun, let arg = button.arg,
                   let raw = Bindings.soleBinding(arg), case .field(let key)? = Bindings.Name(raw) else { return nil }
             let value = (fieldValues[key] ?? spec.field(key)?.default)?.resolved(language: language) ?? ""

@@ -5,7 +5,7 @@ import Testing
 struct TestSpecsTests {
     @Test func allTestSpecsAreValid() {
         let entries = TestSpecs.load()
-        #expect(entries.count == 11)
+        #expect(entries.count == 12)
         for entry in entries {
             if case .failure(let failure) = entry.result {
                 Issue.record("\(entry.fileName): \(failure.description)")
@@ -20,7 +20,7 @@ struct TestSpecsTests {
 
     @Test func togetherTheyUseEveryLayerTypeFamilyAndTheme() {
         let specs = TestSpecs.all()
-        let types = Set(specs.flatMap { $0.layers.map(\.content.typeName) })
+        let types = Set(specs.flatMap { $0.allLayers.map(\.content.typeName) })
         #expect(types == Set(LayerContent.knownTypes))
         #expect(Set(specs.map(\.family)) == Set(SpecFamily.allCases))
         #expect(Set(specs.map(\.theme)) == Set(SpecTheme.allCases))

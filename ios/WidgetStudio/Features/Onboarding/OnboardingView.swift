@@ -1,11 +1,13 @@
 import SwiftUI
 
 /// First-run introduction (brief §7.1, M6): what the app does, how to add a widget to the home
-/// screen, and privacy. Shown once, skippable, reopenable from Settings.
+/// screen, permissions (M6.1) and privacy. Shown once, skippable, reopenable from Settings.
+/// `permissionsOnly` is the one-page version existing users see once after updating.
 struct OnboardingView: View {
+    var permissionsOnly = false
     let onFinish: () -> Void
     @State private var page = 0
-    private let pages = 3
+    private var pages: Int { permissionsOnly ? 1 : 4 }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -20,9 +22,14 @@ struct OnboardingView: View {
             .padding(.horizontal)
 
             TabView(selection: $page) {
-                WhatPage().tag(0)
-                HowToAddPage().tag(1)
-                PrivacyPage().tag(2)
+                if permissionsOnly {
+                    PermissionsPage().tag(0)
+                } else {
+                    WhatPage().tag(0)
+                    HowToAddPage().tag(1)
+                    PermissionsPage().tag(2)
+                    PrivacyPage().tag(3)
+                }
             }
             .tabViewStyle(.page(indexDisplayMode: .always))
             .indexViewStyle(.page(backgroundDisplayMode: .always))

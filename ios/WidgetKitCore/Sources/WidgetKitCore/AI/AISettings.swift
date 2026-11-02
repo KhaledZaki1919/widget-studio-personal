@@ -72,12 +72,14 @@ public struct AIKeyStore: Sendable {
         let clean = sanitize(key)
         guard !clean.isEmpty else { return [] }
         var warnings: [AIKeyWarning] = []
-        if let owner = AIProviderKind.owner(ofKey: clean) {
-            if owner != provider { warnings.append(.looksLike(owner)) }
-        } else {
-            warnings.append(.unexpectedFormat)
-        }
         if !clean.unicodeScalars.allSatisfy({ $0.isASCII }) { warnings.append(.unexpectedCharacters) }
+        // A custom endpoint may use any key format (or a short local token).
+        guard provider != .custom else { return warnings }
+        if let owner = AIProviderKind.owner(ofKey: clean) {
+            if owner != provider { warnings.insert(.looksLike(owner), at: 0) }
+        } else {
+            warnings.insert(.unexpectedFormat, at: 0)
+        }
         if clean.count < 20 { warnings.append(.tooShort) }
         return warnings
     }
@@ -107,6 +109,9 @@ extension AIProviderKind {
         case .openai: ["sk-"]
         case .gemini: ["AIza", "AQ."]
         case .openrouter: ["sk-or-"]
+        case .nvidia: ["nvapi-"]
+        case .groq: ["gsk_"]
+        case .custom: []
         }
     }
 
@@ -115,6 +120,8 @@ extension AIProviderKind {
         if key.hasPrefix("sk-ant-") { return .anthropic }
         if key.hasPrefix("sk-or-") { return .openrouter }
         if key.hasPrefix("AIza") || key.hasPrefix("AQ.") { return .gemini }
+        if key.hasPrefix("nvapi-") { return .nvidia }
+        if key.hasPrefix("gsk_") { return .groq }
         if key.hasPrefix("sk-") { return .openai }
         return nil
     }
@@ -130,19 +137,22 @@ public struct AISettings: Codable, Sendable, Equatable {
     /// "High quality (2 requests)" per provider: the self-review round (ADR-019). Unset = the
     /// provider's default (`defaultHighQuality`).
     public var highQuality: [String: Bool]
+    /// Base URL of the Custom (OpenAI-compatible) provider, e.g. "https://host/v1" (M6.1).
+    public var customBaseURL: String
 
     public static let defaultsKey = "aiSettings"
 
     enum CodingKeys: String, CodingKey {
-        case provider, models, consented, highQuality
+        case provider, models, consented, highQuality, customBaseURL
     }
 
     public init(provider: AIProviderKind = .gemini, models: [String: String] = [:], consented: [String] = [],
-                highQuality: [String: Bool] = [:]) {
+                highQuality: [String: Bool] = [:], customBaseURL: String = "") {
         self.provider = provider
         self.models = models
         self.consented = consented
         self.highQuality = highQuality
+        self.customBaseURL = customBaseURL
     }
 
     public init(from decoder: Decoder) throws {
@@ -151,6 +161,7 @@ public struct AISettings: Codable, Sendable, Equatable {
         models = (try? container.decode([String: String].self, forKey: .models)) ?? [:]
         consented = (try? container.decode([String].self, forKey: .consented)) ?? []
         highQuality = (try? container.decode([String: Bool].self, forKey: .highQuality)) ?? [:]
+        customBaseURL = (try? container.decode(String.self, forKey: .customBaseURL)) ?? ""
     }
 
     public static func load(from defaults: UserDefaults = .standard) -> AISettings {
@@ -176,6 +187,17 @@ public struct AISettings: Codable, Sendable, Equatable {
 
     public func usesHighQuality(for provider: AIProviderKind) -> Bool {
         highQuality[provider.rawValue] ?? Self.defaultHighQuality(for: provider)
+    }
+
+    /// The provider's name for messages: the host for a custom endpoint.
+    public var providerName: String {
+        guard provider == .custom else { return provider.displayName }
+        return CustomEndpoint.normalized(customBaseURL).flatMap { URL(string: $0)?.host } ?? provider.displayName
+    }
+
+    /// A custom endpoint needs a valid base URL and a model ID.
+    public var isCustomReady: Bool {
+        CustomEndpoint.normalized(customBaseURL) != nil && !model(for: .custom).isEmpty
     }
 
     public func hasConsent(for provider: AIProviderKind) -> Bool {

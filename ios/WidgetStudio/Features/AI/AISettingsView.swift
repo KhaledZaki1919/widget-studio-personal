@@ -30,6 +30,7 @@ struct AISettingsView: View {
     var body: some View {
         Form {
             providerSection
+            if provider == .custom { customSection }
             keySection
             if storedKey != nil { testSection }
             modelSection
@@ -48,13 +49,42 @@ struct AISettingsView: View {
         Section {
             Picker("ai.provider", selection: $settings.provider) {
                 ForEach(AIProviderKind.allCases) { kind in
-                    Text(verbatim: kind.displayName).tag(kind)
+                    Self.label(kind).tag(kind)
                 }
             }
             .accessibilityIdentifier("ax.ai.provider")
         } footer: {
-            Text("ai.privacy \(provider.displayName)")
+            VStack(alignment: .leading, spacing: 6) {
+                Text("ai.privacy \(settings.providerName)")
+                if provider.hasFreeTier { Text("ai.provider.free") }
+            }
         }
+    }
+
+    /// Custom (OpenAI-compatible): the endpoint's base URL (M6.1).
+    private var customSection: some View {
+        Section {
+            TextField("ai.custom.url.placeholder", text: $settings.customBaseURL)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .keyboardType(.URL)
+                .font(.callout.monospaced())
+                .accessibilityIdentifier("ax.ai.custom.url")
+            if !settings.customBaseURL.isEmpty && CustomEndpoint.normalized(settings.customBaseURL) == nil {
+                Label("ai.custom.url.invalid", systemImage: "exclamationmark.triangle.fill")
+                    .font(.footnote)
+                    .foregroundStyle(.orange)
+            }
+        } header: {
+            Text("ai.custom.url")
+        } footer: {
+            Text("ai.custom.url.footer")
+        }
+    }
+
+    /// The provider's name in lists: product names stay Latin; Custom is localized.
+    static func label(_ kind: AIProviderKind) -> Text {
+        kind == .custom ? Text("ai.provider.custom") : Text(verbatim: kind.displayName)
     }
 
     private var keySection: some View {
@@ -191,7 +221,7 @@ struct AISettingsView: View {
                 )
             } label: {
                 LabeledContent("ai.model") {
-                    Text(verbatim: settings.model(for: provider))
+                    Text(verbatim: settings.model(for: provider).isEmpty ? "—" : settings.model(for: provider))
                 }
             }
             .accessibilityIdentifier("ax.ai.model")
@@ -220,7 +250,7 @@ struct AISettingsView: View {
                     get: { settings.hasConsent(for: kind) },
                     set: { settings.setConsent($0, for: kind) }
                 )) {
-                    Text(verbatim: kind.displayName)
+                    Self.label(kind)
                 }
                 .accessibilityIdentifier("ax.ai.consent.\(kind.rawValue)")
             }
@@ -290,7 +320,7 @@ struct AISettingsView: View {
         if let key = storedKey {
             let kind = provider
             Task {
-                let models = await AIService().listModels(provider: kind, key: key)
+                let models = await AIService().listModels(provider: kind, key: key, customBaseURL: settings.customBaseURL)
                 if kind == provider { liveModels = models }
             }
         }
@@ -310,7 +340,7 @@ struct AISettingsView: View {
         let id = UUID()
         testID = id
         testTask = Task {
-            let result = await AIService().testConnection(provider: kind, key: key, model: model)
+            let result = await AIService().testConnection(provider: kind, key: key, model: model, customBaseURL: settings.customBaseURL)
             guard testID == id else { return }   // a newer test (or a provider change) replaced this one
             switch result {
             case .success(let model): testState = .passed(model: model)

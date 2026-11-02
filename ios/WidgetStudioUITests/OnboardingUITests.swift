@@ -23,6 +23,11 @@ final class OnboardingUITests: XCTestCase {
         next.tap()
         XCTAssertTrue(app.buttons["ax.onboarding.next"].waitForExistence(timeout: 5))
         app.buttons["ax.onboarding.next"].tap()
+        // M6.1: the permissions page, with an Allow button for each permission (skipped here:
+        // the system prompts can't be scripted).
+        XCTAssertTrue(app.descendants(matching: .any)["ax.permissions.location"].waitForExistence(timeout: 5), "permissions page missing")
+        XCTAssertTrue(app.buttons["ax.permissions.allow"].firstMatch.exists, "no Allow button on the permissions page")
+        app.buttons["ax.onboarding.next"].tap()
         let start = app.buttons["ax.onboarding.start"]
         XCTAssertTrue(start.waitForExistence(timeout: 5), "last page has no start button")
         XCTAssertFalse(app.buttons["ax.onboarding.skip"].exists, "skip shown on the last page")

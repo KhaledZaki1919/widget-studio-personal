@@ -107,6 +107,53 @@ final class EditorModel {
         return String(format: "#%02X%02X%02X", byte(red), byte(green), byte(blue))
     }
 
+    // MARK: Layers (M6.1, ADR-022)
+
+    /// Top-level layers whose text (or an icon over text) covers another.
+    var overlapping: Set<Int> { SpecLayout.overlapping(in: design.spec.layers) }
+
+    /// The layers inside `parent` (`[]` = the top level).
+    func layers(in parent: LayerEditing.Path) -> [Layer] {
+        guard !parent.isEmpty else { return design.spec.layers }
+        guard case .stack(let stack)? = LayerEditing.layer(at: parent, in: design.spec.layers)?.content else { return [] }
+        return stack.children
+    }
+
+    /// The layer at `path`; nil once it's gone (deleted, or its stack was ungrouped).
+    func layer(_ path: LayerEditing.Path) -> Binding<Layer>? {
+        guard let current = LayerEditing.layer(at: path, in: design.spec.layers) else { return nil }
+        return Binding(
+            get: { LayerEditing.layer(at: path, in: self.design.spec.layers) ?? current },
+            set: { LayerEditing.replace(at: path, in: &self.design.spec.layers, with: $0) }
+        )
+    }
+
+    func removeLayer(_ path: LayerEditing.Path) {
+        LayerEditing.remove(at: path, in: &design.spec.layers)
+    }
+
+    func duplicateLayer(_ path: LayerEditing.Path) {
+        LayerEditing.duplicate(at: path, in: &design.spec.layers)
+    }
+
+    func moveLayers(in parent: LayerEditing.Path, from source: IndexSet, to destination: Int) {
+        LayerEditing.move(in: parent, from: source, to: destination, layers: &design.spec.layers)
+    }
+
+    /// Puts top-level layers in one stack; false when they can't share one.
+    func groupLayers(_ indexes: Set<Int>) -> Bool {
+        LayerEditing.group(Array(indexes), in: &design.spec.layers) != nil
+    }
+
+    func ungroupLayer(_ index: Int) {
+        LayerEditing.ungroup(at: index, in: &design.spec.layers)
+    }
+
+    /// The same local fix the AI flow uses, on demand.
+    func arrangeOverlaps() {
+        design.spec = AILayoutFix.fix(design.spec)
+    }
+
     // MARK: Photo
 
     /// Loads the picked photo, applies its orientation, and processes it for the image layer.

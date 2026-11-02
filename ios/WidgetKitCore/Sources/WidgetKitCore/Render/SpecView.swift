@@ -58,7 +58,7 @@ public struct SpecView: View {
 }
 
 /// Rotates only layers that declare `rotation`, so the others render without an extra transform.
-private struct LayerRotation: ViewModifier {
+struct LayerRotation: ViewModifier {
     let degrees: Double?
 
     @ViewBuilder func body(content: Content) -> some View {
@@ -144,7 +144,8 @@ struct LayerView: View {
         case .list(let list): ListLayerView(layer: list, resolver: resolver, scale: scale, mirrored: mirrored)
         case .progressBar(let bar):
             ProgressBarView(layer: bar, progress: resolver.number(bar.progress) ?? 0, scale: scale, mirrored: mirrored)
-        case .unknown: Color.clear
+        case .stack(let stack): StackLayerView(layer: stack, resolver: resolver, scale: scale, mirrored: mirrored)
+        case .spacer, .unknown: Color.clear
         }
     }
 }

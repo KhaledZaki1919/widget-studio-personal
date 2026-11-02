@@ -21,8 +21,9 @@ struct WidgetStudioApp: App {
             // AI starts from defaults, so the consent sheet shows every run.
             AISettings().save()
             // The introduction only when a test asks for it.
-            UserDefaults.standard.set(!ProcessInfo.processInfo.arguments.contains("-uiTestingOnboarding"),
-                                      forKey: AppState.onboardingDoneKey)
+            let introDone = !ProcessInfo.processInfo.arguments.contains("-uiTestingOnboarding")
+            UserDefaults.standard.set(introDone, forKey: AppState.onboardingDoneKey)
+            UserDefaults.standard.set(introDone, forKey: AppState.permissionsSeenKey)
             _appState = State(initialValue: AppState())
             // App Store screenshots: a few saved designs in My widgets.
             if ProcessInfo.processInfo.arguments.contains("-uiTestingSeedDesigns") {

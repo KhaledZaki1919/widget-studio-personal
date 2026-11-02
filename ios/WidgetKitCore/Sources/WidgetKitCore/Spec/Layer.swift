@@ -25,13 +25,19 @@ public struct Layer: Codable, Sendable, Equatable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case type, frame, opacity, mirror, when, rotation
+        case type, frame, opacity, mirror, when, rotation, width, height
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let type = try container.decode(String.self, forKey: .type)
-        frame = try container.decode(Frame.self, forKey: .frame)
+        // Children of a stack (M6.1) give only `width`/`height` (both optional: 0 = natural size).
+        if container.contains(.frame) {
+            frame = try container.decode(Frame.self, forKey: .frame)
+        } else {
+            frame = Frame(x: 0, y: 0, w: try container.decodeIfPresent(Double.self, forKey: .width) ?? 0,
+                          h: try container.decodeIfPresent(Double.self, forKey: .height) ?? 0)
+        }
         opacity = try container.decodeIfPresent(Double.self, forKey: .opacity)
         mirror = try container.decodeIfPresent(Bool.self, forKey: .mirror)
         when = try container.decodeIfPresent(String.self, forKey: .when)
@@ -50,14 +56,26 @@ public struct Layer: Codable, Sendable, Equatable {
         case "calendarMonth": content = .calendarMonth(try CalendarMonthLayer(from: decoder))
         case "list": content = .list(try ListLayer(from: decoder))
         case "progressBar": content = .progressBar(try ProgressBarLayer(from: decoder))
+        case "stack": content = .stack(try StackLayer(from: decoder))
+        case "spacer": content = .spacer(try SpacerLayer(from: decoder))
         default: content = .unknown(type)
         }
     }
 
     public func encode(to encoder: Encoder) throws {
+        try encode(to: encoder, asChild: false)
+    }
+
+    /// A stack's children write `width`/`height` (when set) instead of a frame.
+    func encode(to encoder: Encoder, asChild: Bool) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(content.typeName, forKey: .type)
-        try container.encode(frame, forKey: .frame)
+        if asChild {
+            if frame.w > 0 { try container.encode(frame.w, forKey: .width) }
+            if frame.h > 0 { try container.encode(frame.h, forKey: .height) }
+        } else {
+            try container.encode(frame, forKey: .frame)
+        }
         try container.encodeIfPresent(opacity, forKey: .opacity)
         try container.encodeIfPresent(mirror, forKey: .mirror)
         try container.encodeIfPresent(when, forKey: .when)
@@ -76,6 +94,8 @@ public struct Layer: Codable, Sendable, Equatable {
         case .calendarMonth(let layer): try layer.encode(to: encoder)
         case .list(let layer): try layer.encode(to: encoder)
         case .progressBar(let layer): try layer.encode(to: encoder)
+        case .stack(let layer): try layer.encode(to: encoder)
+        case .spacer(let layer): try layer.encode(to: encoder)
         case .unknown: break
         }
     }
@@ -106,13 +126,16 @@ public enum LayerContent: Sendable, Equatable {
     case calendarMonth(CalendarMonthLayer)
     case list(ListLayer)
     case progressBar(ProgressBarLayer)
+    /// M6.1: a vertical, horizontal or grid container laid out natively, and flexible space in one.
+    case stack(StackLayer)
+    case spacer(SpacerLayer)
     /// A `type` this app doesn't know; always a validation error.
     case unknown(String)
 
     /// The layer types of schema v1, as written in JSON.
     public static let knownTypes = [
         "text", "image", "shape", "icon", "analogClock", "dotGrid", "dotBars", "ring", "forecastRow", "button",
-        "calendarMonth", "list", "progressBar",
+        "calendarMonth", "list", "progressBar", "stack", "spacer",
     ]
 
     public var typeName: String {
@@ -130,6 +153,8 @@ public enum LayerContent: Sendable, Equatable {
         case .calendarMonth: "calendarMonth"
         case .list: "list"
         case .progressBar: "progressBar"
+        case .stack: "stack"
+        case .spacer: "spacer"
         case .unknown(let type): type
         }
     }

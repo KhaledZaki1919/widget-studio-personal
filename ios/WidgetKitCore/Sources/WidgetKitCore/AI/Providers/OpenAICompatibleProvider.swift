@@ -1,22 +1,22 @@
 import Foundation
 
-/// OpenAI Chat Completions, also used for OpenRouter (same request format).
+/// OpenAI Chat Completions, also used by OpenRouter, NVIDIA NIM, Groq and Custom endpoints
+/// (same request format).
 /// - OpenAI: strict `response_format = {type: "json_schema", json_schema: {name, strict, schema}}`.
-/// - OpenRouter: JSON mode (`{type: "json_object"}`) with the schema in the system prompt, since
-///   strict schemas depend on which upstream endpoint serves the model (ADR-018).
+/// - The others in structured mode: JSON mode (`{type: "json_object"}`) with the schema in the
+///   system prompt, since strict schemas depend on the model behind the endpoint (ADR-018);
+///   in prompt-only mode, no `response_format` at all.
 public struct OpenAICompatibleProvider: AIProvider {
     public let kind: AIProviderKind
     private let apiKey: String
     private let session: URLSession
+    let baseURL: String
 
-    public init(kind: AIProviderKind, apiKey: String, session: URLSession = .shared) {
-        self.kind = kind == .openrouter ? .openrouter : .openai
+    public init(kind: AIProviderKind, apiKey: String, baseURL: String? = nil, session: URLSession = .shared) {
+        self.kind = kind
         self.apiKey = apiKey
+        self.baseURL = baseURL ?? kind.baseURL ?? "https://api.openai.com/v1"
         self.session = session
-    }
-
-    var baseURL: String {
-        kind == .openrouter ? "https://openrouter.ai/api/v1" : "https://api.openai.com/v1"
     }
 
     var headers: [String: String] {
@@ -34,7 +34,7 @@ public struct OpenAICompatibleProvider: AIProvider {
 
     func body(for request: AIRequest, model: String, structured: Bool, reasoning: Bool) -> JSONValue {
         var system = request.system
-        if kind == .openrouter && structured {
+        if kind != .openai && structured {
             system = request.withSchemaInstructions().system
         }
         var userContent: [JSONValue] = [["type": "text", "text": .string(request.userText)]]
@@ -52,7 +52,7 @@ public struct OpenAICompatibleProvider: AIProvider {
         body[kind == .openai ? "max_completion_tokens" : "max_tokens"] = .int(request.maxOutputTokens)
         if reasoning { body["reasoning_effort"] = "low" }
         if structured {
-            if kind == .openrouter {
+            if kind != .openai {
                 body["response_format"] = ["type": "json_object"]
             } else {
                 body["response_format"] = [
@@ -145,6 +145,10 @@ public struct OpenAICompatibleProvider: AIProvider {
         if kind == .openrouter {
             // Only models that take images.
             return models.filter { $0.architecture?.inputModalities?.contains("image") ?? false }.map(\.id).sorted()
+        }
+        guard kind == .openai else {
+            // NIM, Groq and custom endpoints: everything but embedding/speech models.
+            return models.map(\.id).filter { !["embed", "tts", "whisper", "rerank", "guard"].contains(where: $0.lowercased().contains) }.sorted()
         }
         // OpenAI also lists embedding, audio and image models; keep the chat families.
         return models.map(\.id).filter { $0.hasPrefix("gpt") || $0.hasPrefix("o") || $0.hasPrefix("chatgpt") }

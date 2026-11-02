@@ -65,7 +65,19 @@ final class LiveDataModel: NSObject, CLLocationManagerDelegate {
 
     func requestHealth() async {
         try? await HealthReader.requestAuthorization()
+        UserDefaults.standard.set(true, forKey: Self.healthAskedKey)
+        healthAsked = true
         await refresh()
+    }
+
+    /// iOS never says whether Health *read* access was granted, only that we asked; whether steps
+    /// can be read (`isHealthReadable`) is the real answer.
+    private(set) var healthAsked = UserDefaults.standard.bool(forKey: LiveDataModel.healthAskedKey)
+    static let healthAskedKey = "healthAsked"
+
+    var isHealthReadable: Bool {
+        if case .success? = inputs.health { return true }
+        return false
     }
 
     /// Re-reads every source. Cheap when caches are fresh.

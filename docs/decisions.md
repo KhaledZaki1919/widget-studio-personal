@@ -462,3 +462,51 @@ Picked side-by-sides are in `docs/ai-eval/results/` (left: the drawn original, r
    Both for App Functionality, not linked to identity, no tracking. Neither reaches us; they are declared because the third parties may keep the data under their own terms. Any new data flow must update the label, both manifests and `site/privacy.html` together.
 2. **The App Store build is developer mode** (`WS_DEVELOPER`): one configurable **Widget Studio** widget per size; Edit Widget picks any saved design (including AI-made ones) or template, with search and Appearance, and never picks automatically (ADR-020). The 28 fixed template widgets (ADR-013) are **not** shipped; they remain only in store mode for Fast Store installs. Before submitting, remove the check widget from the developer-mode bundle (it is built in developer mode today for testing, ADR-020).
 3. **Status:** the app is complete for now (M0–M6). Next steps happen when the owner buys the Apple Developer account: follow `docs/app-store/when-account.md`, starting with the picker test. Android (M7) stays later.
+
+### ADR-022 — M6.1: stacks, free vision presets, never no widget, layer editor
+**Status:** Accepted (2026-11-02).
+
+- **Onboarding permissions (item 1):** a page asks for location and Health in place; users who finished the M6 introduction see only this page, once.
+- **AI colors as tokens (item 2a):** `AIColorTokens` turns palette hex values in AI output into `@bg/@fg/@accent/@muted`, so the editor's color pickers reach them.
+- **Stack layers (item 3):** `stack` (vertical, horizontal, grid; spacing, padding, alignItems, justify, columns) and `spacer`, laid out by SwiftUI stacks and `Grid`. Children carry only optional `width`/`height` (0 = natural size). Nesting ≤ 3, ≤ 12 children, ≤ 60 layers counting children. Mirrored stacks reverse their items in Arabic; glyphs never flip (ADR-010). Prompt `generate_v3`: in AI output, text only goes inside stacks.
+- **Providers (item 4):** NVIDIA NIM, Groq and Custom (any OpenAI-compatible base URL, https or localhost) next to Gemini, OpenRouter, Anthropic and OpenAI. NIM and Custom start in prompt-only JSON mode. HTTP 410 (a model past its end of life) maps to `modelNotFound`.
+- **Overlap rule:** `SpecLayout` holds one rule for the validator, the fix and the editor: two top-level layers collide when they share more than 20 % of the smaller frame. It applies to text-showing layers and to icons over text; layers with `when` are exempt. The check runs on frames **clamped to the canvas** (as drawn): a list taller than the widget slides up under its header.
+- **Never no widget:** the first answer is strict (overlaps send the retry). If the retry's answer still has overlapping layers, `AILayoutFix` repairs it locally:
+  - oversized icons shrink to their frame;
+  - each group of colliding layers goes into one stack over the group's combined frame: a column, or a row only when the layers clearly sit side by side;
+  - groups a stack can't hold (lists, calendars, forecasts; more than 12 layers; nesting too deep) are moved apart into bands proportional to their sizes;
+  - layers are ordered by frame center.
+
+  The result reports `LayoutRepair`:
+  - `.clean`: nothing to fix;
+  - `.fixed(before:)`: the editor shows a short note;
+  - `.needsEditing(problems)`: the editor opens with an orange warning and **Fix in Layers**, and Save still works.
+
+  A self-review that ends in `.needsEditing` never replaces a first round that didn't. Answers that break other rules (schema, bindings, contrast) still fail after the retry, as before.
+- **Layer editor:** Editor → **Layers** lists the layers back to front with the live preview and marks colliding layers. **Arrange automatically** runs the same `AILayoutFix`. **Select** reorders and deletes layers and stacks several of them; swipe to duplicate or delete. A layer opens its frame (a stack's items: width and height), opacity, mirror, and its kind's settings:
+  - text: Arabic, English, size, weight, alignment, lines, color;
+  - icon: size, color;
+  - shape: kind, fill;
+  - stack: direction, spacing, padding, alignment, columns, items, ungroup.
+
+  Colors pick a theme token or a custom hex. The operations live in `LayerEditing` (path-based, unit-tested). Save still goes through `DesignEditing.validate`.
+- **AI eval, 2026-11-01/02** (8 runs; 10 drawn cases unless noted; prompt v3; no review round). The workflow now runs several comma-separated models per run, checks IDs against the provider's live list, and writes `<case>.fix.png` (original | model's layout | fixed). Results:
+
+  | Provider | Model | Widgets | Median s | Notes |
+  |---|---|---|---|---|
+  | Gemini | `gemini-3.5-flash-lite` | 10/10, 10/10, 4/4 | 5, 32, 3 | closest layouts and fonts; 1, 2 and 1 cases fixed locally |
+  | Gemini | `gemini-3.8-flash` | 7/10 | 64 | 3 timeouts; good layouts, but slow |
+  | NVIDIA | `nvidia/nemotron-3.5-super-vl-120b-a12b` | 7/10 | 50 | right structure, small numerals, 3 timeouts |
+  | NVIDIA | `meta/llama-4-maverick-17b-128e-instruct`, `qwen/qwen3.5-397b-a17b`, `google/gemma-3-27b-it`, `nvidia/nemotron-nano-12b-v2-vl` | 0/10 | – | HTTP 410: end of life 2026-07-27 (model pages still online) |
+  | NVIDIA | `google/gemma-4-31b-it` · `meta/llama-3.2-90b-vision-instruct` | 0/10 · 1/10 | – · 39 | timeouts at the 240 s deadline |
+  | NVIDIA | `qwen/qwen3.5-122b-a10b`, `moonshotai/kimi-k2.5` | 0/10 | – | not available to the key (`modelNotFound`) |
+  | OpenRouter | `nvidia/nemotron-3.5-super-vl:free` | 8/10 | 62 | like the NIM version; 1 timeout, 1 truncated |
+  | OpenRouter | `openrouter/free` | 7/10 | 109 | slowest; plainer styling; one font-size error after the retry |
+  | OpenRouter | `google/gemma-4-31b-it:free`, `google/gemma-4-26b-a4b-it:free` | 0/10 | – | 429 from the shared upstream pool, even 30 s apart |
+
+- **Presets:**
+  - Gemini `gemini-3.5-flash-lite` (alternative `gemini-3.8-flash`) is the recommended free provider;
+  - NVIDIA `nvidia/nemotron-3.5-super-vl-120b-a12b` (alternative `meta/llama-3.2-90b-vision-instruct`);
+  - OpenRouter `nvidia/nemotron-3.5-super-vl:free` (alternative `openrouter/free`); the paid `google/gemini-3.8-flash` stays in the list.
+- **Results kept:** `docs/ai-eval/results/m61-*.png` (forecast local fix, reminders before and after the clamped-frame check, calendar/steps/quote per provider).
+- **Unverified on device:** the layer editor and the layout warning (UI test covers opening the editor and a layer); provider free-tier limits change often, so re-run the eval before changing presets.

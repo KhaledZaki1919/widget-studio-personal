@@ -41,7 +41,7 @@ struct RootView: View {
             .tag(AppState.Tab.settings)
         }
         .fullScreenCover(isPresented: $appState.isShowingOnboarding) {
-            OnboardingView(onFinish: appState.finishOnboarding)
+            OnboardingView(permissionsOnly: appState.onboardingPermissionsOnly, onFinish: appState.finishOnboarding)
         }
         .sheet(isPresented: $appState.isCreatingFromImage) {
             CreateFromImageView()

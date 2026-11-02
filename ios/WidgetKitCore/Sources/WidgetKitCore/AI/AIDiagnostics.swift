@@ -127,7 +127,8 @@ public final class AITrace: @unchecked Sendable {
 public enum AIRedactor {
     /// Google (AIza…, AQ.…), OpenAI/Anthropic/OpenRouter (sk-…) style keys, and `key=` parameters.
     private static let patterns = [
-        #"\bAIza[0-9A-Za-z_\-]{20,}"#, #"\bAQ\.[0-9A-Za-z_\-]{20,}"#, #"\bsk-[A-Za-z0-9_\-]{12,}"#, #"(?i)(key=)[^&\s"]+"#,
+        #"\bAIza[0-9A-Za-z_\-]{20,}"#, #"\bAQ\.[0-9A-Za-z_\-]{20,}"#, #"\bsk-[A-Za-z0-9_\-]{12,}"#,
+        #"\bnvapi-[A-Za-z0-9_\-]{12,}"#, #"\bgsk_[A-Za-z0-9]{12,}"#, #"(?i)(key=)[^&\s"]+"#,
     ]
 
     public static func redact(_ text: String, secrets: [String] = []) -> String {

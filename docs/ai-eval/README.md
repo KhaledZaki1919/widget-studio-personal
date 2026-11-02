@@ -13,4 +13,4 @@ secret `GEMINI_API_KEY`. The job generates a spec per image with the app's real 
 parser and renderer, and uploads the artifact `ai-eval` with one side-by-side PNG per case
 (original left, render right), the specs, and `summary.md`. The key is never printed.
 
-`results/` holds side-by-side images picked from runs, for the record.
+`results/` holds side-by-side images picked from runs, for the record (`m61-*`: the M6.1 provider comparison and local layout fixes, ADR-022). Several models per run: put comma-separated IDs in `model`; raise `pause` for OpenRouter `:free` models. Secrets: `GEMINI_API_KEY`, `NVIDIA_API_KEY`, `OPENROUTER_API_KEY`.

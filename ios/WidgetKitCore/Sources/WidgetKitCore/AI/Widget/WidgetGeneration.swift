@@ -49,15 +49,24 @@ public struct GeneratedWidget: Sendable, Equatable {
     public let reviewed: Bool
     /// What the review round said it fixed.
     public let differences: [String]
+    /// Whether the layout was repaired locally, or still needs the layer editor (ADR-022).
+    public let layout: LayoutRepair
 
     public init(spec: WidgetSpec, colors: [String: String], model: String, attempts: Int, reviewed: Bool = false,
-                differences: [String] = []) {
+                differences: [String] = [], layout: LayoutRepair = .clean) {
         self.spec = spec
         self.colors = colors
         self.model = model
         self.attempts = attempts
         self.reviewed = reviewed
         self.differences = differences
+        self.layout = layout
+    }
+
+    /// Overlaps are left that the user should fix in the layer editor.
+    public var needsEditing: Bool {
+        if case .needsEditing = layout { return true }
+        return false
     }
 
     /// A new, unsaved design named after the widget in `language`.
@@ -69,11 +78,11 @@ public struct GeneratedWidget: Sendable, Equatable {
 
 // MARK: - Prompt
 
-/// Builds the request: the versioned system prompt (`Prompts/generate_v2.md`, ADR-019), the user
+/// Builds the request: the versioned system prompt (`Prompts/generate_v3.md`, ADR-019, M6.1), the user
 /// text with mode, size and the user's instructions, the image, and the AI schema. Also the one
 /// self-review request (`Prompts/review_v1.md`).
 public enum WidgetPrompt {
-    public static let version = "generate_v2"
+    public static let version = "generate_v3"
     public static let reviewVersion = "review_v1"
     /// Room for 30 layers with their nulls; thinking providers get extra on top.
     public static let maxOutputTokens = 16000
@@ -263,30 +272,75 @@ public enum AIWidgetSchema {
         return JSONSchema.object(all)
     }
 
+    /// A stack's child: no frame, an optional size instead (M6.1).
+    static func child(_ type: String, _ properties: [String: JSONValue]) -> JSONValue {
+        var all = properties
+        all["type"] = JSONSchema.enumeration([type])
+        all["width"] = nullableNumber
+        all["height"] = nullableNumber
+        return JSONSchema.object(all)
+    }
+
+    static let textProperties: [String: JSONValue] = [
+        "value": localized,
+        "font": font,
+        "color": JSONSchema.string,
+        "align": nullableEnum(TextAlign.allCases.map(\.rawValue)),
+        "maxLines": JSONSchema.nullable(JSONSchema.integer),
+        "live": JSONSchema.nullable(JSONSchema.object([
+            "kind": JSONSchema.enumeration(["timer", "relative", "time"]),
+            "target": nullableString,
+        ])),
+    ]
+    static let shapeProperties: [String: JSONValue] = [
+        "kind": JSONSchema.enumeration(ShapeLayer.Kind.allCases.map(\.rawValue)),
+        "fill": nullableString,
+        "stroke": JSONSchema.nullable(JSONSchema.object(["color": JSONSchema.string, "width": JSONSchema.number])),
+        "cornerRadius": nullableNumber,
+    ]
+    static let iconProperties: [String: JSONValue] = [
+        "symbol": JSONSchema.enumeration(Icons.whitelist.keys.sorted() + ["{{weather.symbol}}"]),
+        "size": JSONSchema.number,
+        "color": JSONSchema.string,
+    ]
+    static let ringProperties: [String: JSONValue] = [
+        "progress": JSONSchema.string, "color": JSONSchema.string, "trackColor": nullableString,
+        "lineWidth": JSONSchema.number,
+    ]
+    static let progressBarProperties: [String: JSONValue] = [
+        "progress": JSONSchema.string, "color": JSONSchema.string, "trackColor": nullableString,
+        "segments": JSONSchema.nullable(JSONSchema.integer), "cornerRadius": nullableNumber,
+    ]
+
+    static func stackProperties(children: [JSONValue]) -> [String: JSONValue] {
+        [
+            "axis": JSONSchema.enumeration(StackLayer.Axis.allCases.map(\.rawValue)),
+            "spacing": nullableNumber,
+            "padding": nullableNumber,
+            "alignItems": nullableEnum(StackLayer.Align.allCases.map(\.rawValue)),
+            "justify": nullableEnum(StackLayer.Align.allCases.map(\.rawValue)),
+            "columns": JSONSchema.nullable(JSONSchema.integer),
+            "children": JSONSchema.array(JSONSchema.anyOf(children)),
+        ]
+    }
+
+    /// What a stack holds: texts and small pieces, plus (one level down) another stack.
+    static func childShapes(nested: Bool) -> [JSONValue] {
+        var shapes = [
+            child("text", textProperties), child("icon", iconProperties), child("shape", shapeProperties),
+            child("ring", ringProperties), child("progressBar", progressBarProperties),
+            child("spacer", ["minLength": nullableNumber]),
+        ]
+        if nested { shapes.append(child("stack", stackProperties(children: childShapes(nested: false)))) }
+        return shapes
+    }
+
+    /// Prompt v3 (M6.1): text only inside stacks, so the top level has no text shape.
     static func layerShapes(mode: GenerationMode) -> [JSONValue] {
         var shapes = [
-            layer("text", [
-                "value": localized,
-                "font": font,
-                "color": JSONSchema.string,
-                "align": nullableEnum(TextAlign.allCases.map(\.rawValue)),
-                "maxLines": JSONSchema.nullable(JSONSchema.integer),
-                "live": JSONSchema.nullable(JSONSchema.object([
-                    "kind": JSONSchema.enumeration(["timer", "relative", "time"]),
-                    "target": nullableString,
-                ])),
-            ]),
-            layer("shape", [
-                "kind": JSONSchema.enumeration(ShapeLayer.Kind.allCases.map(\.rawValue)),
-                "fill": nullableString,
-                "stroke": JSONSchema.nullable(JSONSchema.object(["color": JSONSchema.string, "width": JSONSchema.number])),
-                "cornerRadius": nullableNumber,
-            ]),
-            layer("icon", [
-                "symbol": JSONSchema.enumeration(Icons.whitelist.keys.sorted() + ["{{weather.symbol}}"]),
-                "size": JSONSchema.number,
-                "color": JSONSchema.string,
-            ]),
+            layer("stack", stackProperties(children: childShapes(nested: true))),
+            layer("shape", shapeProperties),
+            layer("icon", iconProperties),
             layer("analogClock", [
                 "style": nullableEnum(AnalogClockLayer.Style.allCases.map(\.rawValue)),
                 "faceColor": nullableString, "tickColor": nullableString, "hourColor": nullableString,
@@ -302,10 +356,7 @@ public enum AIWidgetSchema {
                 "color": JSONSchema.string, "offColor": nullableString, "labels": JSONSchema.nullable(localized),
                 "highlightColor": nullableString,
             ]),
-            layer("ring", [
-                "progress": JSONSchema.string, "color": JSONSchema.string, "trackColor": nullableString,
-                "lineWidth": JSONSchema.number,
-            ]),
+            layer("ring", ringProperties),
             layer("forecastRow", ["days": JSONSchema.integer, "color": JSONSchema.string]),
             layer("button", ["action": JSONSchema.enumeration([ButtonLayer.Action.openApp.rawValue])]),
             // ADR-019.
@@ -334,10 +385,7 @@ public enum AIWidgetSchema {
                 "marker": nullableEnum(ListLayer.Marker.allCases.map(\.rawValue)),
                 "markerColor": nullableString, "dividerColor": nullableString,
             ]),
-            layer("progressBar", [
-                "progress": JSONSchema.string, "color": JSONSchema.string, "trackColor": nullableString,
-                "segments": JSONSchema.nullable(JSONSchema.integer), "cornerRadius": nullableNumber,
-            ]),
+            layer("progressBar", progressBarProperties),
         ]
         if mode == .photo {
             shapes.append(layer("image", [
@@ -369,10 +417,24 @@ public enum AIWidgetParser {
     /// Minimum `fg`/`bg` contrast accepted (WCAG AA for large text; the prompt asks for 4.5).
     public static let minimumContrast = 3.0
 
-    /// `enforceLayout`: overlapping frames and oversized icons are problems (they send the retry);
-    /// false accepts them, for the last attempt, so a slightly messy layout still gives a widget.
+    /// A parsed answer and what happened to its layout.
+    public struct Parsed: Sendable, Equatable {
+        public let spec: WidgetSpec
+        public let colors: [String: String]
+        public let layout: LayoutRepair
+    }
+
+    /// `enforceLayout`: overlapping frames and oversized icons are problems (they send the retry).
+    /// False is for the last attempt: the layout is repaired locally (`AILayoutFix`) and whatever
+    /// is left is reported in `layout`, so the user never ends up without a widget (ADR-022).
     public static func parse(_ text: String, options: GenerationOptions, id: String,
                              enforceLayout: Bool = true) throws -> (spec: WidgetSpec, colors: [String: String]) {
+        let parsed = try parseWidget(text, options: options, id: id, enforceLayout: enforceLayout)
+        return (parsed.spec, parsed.colors)
+    }
+
+    public static func parseWidget(_ text: String, options: GenerationOptions, id: String,
+                                   enforceLayout: Bool = true) throws -> Parsed {
         guard let data = StructuredAI.extractJSON(text),
               case .object(var object)? = try? JSONDecoder().decode(JSONValue.self, from: data) else {
             throw AIValidationError("no JSON object found")
@@ -381,7 +443,7 @@ public enum AIWidgetParser {
 
         // Palette → overrides of the editable tokens.
         var colors: [String: String] = [:]
-        for token in SavedDesign.editableColors {
+        for token in ["accent", "bg", "fg"] {   // the palette the model returns; muted comes from AIColorTokens
             guard let hex = object["palette"]?[token]?.stringValue, HexColor.parse(hex) != nil else {
                 problems.append("palette.\(token): must be a #RRGGBB color")
                 continue
@@ -404,9 +466,10 @@ public enum AIWidgetParser {
         object["schemaVersion"] = 1
         object["id"] = .string(id)
         if let family = options.size.family { object["family"] = .string(family.rawValue) }
-        let cleaned = JSONValue.object(object).removingNulls()
+        // Palette hex values become tokens, so the editor's color pickers reach them (M6.1).
+        let cleaned = AIColorTokens.tokenize(JSONValue.object(object).removingNulls(), colors: &colors)
 
-        switch SpecValidator(mode: .ai).validate(data: cleaned.jsonData()) {
+        switch SpecValidator(mode: .ai, checksTextOverlaps: enforceLayout).validate(data: cleaned.jsonData()) {
         case .failure(let failure):
             problems += failure.issues.prefix(20).map(\.description)
             throw AIValidationError(problems.joined(separator: "; "))
@@ -414,9 +477,27 @@ public enum AIWidgetParser {
             problems += modeProblems(spec, mode: options.mode)
             if enforceLayout { problems += overlappingTexts(spec) }
             guard problems.isEmpty else { throw AIValidationError(problems.joined(separator: "; ")) }
+            var layout = LayoutRepair.clean
+            if !enforceLayout { (spec, layout) = repaired(spec) }
             spec.refresh = refresh(for: spec)
-            return (spec, colors)
+            return Parsed(spec: spec, colors: colors, layout: layout)
         }
+    }
+
+    /// The last answer's layout problems, fixed locally where possible (ADR-022). The fixed spec is
+    /// used only if it passes the AI validator's other rules; otherwise the answer stays as written
+    /// and the remaining problems go to the editor.
+    static func repaired(_ spec: WidgetSpec) -> (WidgetSpec, LayoutRepair) {
+        func problems(_ spec: WidgetSpec) -> [String] {
+            SpecLayout.textOverlaps(in: spec.layers).map { "layers[\($0.1)]: its text overlaps layers[\($0.0)]" } + overlappingTexts(spec)
+        }
+        let before = problems(spec)
+        guard !before.isEmpty else { return (spec, .clean) }
+        if case .success(let fixed) = SpecValidator(mode: .ai, checksTextOverlaps: false).validate(AILayoutFix.fix(spec)) {
+            let left = problems(fixed)
+            return left.isEmpty ? (fixed, .fixed(before: spec)) : (fixed, .needsEditing(left))
+        }
+        return (spec, .needsEditing(before))
     }
 
     /// Icon layers (and list row icons) with symbols outside the whitelist are dropped instead of
@@ -430,6 +511,7 @@ public enum AIWidgetParser {
                !Icons.isAllowed(symbol), Bindings.soleBinding(symbol) == nil {
                 return nil
             }
+            if let children = fields["children"] { fields["children"] = withoutUnknownIcons(children) }
             if case .array(let rows)? = fields["items"] {
                 fields["items"] = .array(rows.map { row in
                     guard case .object(var cells) = row, let icon = cells["icon"]?.stringValue, !Icons.isAllowed(icon) else { return row }
@@ -455,35 +537,20 @@ public enum AIWidgetParser {
         }
     }
 
-    /// Content layers (text, icons, forecast rows, lists, calendars) whose frames cover each other
-    /// (more than 20 % of the smaller one), and icons drawn larger than their frame: in the eval a
-    /// big temperature ran into its H/L labels and a big icon into the day row (runs 4–5). Text on
-    /// shapes, rings and clocks is fine.
+    /// Layout problems that send the retry: icons drawn larger than their frame, and icons covering
+    /// text (more than 20 % of the smaller frame). Text on text is a validator error in AI mode
+    /// (M6.1); text on shapes, rings and clocks is fine.
     static func overlappingTexts(_ spec: WidgetSpec) -> [String] {
         var problems: [String] = []
-        let texts = spec.layers.indices.filter {
-            switch spec.layers[$0].content {
-            case .text, .forecastRow, .list, .calendarMonth: return true
-            case .icon(let icon):
-                let frame = spec.layers[$0].frame
-                if icon.size > min(frame.w, frame.h) * 1.15 {
-                    problems.append("layers[\($0)]: icon size \(Int(icon.size)) is bigger than its frame; make the frame at least as big as the size")
-                }
-                return true
-            default: return false
+        for index in spec.layers.indices {
+            guard case .icon(let icon) = spec.layers[index].content else { continue }
+            let frame = spec.layers[index].frame
+            if icon.size > min(frame.w, frame.h) * 1.15 {
+                problems.append("layers[\(index)]: icon size \(Int(icon.size)) is bigger than its frame; make the frame at least as big as the size")
             }
         }
-        for (position, first) in texts.enumerated() {
-            for second in texts[(position + 1)...] {
-                let a = spec.layers[first].frame
-                let b = spec.layers[second].frame
-                let width = min(a.x + a.w, b.x + b.w) - max(a.x, b.x)
-                let height = min(a.y + a.h, b.y + b.h) - max(a.y, b.y)
-                guard width > 0, height > 0 else { continue }
-                if width * height > 0.2 * min(a.w * a.h, b.w * b.h) {
-                    problems.append("layers[\(first)] and layers[\(second)]: frames overlap; move or shrink them so they don't")
-                }
-            }
+        for (icon, text) in SpecLayout.iconOverlaps(in: spec.layers) {
+            problems.append("layers[\(icon)] and layers[\(text)]: the icon covers the text; move it or put both in one stack")
         }
         return problems
     }
@@ -491,7 +558,7 @@ public enum AIWidgetParser {
     /// Minute for clocks, hourly for other live data, daily for dates, none otherwise.
     static func refresh(for spec: WidgetSpec) -> RefreshPolicy {
         let names = DataRequirements.bindingNames(in: spec).map { $0.trimmingCharacters(in: .whitespaces) }
-        let hasClock = spec.layers.contains { layer in
+        let hasClock = spec.allLayers.contains { layer in
             switch layer.content {
             case .analogClock: true
             case .text(let text): text.live?.kind == .time
@@ -536,7 +603,8 @@ public typealias SpecRenderer = @Sendable (WidgetSpec, [String: String]) async -
 /// Image → widget: builds the request, runs it through `AIService` (deadline, diagnostics) and
 /// parses with the retry. With `review`, the result is rendered and sent back with the original
 /// for one correction round ("High quality", ADR-019); if that round fails, the first result
-/// stands. Errors are `AIError`s; still-invalid output after the retry is `.invalidOutput`.
+/// stands. Errors are `AIError`s; still-invalid output after the retry is `.invalidOutput`,
+/// except layout problems, which the retry's answer gets repaired locally (ADR-022).
 public struct WidgetGenerator: Sendable {
     private let service: AIService
 
@@ -552,9 +620,10 @@ public struct WidgetGenerator: Sendable {
         // The retry's answer is accepted with layout problems (overlaps); only the first is strict.
         let firstRound = AttemptCounter()
         let result = try await service.run(request: request, feature: .generateWidget) { text in
-            try AIWidgetParser.parse(text, options: options, id: id, enforceLayout: firstRound.next() == 1)
+            try AIWidgetParser.parseWidget(text, options: options, id: id, enforceLayout: firstRound.next() == 1)
         }
-        let first = GeneratedWidget(spec: result.value.spec, colors: result.value.colors, model: result.model, attempts: result.attempts)
+        let first = GeneratedWidget(spec: result.value.spec, colors: result.value.colors, model: result.model, attempts: result.attempts,
+                                    layout: result.value.layout)
         guard let review, let render = await review(first.spec, first.colors) else { return first }
         if Task.isCancelled { throw AIError.cancelled }
 
@@ -563,11 +632,14 @@ public struct WidgetGenerator: Sendable {
         do {
             let reviewRound = AttemptCounter()
             let reviewed = try await service.run(request: reviewRequest, feature: .reviewWidget) { text in
-                let parsed = try AIWidgetParser.parse(text, options: options, id: id, enforceLayout: reviewRound.next() == 1)
-                return (parsed.spec, parsed.colors, AIWidgetParser.differences(in: text))
+                let parsed = try AIWidgetParser.parseWidget(text, options: options, id: id, enforceLayout: reviewRound.next() == 1)
+                return (parsed, AIWidgetParser.differences(in: text))
             }
-            return GeneratedWidget(spec: reviewed.value.0, colors: reviewed.value.1, model: reviewed.model,
-                                   attempts: first.attempts + reviewed.attempts, reviewed: true, differences: reviewed.value.2)
+            // A review that still needs editing doesn't replace a first round that didn't.
+            if case .needsEditing = reviewed.value.0.layout, !first.needsEditing { return first }
+            return GeneratedWidget(spec: reviewed.value.0.spec, colors: reviewed.value.0.colors, model: reviewed.model,
+                                   attempts: first.attempts + reviewed.attempts, reviewed: true, differences: reviewed.value.1,
+                                   layout: reviewed.value.0.layout)
         } catch AIError.cancelled {
             throw AIError.cancelled
         } catch {

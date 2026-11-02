@@ -79,10 +79,10 @@ struct DesignEditingTests {
         tiles.fieldValues["icon1"] = "applelogo"
         tiles.fieldValues["shortcut1"] = "shortcuts://run"
         tiles.colors["accent"] = "blue"
-        tiles.colors["muted"] = "#000000"
+        tiles.colors["line"] = "#000000"   // muted is editable since M6.1; line isn't
         tiles.name = "   "
         let paths = Set(DesignEditing.validate(tiles).map(\.path))
-        #expect(paths.isSuperset(of: ["fields.icon1", "fields.shortcut1", "colors.accent", "colors.muted", "name"]))
+        #expect(paths.isSuperset(of: ["fields.icon1", "fields.shortcut1", "colors.accent", "colors.line", "name"]))
     }
 
     @Test func unknownFieldsAreReported() throws {

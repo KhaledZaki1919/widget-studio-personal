@@ -3,7 +3,9 @@ import SwiftUI
 import WidgetKitCore
 
 /// The editor (brief §7.3, M3): a live preview at real size above every field the template
-/// defines, theme, colors and photo. Save validates the design and puts it in My widgets.
+/// defines, theme, colors, photo and the layer editor (M6.1). Save validates the design and puts
+/// it in My widgets. AI results say when their layout was fixed or still needs the layer editor
+/// (ADR-022).
 struct EditorView: View {
     @Environment(DesignsModel.self) private var designs
     @Environment(AppState.self) private var appState
@@ -13,9 +15,13 @@ struct EditorView: View {
 
     /// Shown for AI results (M5): a new design from the same image and options.
     private let onRegenerate: (() -> Void)?
+    /// AI results (ADR-022): what the local layout fix did.
+    private let layout: LayoutRepair
 
-    init(design: SavedDesign, isNew: Bool, photo: CGImage? = nil, onRegenerate: (() -> Void)? = nil) {
+    init(design: SavedDesign, isNew: Bool, photo: CGImage? = nil, layout: LayoutRepair = .clean,
+         onRegenerate: (() -> Void)? = nil) {
         _model = State(initialValue: EditorModel(design: design, isNew: isNew, photo: photo))
+        self.layout = layout
         self.onRegenerate = onRegenerate
     }
 
@@ -24,6 +30,7 @@ struct EditorView: View {
         NavigationStack {
             Form {
                 previewSection
+                layoutSection
                 if let onRegenerate {
                     Section {
                         Button(action: onRegenerate) {
@@ -43,6 +50,7 @@ struct EditorView: View {
                 }
                 if model.hasPhoto { photoSection }
                 appearanceSection
+                layersSection
                 if !model.editableFields.isEmpty {
                     Section("editor.fields") {
                         ForEach(model.editableFields, id: \.key) { field in
@@ -114,6 +122,60 @@ struct EditorView: View {
         }
     }
 
+    /// AI results: overlaps the model left that the app couldn't fix go to the layer editor.
+    @ViewBuilder private var layoutSection: some View {
+        switch layout {
+        case .clean:
+            EmptyView()
+        case .fixed:
+            Section {
+                Label("editor.layout.fixed", systemImage: "wand.and.stars")
+                    .font(.footnote)
+            }
+            .accessibilityIdentifier("ax.editor.layout.fixed")
+        case .needsEditing:
+            Section {
+                Label("editor.layout.needsEditing", systemImage: "exclamationmark.triangle.fill")
+                    .font(.subheadline)
+                    .foregroundStyle(.orange)
+                if !model.overlapping.isEmpty {
+                    NavigationLink {
+                        LayersView(model: model, parent: [])
+                    } label: {
+                        Label("editor.layout.openLayers", systemImage: "square.3.layers.3d")
+                    }
+                    .accessibilityIdentifier("ax.editor.layout.openLayers")
+                } else {
+                    Label("editor.layout.resolved", systemImage: "checkmark.circle")
+                        .font(.footnote)
+                        .foregroundStyle(.green)
+                }
+            }
+            .accessibilityIdentifier("ax.editor.layout.warning")
+        }
+    }
+
+    private var layersSection: some View {
+        Section {
+            NavigationLink {
+                LayersView(model: model, parent: [])
+            } label: {
+                LabeledContent {
+                    if !model.overlapping.isEmpty {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                    }
+                    Text(verbatim: "(model.design.spec.layers.count)")
+                } label: {
+                    Label("editor.layers", systemImage: "square.3.layers.3d")
+                }
+            }
+            .accessibilityIdentifier("ax.editor.layers")
+        } footer: {
+            Text("editor.layers.entry.footer")
+        }
+    }
+
     private var photoSection: some View {
         @Bindable var model = model
         return Section {
@@ -156,6 +218,7 @@ struct EditorView: View {
             colorRow("editor.color.accent", token: "accent")
             colorRow("editor.color.bg", token: "bg")
             colorRow("editor.color.fg", token: "fg")
+            colorRow("editor.color.muted", token: "muted")
         }
     }
 

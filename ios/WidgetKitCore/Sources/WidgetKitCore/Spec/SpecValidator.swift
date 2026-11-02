@@ -36,14 +36,22 @@ public struct SpecValidator: Sendable {
     }
 
     public static let maxLayers = 30
+    /// Layers counted with the children of stacks (M6.1).
+    public static let maxTotalLayers = 60
+    public static let maxStackDepth = 3
+    public static let maxChildren = 12
     public static let maxTextLength = 200
     public static let fontSizes: ClosedRange<Double> = 6...200
     public static let minAIFontSize: Double = 11
 
     public let mode: Mode
+    /// AI mode only: false skips the text-overlap rule, so the last answer can be repaired
+    /// locally instead of failing (`AILayoutFix`, ADR-022).
+    public let checksTextOverlaps: Bool
 
-    public init(mode: Mode = .standard) {
+    public init(mode: Mode = .standard, checksTextOverlaps: Bool = true) {
         self.mode = mode
+        self.checksTextOverlaps = checksTextOverlaps
     }
 
     public func validate(data: Data) -> Result<WidgetSpec, SpecIssues> {
@@ -57,7 +65,7 @@ public struct SpecValidator: Sendable {
     }
 
     public func validate(_ spec: WidgetSpec) -> Result<WidgetSpec, SpecIssues> {
-        var check = Check(spec: spec, mode: mode)
+        var check = Check(spec: spec, mode: mode, checksTextOverlaps: checksTextOverlaps)
         check.run()
         guard check.issues.isEmpty else { return .failure(SpecIssues(check.issues)) }
         var normalized = spec
@@ -133,14 +141,17 @@ enum SpecValidatorID {
 }
 
 /// Collects issues for one spec.
+// swiftlint:disable:next type_body_length
 private struct Check {
     let spec: WidgetSpec
     let mode: SpecValidator.Mode
+    let checksTextOverlaps: Bool
     var issues: [SpecIssue] = []
 
-    init(spec: WidgetSpec, mode: SpecValidator.Mode) {
+    init(spec: WidgetSpec, mode: SpecValidator.Mode, checksTextOverlaps: Bool) {
         self.spec = spec
         self.mode = mode
+        self.checksTextOverlaps = checksTextOverlaps
     }
 
     mutating func fail(_ path: String, _ message: String) {
@@ -156,8 +167,62 @@ private struct Check {
         checkFields()
         if spec.layers.isEmpty { fail("layers", "needs at least one layer") }
         if spec.layers.count > SpecValidator.maxLayers { fail("layers", "at most \(SpecValidator.maxLayers) layers") }
+        if spec.allLayers.count > SpecValidator.maxTotalLayers {
+            fail("layers", "at most \(SpecValidator.maxTotalLayers) layers counting the children of stacks")
+        }
         for (index, layer) in spec.layers.enumerated() {
             checkLayer(layer, path: "layers[\(index)]")
+        }
+        if mode == .ai && checksTextOverlaps { checkTextOverlaps() }
+    }
+
+    /// AI output (M6.1): layers that show text must not cover each other (`SpecLayout`), checked on
+    /// the frames as drawn, clamped to the canvas: a list taller than the widget slides up under
+    /// the header (eval 2026-11-01).
+    mutating func checkTextOverlaps() {
+        let canvas = spec.family.canvas
+        let drawn = spec.layers.map { layer -> Layer in
+            var clamped = layer
+            clamped.frame = layer.frame.clamped(to: canvas)
+            return clamped
+        }
+        for (first, second) in SpecLayout.textOverlaps(in: drawn) {
+            fail("layers[\(second)]", "its text overlaps layers[\(first)]; put texts that belong together in one stack, or move the frames apart")
+        }
+    }
+
+    /// Children of a stack (M6.1): a natural size along any axis left at 0, the types a stack
+    /// can lay out, and spacers only in vertical and horizontal stacks.
+    mutating func checkStack(_ stack: StackLayer, path: String, depth: Int) {
+        if depth > SpecValidator.maxStackDepth { fail(path, "stacks nest at most \(SpecValidator.maxStackDepth) deep") }
+        count("\(path).children", stack.children.count, in: 1...SpecValidator.maxChildren)
+        number("\(path).spacing", stack.spacing, in: 0...100)
+        number("\(path).padding", stack.padding, in: 0...100)
+        if stack.axis == .grid {
+            count("\(path).columns", stack.columns ?? 2, in: 1...8)
+        } else if stack.columns != nil {
+            fail("\(path).columns", "only grids have columns")
+        }
+        for (index, child) in stack.children.enumerated() {
+            let childPath = "\(path).children[\(index)]"
+            let size = child.frame
+            if ![size.w, size.h].allSatisfy(\.isFinite) || size.w < 0 || size.h < 0 {
+                fail(childPath, "width and height must be positive numbers or absent")
+            }
+            switch child.content {
+            case .text, .icon, .stack:
+                break
+            case .spacer:
+                if stack.axis == .grid { fail(childPath, "grids can't hold spacers") }
+            case .shape, .ring, .progressBar, .analogClock:
+                // These fill what they're given, so they need a size along the stack's axis.
+                if stack.axis == .horizontal ? size.w <= 0 : size.h <= 0 {
+                    fail(childPath, stack.axis == .horizontal ? "needs a width inside a horizontal stack" : "needs a height inside this stack")
+                }
+            default:
+                fail("\(childPath).type", "\"\(child.content.typeName)\" can't go in a stack; give it its own frame")
+            }
+            checkLayer(child, path: childPath, depth: depth)
         }
     }
 
@@ -325,9 +390,10 @@ private struct Check {
     }
 
     // swiftlint:disable:next cyclomatic_complexity function_body_length
-    mutating func checkLayer(_ layer: Layer, path: String) {
+    mutating func checkLayer(_ layer: Layer, path: String, depth: Int = 0) {
         let frame = layer.frame
-        if ![frame.x, frame.y, frame.w, frame.h].allSatisfy(\.isFinite) || frame.w <= 0 || frame.h <= 0 {
+        // Children (depth > 0) are sized by their stack; `checkStack` checks their sizes.
+        if depth == 0, ![frame.x, frame.y, frame.w, frame.h].allSatisfy(\.isFinite) || frame.w <= 0 || frame.h <= 0 {
             fail("\(path).frame", "w and h must be positive numbers")
         }
         number("\(path).opacity", layer.opacity, in: 0...1)
@@ -445,6 +511,11 @@ private struct Check {
             number("\(path).cornerRadius", bar.cornerRadius, in: 0...200)
         case .button(let button):
             checkButton(button, path: path)
+        case .stack(let stack):
+            checkStack(stack, path: path, depth: depth + 1)
+        case .spacer(let spacer):
+            if depth == 0 { fail("\(path).type", "a spacer only goes inside a vertical or horizontal stack") }
+            number("\(path).minLength", spacer.minLength, in: 0...200)
         }
     }
 

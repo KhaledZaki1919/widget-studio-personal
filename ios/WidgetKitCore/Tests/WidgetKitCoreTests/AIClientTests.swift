@@ -144,6 +144,7 @@ struct AIClientTests {
         #expect(AIHTTP.mapError(status: 400, body: try aiFixture("anthropic-400-credit")) == .insufficientCredit)
         #expect(AIHTTP.mapError(status: 429, body: try aiFixture("openai-429-quota")) == .insufficientCredit)
         #expect(AIHTTP.mapError(status: 404, body: Data()) == .modelNotFound)
+        #expect(AIHTTP.mapError(status: 410, body: Data()) == .modelNotFound)
         #expect(AIHTTP.mapError(status: 500, body: Data()) == .providerUnavailable)
         #expect(AIHTTP.mapError(status: 503, body: try aiFixture("gemini-503")) == .busy)
         #expect(AIHTTP.mapError(status: 529, body: Data()) == .busy)

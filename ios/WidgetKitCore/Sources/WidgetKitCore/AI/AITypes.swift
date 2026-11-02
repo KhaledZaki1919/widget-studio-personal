@@ -1,18 +1,23 @@
 import Foundation
 
-/// The AI providers a user can bring a key for (brief D4, ADR-008). Ported from Lakhas.
+/// The AI providers a user can bring a key for (brief D4, ADR-008, M6.1). Ported from Lakhas;
+/// NVIDIA NIM, Groq and Custom are OpenAI-compatible (free vision presets checked in their docs
+/// on 2026-10-29, ADR-022).
 public enum AIProviderKind: String, CaseIterable, Codable, Sendable, Identifiable {
-    case gemini, anthropic, openai, openrouter
+    case gemini, nvidia, groq, openrouter, anthropic, openai, custom
 
     public var id: String { rawValue }
 
-    /// Product names stay in Latin script in both languages.
+    /// Product names stay in Latin script in both languages; Custom is localized in the UI.
     public var displayName: String {
         switch self {
         case .gemini: "Google Gemini"
+        case .nvidia: "NVIDIA NIM"
+        case .groq: "Groq"
+        case .openrouter: "OpenRouter"
         case .anthropic: "Anthropic Claude"
         case .openai: "OpenAI"
-        case .openrouter: "OpenRouter"
+        case .custom: "Custom (OpenAI-compatible)"
         }
     }
 
@@ -20,40 +25,69 @@ public enum AIProviderKind: String, CaseIterable, Codable, Sendable, Identifiabl
     public var shortName: String {
         switch self {
         case .gemini: "Google"
+        case .nvidia: "NVIDIA"
+        case .groq: "Groq"
+        case .openrouter: "OpenRouter"
         case .anthropic: "Anthropic"
         case .openai: "OpenAI"
-        case .openrouter: "OpenRouter"
+        case .custom: "The provider"
         }
+    }
+
+    /// Providers with a free tier that reads images (ADR-022).
+    public var hasFreeTier: Bool {
+        [.gemini, .nvidia, .groq, .openrouter].contains(self)
     }
 
     /// Where the user creates an API key.
     public var keyPageURL: URL? {
         switch self {
         case .gemini: URL(string: "https://aistudio.google.com/apikey")
+        case .nvidia: URL(string: "https://build.nvidia.com")
+        case .groq: URL(string: "https://console.groq.com/keys")
+        case .openrouter: URL(string: "https://openrouter.ai/keys")
         case .anthropic: URL(string: "https://console.anthropic.com/settings/keys")
         case .openai: URL(string: "https://platform.openai.com/api-keys")
-        case .openrouter: URL(string: "https://openrouter.ai/keys")
+        case .custom: nil
+        }
+    }
+
+    /// Fixed OpenAI-compatible base URL; Custom uses the user's.
+    public var baseURL: String? {
+        switch self {
+        case .nvidia: "https://integrate.api.nvidia.com/v1"
+        case .groq: "https://api.groq.com/openai/v1"
+        case .openrouter: "https://openrouter.ai/api/v1"
+        case .openai: "https://api.openai.com/v1"
+        case .gemini, .anthropic, .custom: nil
         }
     }
 
     /// Fast, low-cost vision model used by default. IDs checked in each provider's model docs
-    /// on 2026-10-26 (ADR-018): Gemini 3.8 Flash is stable and free of charge on the free tier.
+    /// (ADR-018, ADR-019); the free providers' picks come from the AI eval of 2026-11-01/02
+    /// (ADR-022): every free preset reads images at no cost. Custom has none: the user types it.
     public var recommendedModel: String {
         switch self {
         case .gemini: "gemini-3.5-flash-lite"
+        case .nvidia: "nvidia/nemotron-3.5-super-vl-120b-a12b"
+        case .groq: "qwen/qwen3.8-27b"
+        case .openrouter: "nvidia/nemotron-3.5-super-vl:free"
         case .anthropic: "claude-haiku-5-5"
         case .openai: "gpt-6-luna"
-        case .openrouter: "google/gemini-3.8-flash"
+        case .custom: ""
         }
     }
 
-    /// Suggested when the default model is rate limited (free Gemini keys).
+    /// Suggested when the default model is rate limited.
     public var alternativeModel: String {
         switch self {
         case .gemini: "gemini-3.8-flash"
+        case .nvidia: "meta/llama-3.2-90b-vision-instruct"
+        case .groq: "qwen/qwen3.8-27b"
+        case .openrouter: "openrouter/free"
         case .anthropic: "claude-sonnet-5-5"
         case .openai: "gpt-6.1-sol"
-        case .openrouter: "anthropic/claude-haiku-5.5"
+        case .custom: ""
         }
     }
 
@@ -61,24 +95,52 @@ public enum AIProviderKind: String, CaseIterable, Codable, Sendable, Identifiabl
     public var builtInModels: [String] {
         switch self {
         case .gemini: ["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.6-flash"]
+        case .nvidia: ["nvidia/nemotron-3.5-super-vl-120b-a12b", "meta/llama-3.2-90b-vision-instruct", "google/gemma-4-31b-it"]
+        case .groq: ["qwen/qwen3.8-27b"]
+        case .openrouter: ["nvidia/nemotron-3.5-super-vl:free", "openrouter/free", "google/gemma-4-31b-it:free",
+                           "google/gemini-3.8-flash", "anthropic/claude-haiku-5.5", "openai/gpt-6-luna"]
         case .anthropic: ["claude-haiku-5-5", "claude-sonnet-5-5"]
         case .openai: ["gpt-6-luna", "gpt-6.1-sol"]
-        case .openrouter: ["google/gemini-3.8-flash", "anthropic/claude-haiku-5.5", "openai/gpt-6-luna"]
+        case .custom: []
         }
     }
 
     /// Whether requests start with the provider's native structured output. Gemini starts in
     /// JSON mode with the schema in the prompt: with `responseSchema`, Gemini 3.8 Flash ran past
-    /// three minutes on most eval images while JSON mode answered in 1–12 s (ADR-019). Every reply
-    /// is validated either way.
-    public var prefersStructuredOutput: Bool { self != .gemini }
+    /// three minutes on most eval images while JSON mode answered in 1–12 s (ADR-019). NVIDIA NIM
+    /// and Custom start with the schema in the prompt too, since JSON-mode support varies by model.
+    /// Every reply is validated either way.
+    public var prefersStructuredOutput: Bool {
+        ![.gemini, .nvidia, .custom].contains(self)
+    }
 
-    public func makeProvider(apiKey: String, session: URLSession = .shared) -> AIProvider {
+    /// `customBaseURL` is used by `.custom` only.
+    public func makeProvider(apiKey: String, session: URLSession = .shared, customBaseURL: String = "") -> AIProvider {
         switch self {
         case .gemini: GeminiProvider(apiKey: apiKey, session: session)
         case .anthropic: AnthropicProvider(apiKey: apiKey, session: session)
-        case .openai, .openrouter: OpenAICompatibleProvider(kind: self, apiKey: apiKey, session: session)
+        case .openai, .openrouter, .nvidia, .groq:
+            OpenAICompatibleProvider(kind: self, apiKey: apiKey, baseURL: baseURL ?? "", session: session)
+        case .custom:
+            OpenAICompatibleProvider(kind: .custom, apiKey: apiKey, baseURL: CustomEndpoint.normalized(customBaseURL) ?? "", session: session)
         }
+    }
+}
+
+/// The user's base URL for the Custom provider (M6.1).
+public enum CustomEndpoint {
+    /// "https://host/v1/" or ".../chat/completions" → "https://host/v1"; nil unless https (or
+    /// http on localhost) with a host.
+    public static func normalized(_ raw: String) -> String? {
+        var text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        for suffix in ["/chat/completions", "/"] where text.hasSuffix(suffix) {
+            text.removeLast(suffix.count)
+        }
+        while text.hasSuffix("/") { text.removeLast() }
+        guard let url = URL(string: text), let scheme = url.scheme?.lowercased(), let host = url.host, !host.isEmpty else { return nil }
+        let local = host == "localhost" || host == "127.0.0.1"
+        guard scheme == "https" || (scheme == "http" && local) else { return nil }
+        return text
     }
 }
 

@@ -106,7 +106,7 @@ enum AIHTTP {
             return .invalidKey
         case 402:
             return .insufficientCredit
-        case 404:
+        case 404, 410:   // 410: the model reached its end of life (NVIDIA NIM, eval 2026-11-01)
             return .modelNotFound
         case 408:
             return .timedOut

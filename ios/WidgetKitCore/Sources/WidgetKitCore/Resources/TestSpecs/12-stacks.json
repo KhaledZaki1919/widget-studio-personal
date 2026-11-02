@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "id": "test.stacks",
+  "name": { "en": "Stacks", "ar": "حاويات" },
+  "family": "medium",
+  "theme": "light",
+  "refresh": "hourly",
+  "background": { "type": "solid", "color": "@bg" },
+  "layers": [
+    { "type": "shape", "kind": "roundedRect", "fill": "@accent", "cornerRadius": 14, "frame": { "x": 196, "y": 14, "w": 154, "h": 142 }, "mirror": true },
+    {
+      "type": "stack", "axis": "vertical", "spacing": 6, "padding": 4, "mirror": true,
+      "frame": { "x": 12, "y": 12, "w": 172, "h": 146 },
+      "children": [
+        {
+          "type": "stack", "axis": "horizontal", "spacing": 6,
+          "children": [
+            { "type": "icon", "symbol": "{{weather.symbol}}", "size": 18, "color": "@accent" },
+            { "type": "text", "value": "{{weather.city}}", "font": { "family": "system", "size": 13, "weight": "semibold" }, "color": "@fg" },
+            { "type": "spacer" },
+            { "type": "text", "value": "{{weather.temp}}°", "font": { "family": "system-rounded", "size": 13, "weight": "bold" }, "color": "@fg" }
+          ]
+        },
+        { "type": "shape", "kind": "rect", "fill": "@line", "height": 1 },
+        { "type": "text", "value": { "en": "A long title that wraps onto a second line", "ar": "عنوان طويل يلتف على سطر ثانٍ" }, "font": { "family": "system", "size": 15, "weight": "bold" }, "color": "@fg", "maxLines": 2 },
+        { "type": "text", "value": "{{weather.cond}}", "font": { "family": "system", "size": 12 }, "color": "@muted" },
+        { "type": "spacer" },
+        { "type": "progressBar", "progress": "{{battery.level}}", "color": "@accent", "trackColor": "@dim", "height": 6 }
+      ]
+    },
+    {
+      "type": "stack", "axis": "grid", "columns": 2, "spacing": 8, "padding": 12, "alignItems": "center", "mirror": true,
+      "frame": { "x": 196, "y": 14, "w": 154, "h": 142 },
+      "children": [
+        { "type": "text", "value": "{{time.hh}}:{{time.mm}}", "font": { "family": "dot", "size": 20, "weight": "bold" }, "color": "@onAccent" },
+        { "type": "text", "value": "{{date.d}}", "font": { "family": "dot", "size": 20, "weight": "bold" }, "color": "@onAccent" },
+        { "type": "text", "value": { "en": "Time", "ar": "الوقت" }, "font": { "family": "system", "size": 11 }, "color": "@onAccent" },
+        { "type": "text", "value": { "en": "Day", "ar": "اليوم" }, "font": { "family": "system", "size": 11 }, "color": "@onAccent" },
+        { "type": "ring", "progress": "0.6", "color": "@onAccent", "trackColor": "#FFFFFF40", "lineWidth": 4, "width": 36, "height": 36 },
+        { "type": "icon", "symbol": "heart.fill", "size": 22, "color": "@onAccent" }
+      ]
+    }
+  ]
+}
