@@ -30,14 +30,21 @@ public struct SpecValidator: Sendable {
     public enum Mode: Sendable {
         /// Bundled templates and specs the user edited.
         case standard
-        /// AI output (brief §5.1, ADR-018): only `open.app` buttons; time, date, weather, battery,
-        /// prayer and steps bindings; text and image fields only; photos only as `user_image`.
+        /// AI output (brief §5.1, ADR-018, ADR-027): the catalog's bindings and actions marked for
+        /// AI; text, date, link, Shortcut, time zone and image fields; photos only as `user_image`.
         case ai
     }
 
     public static let maxLayers = 30
-    /// Layers counted with the children of stacks (M6.1).
-    public static let maxTotalLayers = 60
+    /// Layers counted with the children of stacks (M6.1). A chart, dot grid or list is one layer however
+    /// much it draws (ADR-029: raised from 60).
+    public static let maxTotalLayers = 100
+    /// Dots in one `dotGrid` (ADR-029: halftone drawings need more than 600).
+    public static let maxDots = 1600
+    public static let maxGridSide = 60
+    /// Spans in one text, points in a chart.
+    public static let maxSpans = 12
+    public static let maxChartPoints = 400
     public static let maxStackDepth = 3
     public static let maxChildren = 12
     public static let maxTextLength = 200
@@ -69,37 +76,37 @@ public struct SpecValidator: Sendable {
         check.run()
         guard check.issues.isEmpty else { return .failure(SpecIssues(check.issues)) }
         var normalized = spec
-        let canvas = spec.family.canvas
+        // ADR-029: frames are in the card's canvas when the spec has a card.
+        let canvas = spec.canvas
         for index in normalized.layers.indices {
             normalized.layers[index].frame = normalized.layers[index].frame.clamped(to: canvas)
         }
         return .success(normalized)
     }
 
-    /// Bindings AI output may use: time and date, weather, battery, prayer and Qibla, steps
-    /// (not sleep), and text fields. Location, sleep and app data are left out.
+    /// Bindings AI output may use: every catalog binding marked for AI (ADR-027), plus fields,
+    /// days left and world clocks, which each need the matching field.
     public static func allowsInAI(_ name: Bindings.Name) -> Bool {
         switch name {
-        case .builtin(let raw):
-            switch name.group {
-            case .time, .weather, .device: return true
-            // `prayer.next.key` only feeds `when` conditions, which AI output doesn't use.
-            case .prayer: return raw != "prayer.next.key"
-            case .health: return raw.hasPrefix("steps.")
-            default: return false
-            }
-        case .field: return true
-        case .daysUntil: return true   // needs a date field (countdowns, ADR-019)
-        case .timezoneTime: return false
+        case .builtin(let raw): return Capabilities.binding(raw)?.ai ?? false
+        case .field, .daysUntil, .timezoneTime: return true
+        case .appIcon: return Capabilities.binding("app.<appField>.icon")?.ai ?? false
+        case .stock: return Capabilities.binding("stock.<tickerField>.price")?.ai ?? false
         }
     }
 
+    /// Actions AI output may use.
+    public static func allowsInAI(_ action: ButtonLayer.Action) -> Bool {
+        Capabilities.action(action.rawValue)?.ai ?? false
+    }
+
     /// Field types AI output may declare.
-    public static let aiFieldTypes: Set<FieldSpec.Kind> = [.text, .date, .image]
+    public static let aiFieldTypes: Set<FieldSpec.Kind> = [.text, .date, .image, .url, .shortcut, .timezone, .app, .ticker]
 
     /// Readable text for the AI retry ("Your previous reply was not valid: …").
+    /// ADR-029: every issue, so one reply can fix them all (capped for very broken replies).
     public static func describe(_ issues: [SpecIssue]) -> String {
-        issues.prefix(20).map(\.description).joined(separator: "; ")
+        issues.prefix(60).map(\.description).joined(separator: "; ")
     }
 
     static func issue(from error: DecodingError) -> SpecIssue {
@@ -159,15 +166,22 @@ private struct Check {
     }
 
     mutating func run() {
-        if spec.schemaVersion != 1 { fail("schemaVersion", "must be 1") }
+        if spec.schemaVersion > WidgetSpec.currentVersion {
+            fail("specVersion", "made for a newer version of Widget Studio (\(spec.schemaVersion)); update the app")
+        } else if spec.schemaVersion < 1 {
+            fail("specVersion", "must be 1 or \(WidgetSpec.currentVersion)")
+        }
+        if let card = spec.card { checkCard(card) }
         if !Self.isValidID(spec.id) { fail("id", "use letters, digits, dots, dashes or underscores (max 64)") }
         if case .plain = spec.name { fail("name", "needs both \"en\" and \"ar\"") }
         for value in spec.name.allValues { text(path: "name", value, allowBindings: false) }
         checkBackground()
         checkFields()
         if spec.layers.isEmpty { fail("layers", "needs at least one layer") }
-        if spec.layers.count > SpecValidator.maxLayers { fail("layers", "at most \(SpecValidator.maxLayers) layers") }
-        if spec.allLayers.count > SpecValidator.maxTotalLayers {
+        // Tap areas don't count: every control needs one (ADR-027).
+        func drawn(_ layers: [Layer]) -> Int { layers.filter { if case .button = $0.content { false } else { true } }.count }
+        if drawn(spec.layers) > SpecValidator.maxLayers { fail("layers", "at most \(SpecValidator.maxLayers) layers") }
+        if drawn(spec.layers.flatMap(\.flattenedStacks)) > SpecValidator.maxTotalLayers {
             fail("layers", "at most \(SpecValidator.maxTotalLayers) layers counting the children of stacks")
         }
         for (index, layer) in spec.layers.enumerated() {
@@ -180,7 +194,7 @@ private struct Check {
     /// the frames as drawn, clamped to the canvas: a list taller than the widget slides up under
     /// the header (eval 2026-11-01).
     mutating func checkTextOverlaps() {
-        let canvas = spec.family.canvas
+        let canvas = spec.canvas
         let drawn = spec.layers.map { layer -> Layer in
             var clamped = layer
             clamped.frame = layer.frame.clamped(to: canvas)
@@ -203,6 +217,14 @@ private struct Check {
         } else if stack.columns != nil {
             fail("\(path).columns", "only grids have columns")
         }
+        if stack.axis == .radial {
+            number("\(path).radius", stack.radius, in: 0...400)
+            number("\(path).startAngle", stack.startAngle, in: -720...720)
+            number("\(path).sweep", stack.sweep, in: 0...360)
+            for (index, child) in stack.children.enumerated() where child.content.typeName == "spacer" {
+                fail("\(path).children[\(index)]", "a radial stack can't hold spacers")
+            }
+        }
         for (index, child) in stack.children.enumerated() {
             let childPath = "\(path).children[\(index)]"
             let size = child.frame
@@ -211,6 +233,8 @@ private struct Check {
             }
             switch child.content {
             case .text, .icon, .stack:
+                break
+            case .shape where stack.axis == .radial:
                 break
             case .spacer:
                 if stack.axis == .grid { fail(childPath, "grids can't hold spacers") }
@@ -234,6 +258,11 @@ private struct Check {
 
     mutating func color(_ path: String, _ value: String?) {
         guard let value else { return }
+        // ADR-029: a color binding (a calendar's color).
+        if let raw = Bindings.soleBinding(value), Capabilities.binding(raw.trimmingCharacters(in: .whitespaces))?.type == "color" {
+            binding(path: path, raw, expecting: nil)
+            return
+        }
         if HexColor.parse(value) == nil && !SpecTokens.isToken(value) {
             fail(path, "color must be #RRGGBB, #RRGGBBAA or a token (@\(SpecTokens.names.joined(separator: ", @")))")
         }
@@ -298,9 +327,17 @@ private struct Check {
                 if field.type != .date { fail(path, "{{\(raw)}} needs a date field") }
                 kind = .number
             default:
-                if mode == .ai, field.type != .text && field.type != .date { fail(path, "AI output may only bind text and date fields") }
+                if mode == .ai, field.type == .image || !SpecValidator.aiFieldTypes.contains(field.type) { fail(path, "AI output may only bind text, date, link and Shortcut fields") }
                 kind = Self.kind(of: field)
             }
+        case .appIcon(let key), .stock(let key, _):
+            guard let field = spec.field(key) else {
+                fail(path, "{{\(raw)}} refers to a missing field")
+                return
+            }
+            if case .appIcon = name, field.type != .app { fail(path, "{{\(raw)}} needs a field of type app") }
+            if case .stock = name, field.type != .ticker { fail(path, "{{\(raw)}} needs a field of type ticker") }
+            kind = name.builtinKind ?? .text
         case .builtin:
             if raw.trimmingCharacters(in: .whitespaces) == "counter.progress",
                spec.field("target")?.type != .number {
@@ -321,13 +358,58 @@ private struct Check {
         }
     }
 
-    /// A `when` condition: a known binding, optionally negated or compared with a value.
+    /// A `when`: known bindings, each optionally negated, compared with a value or tested against
+    /// a range or a list, joined by `&&` and `||`.
     mutating func condition(path: String, _ text: String) {
-        guard let condition = SpecCondition(text) else {
-            fail(path, "use \"{{binding}}\", \"!{{binding}}\" or \"{{binding}} == value\"")
+        guard let expression = SpecExpression(text) else {
+            fail(path, "use \"{{binding}}\", \"!{{binding}}\", \"{{binding}} == value\", \">= 0.9\", \"in 0.5..0.8\" or \"in a,b\", joined by && or ||")
             return
         }
-        binding(path: path, condition.binding, expecting: nil)
+        for name in expression.bindings { binding(path: path, name, expecting: nil) }
+    }
+
+    /// A state layer (ADR-028): a built-in set or written-out variants, always at the top level.
+    mutating func checkStates(_ states: StatesLayer, path: String, depth: Int) {
+        if depth > 0 { fail("\(path).type", "a states layer stays at the top level") }
+        color("\(path).color", states.color)
+        color("\(path).accent", states.accent)
+        color("\(path).dim", states.dim)
+        if let box = states.box, box.count != 2 || !box.allSatisfy({ $0 > 0 }) { fail("\(path).box", "needs a positive width and height") }
+        if let id = states.set {
+            guard let set = Capabilities.stateSet(id) else {
+                fail("\(path).set", "unknown state set \"\(id)\"; use an id from the allowed list")
+                return
+            }
+            if set.value != nil {
+                guard let value = states.value, let raw = Bindings.soleBinding(value) else {
+                    fail("\(path).value", "\(id) needs one binding, like \(set.value ?? "")")
+                    return
+                }
+                binding(path: "\(path).value", raw, expecting: nil)
+            }
+        } else if states.variants == nil {
+            fail("\(path).set", "needs a built-in set or variants")
+        }
+        guard let variants = states.variants else { return }
+        if variants.isEmpty || variants.count > 12 { fail("\(path).variants", "needs 1 to 12 variants") }
+        if Set(variants.map(\.id)).count != variants.count { fail("\(path).variants", "ids must differ") }
+        for (index, variant) in variants.enumerated() {
+            let itemPath = "\(path).variants[\(index)]"
+            if let when = variant.when {
+                condition(path: "\(itemPath).when", when)
+            } else if index != variants.count - 1 {
+                fail("\(itemPath).when", "only the last variant can be the default")
+            }
+            if variant.layers.count > 12 { fail("\(itemPath).layers", "at most 12 layers") }
+            for (position, layer) in variant.layers.enumerated() {
+                let layerPath = "\(itemPath).layers[\(position)]"
+                switch layer.content {
+                case .button: fail("\(layerPath).type", "a button stays at the top level, over the state layer")
+                case .states: fail("\(layerPath).type", "states don't nest")
+                default: checkLayer(layer, path: layerPath)
+                }
+            }
+        }
     }
 
     /// A value that must be exactly one binding of an allowed kind, or a literal accepted by `literal`.
@@ -341,6 +423,29 @@ private struct Check {
 
     // MARK: Parts
 
+    /// ADR-029: the card's shape, ratio, place and colors.
+    mutating func checkCard(_ card: CardSpec) {
+        number("card.aspect", card.aspect, in: 0.15...7)
+        number("card.cornerRadius", card.cornerRadius, in: 0...200)
+        if let bumps = card.bumps { count("card.bumps", bumps, in: 5...24) }
+        color("card.outerColor", card.outerColor)
+        if let inset = card.inset {
+            let canvas = spec.family.canvas
+            if ![inset.x, inset.y, inset.w, inset.h].allSatisfy(\.isFinite) || inset.w <= 0 || inset.h <= 0
+                || inset.x < -0.5 || inset.y < -0.5 || inset.x + inset.w > canvas.width + 0.5 || inset.y + inset.h > canvas.height + 0.5 {
+                fail("card.inset", "must lie inside the \(Int(canvas.width)) × \(Int(canvas.height)) canvas")
+            }
+        }
+    }
+
+    /// A color or a gradient object.
+    mutating func gradient(_ path: String, _ gradient: SpecGradient?) {
+        guard let gradient else { return }
+        if !(2...4).contains(gradient.colors.count) { fail("\(path).colors", "a gradient needs 2 to 4 colors") }
+        for (index, value) in gradient.colors.enumerated() { color("\(path).colors[\(index)]", value) }
+        number("\(path).angle", gradient.angle, in: -360...360)
+    }
+
     mutating func checkBackground() {
         let background = spec.background
         switch background.type {
@@ -352,6 +457,8 @@ private struct Check {
             if !(2...4).contains(colors.count) { fail("background.colors", "a gradient needs 2 to 4 colors") }
             for (index, value) in colors.enumerated() { color("background.colors[\(index)]", value) }
             number("background.angle", background.angle, in: -360...360)
+        case .glass:
+            color("background.color", background.color)   // optional tint
         }
         color("background.outerColor", background.outerColor)
     }
@@ -363,7 +470,7 @@ private struct Check {
             if !Bindings.isValidKey(field.key) { fail("\(path).key", "letters, digits and underscores, starting with a letter") }
             if !keys.insert(field.key).inserted { fail("\(path).key", "duplicate key \"\(field.key)\"") }
             if mode == .ai, !SpecValidator.aiFieldTypes.contains(field.type) {
-                fail("\(path).type", "AI output may only use text and image fields")
+                fail("\(path).type", "AI output may only use text, date, url, shortcut, timezone, app, ticker and image fields")
             }
             for value in field.label.allValues { text(path: "\(path).label", value, allowBindings: false) }
             for value in field.default?.allValues ?? [] {
@@ -384,7 +491,7 @@ private struct Check {
         // A user field may hold a URL (open.url), but a spec's default may not.
         case .url: if !value.isEmpty { fail(path, "URL fields can't have a default") }
         case .icon: if !Icons.isAllowed(value) { fail(path, "\"\(value)\" is not in the icon whitelist") }
-        case .text, .city, .shortcut, .image:
+        case .text, .city, .shortcut, .image, .app, .ticker:
             if Self.containsURL(value) { fail(path, "remote URLs are not allowed in specs") }
         }
     }
@@ -409,16 +516,22 @@ private struct Check {
             fail("\(path).type", "unknown layer type \"\(type)\"")
         case .text(let text):
             checkText(text, path: path)
+        case .chart(let chart):
+            checkChart(chart, path: path)
         case .image(let image):
-            if image.source != "user_image" && !Self.isAssetSource(image.source) {
-                fail("\(path).source", "must be \"user_image\" or \"asset:<id>\"")
+            if let raw = Bindings.soleBinding(image.source) {
+                binding(path: "\(path).source", raw, expecting: [.image])
+            } else if image.source != "user_image" && !Self.isAssetSource(image.source) {
+                fail("\(path).source", "must be \"user_image\", an image binding like {{media.artwork}} or {{media.appIcon}}, or \"asset:<id>\"")
             } else if mode == .ai, image.source != "user_image" {
                 fail("\(path).source", "AI output may only use \"user_image\"")
             }
             number("\(path).cornerRadius", image.cornerRadius, in: 0...200)
         case .shape(let shape):
-            if shape.fill == nil && shape.stroke == nil { fail(path, "a shape needs a fill or a stroke") }
+            if shape.fill == nil && shape.stroke == nil && shape.gradient == nil { fail(path, "a shape needs a fill or a stroke") }
             color("\(path).fill", shape.fill)
+            gradient("\(path).fill", shape.gradient)
+            checkShapeGeometry(shape, path: path)
             if let stroke = shape.stroke {
                 color("\(path).stroke.color", stroke.color)
                 number("\(path).stroke.width", stroke.width, in: 0...40)
@@ -430,8 +543,9 @@ private struct Check {
         case .icon(let icon):
             if let raw = Bindings.soleBinding(icon.symbol) {
                 binding(path: "\(path).symbol", raw, expecting: [.symbol])
-            } else if !Icons.isAllowed(icon.symbol) {
-                fail("\(path).symbol", "\"\(icon.symbol)\" is not in the icon whitelist")
+            } else if !Icons.isAllowed(icon.symbol) && !Icons.isSymbolName(icon.symbol) {
+                // ADR-029: any SF Symbol name; unknown ones draw their closest known symbol.
+                fail("\(path).symbol", "\"\(icon.symbol)\" is not an SF Symbol name (lower-case words joined by dots)")
             }
             number("\(path).size", icon.size, in: 4...200)
             color("\(path).color", icon.color)
@@ -440,6 +554,10 @@ private struct Check {
                                  ("minuteColor", clock.minuteColor), ("accentColor", clock.accentColor)] {
                 color("\(path).\(key)", value)
             }
+            number("\(path).hourWidth", clock.hourWidth, in: 0.005...0.4)
+            number("\(path).minuteWidth", clock.minuteWidth, in: 0.005...0.4)
+            number("\(path).hourLength", clock.hourLength, in: 0.1...1.2)
+            number("\(path).minuteLength", clock.minuteLength, in: 0.1...1.2)
             if let zone = clock.timezone {
                 bindingOrLiteral(path: "\(path).timezone", zone, kinds: [.text]) { TimeZone(identifier: $0) != nil }
                 if let raw = Bindings.soleBinding(zone), case .field(let key)? = Bindings.Name(raw), spec.field(key)?.type != .timezone {
@@ -447,15 +565,20 @@ private struct Check {
                 }
             }
         case .dotGrid(let grid):
-            count("\(path).rows", grid.rows, in: 1...40)
-            count("\(path).cols", grid.cols, in: 1...40)
-            if grid.rows * grid.cols > 600 { fail(path, "at most 600 dots") }
+            count("\(path).rows", grid.rows, in: 1...SpecValidator.maxGridSide)
+            count("\(path).cols", grid.cols, in: 1...SpecValidator.maxGridSide)
+            if grid.rows * grid.cols > SpecValidator.maxDots { fail(path, "at most \(SpecValidator.maxDots) dots") }
+            if let colors = grid.levelColors {
+                count("\(path).levelColors", colors.count, in: 1...10)
+                for (index, value) in colors.enumerated() { color("\(path).levelColors[\(index)]", value) }
+            }
             number("\(path).dotSize", grid.dotSize, in: 0.5...60)
             number("\(path).gap", grid.gap, in: 0...60)
             color("\(path).onColor", grid.onColor)
             color("\(path).offColor", grid.offColor)
             color("\(path).highlightColor", grid.highlightColor)
-            bindingOrLiteral(path: "\(path).values", grid.values, kinds: [.levels]) { SpecLiterals.dotPattern($0) != nil }
+            // A number 0…1 (`{{volume.level}}`) lights that share of the dots, in order (ADR-027).
+            bindingOrLiteral(path: "\(path).values", grid.values, kinds: [.levels, .number]) { SpecLiterals.dotPattern($0) != nil }
         case .dotBars(let bars):
             count("\(path).bars", bars.bars, in: 1...31)
             count("\(path).maxDots", bars.maxDots, in: 1...24)
@@ -472,8 +595,11 @@ private struct Check {
             color("\(path).trackColor", ring.trackColor)
             number("\(path).lineWidth", ring.lineWidth, in: 0.5...60)
         case .forecastRow(let row):
-            count("\(path).days", row.days, in: 1...7)
+            count("\(path).days", row.days, in: row.mode == .hourly ? 1...8 : 1...7)
             color("\(path).color", row.color)
+            color("\(path).dividerColor", row.dividerColor)
+            color("\(path).labelColor", row.labelColor)
+            if let font = row.font { self.font(font, path: "\(path).font") }
         case .calendarMonth(let calendar):
             font(calendar.font, path: "\(path).font")
             font(calendar.effectiveTitleFont, path: "\(path).titleFont")
@@ -498,8 +624,11 @@ private struct Check {
                 let itemPath = "\(path).items[\(index)]"
                 for value in item.title.allValues { text(path: "\(itemPath).title", value) }
                 for value in item.detail?.allValues ?? [] { text(path: "\(itemPath).detail", value) }
+                for value in item.subtitle?.allValues ?? [] { text(path: "\(itemPath).subtitle", value) }
+                for value in item.detail2?.allValues ?? [] { text(path: "\(itemPath).detail2", value) }
                 if let icon = item.icon, !Icons.isAllowed(icon) { fail("\(itemPath).icon", "\"\(icon)\" is not in the icon whitelist") }
                 color("\(itemPath).color", item.color)
+                if let done = item.done { condition(path: "\(itemPath).done", done) }
             }
         case .progressBar(let bar):
             bindingOrLiteral(path: "\(path).progress", bar.progress, kinds: [.number]) { value in
@@ -509,6 +638,10 @@ private struct Check {
             color("\(path).trackColor", bar.trackColor)
             if let segments = bar.segments { count("\(path).segments", segments, in: 1...20) }
             number("\(path).cornerRadius", bar.cornerRadius, in: 0...200)
+            if let knob = bar.knob {
+                number("\(path).knob.size", knob.size, in: 0...80)
+                color("\(path).knob.color", knob.color)
+            }
         case .button(let button):
             checkButton(button, path: path)
         case .stack(let stack):
@@ -516,12 +649,30 @@ private struct Check {
         case .spacer(let spacer):
             if depth == 0 { fail("\(path).type", "a spacer only goes inside a vertical or horizontal stack") }
             number("\(path).minLength", spacer.minLength, in: 0...200)
+        case .states(let states):
+            checkStates(states, path: path, depth: depth)
         }
     }
 
     mutating func checkText(_ text: TextLayer, path: String) {
         for value in text.value.allValues {
             self.text(path: "\(path).value", value)
+        }
+        number("\(path).minScale", text.minScale, in: 0.3...1)
+        if let spans = text.spans {
+            count("\(path).spans", spans.count, in: 1...SpecValidator.maxSpans)
+            for (index, span) in spans.enumerated() {
+                let spanPath = "\(path).spans[\(index)]"
+                for value in span.text.allValues { self.text(path: "\(spanPath).text", value) }
+                if let font = span.font { self.font(font, path: "\(spanPath).font") }
+                color("\(spanPath).color", span.color)
+                number("\(spanPath).baselineOffset", span.baselineOffset, in: -100...100)
+                number("\(spanPath).tracking", span.tracking, in: -10...40)
+            }
+        }
+        if let arc = text.path {
+            number("\(path).path.arc", arc.arc, in: 1...400)
+            number("\(path).path.start", arc.start, in: -720...720)
         }
         font(text.font, path: "\(path).font")
         color("\(path).color", text.color)
@@ -552,23 +703,71 @@ private struct Check {
         }
     }
 
+    /// The action must be in the catalog (ADR-027); its `arg` rule says what it takes.
     mutating func checkButton(_ button: ButtonLayer, path: String) {
-        if mode == .ai, button.action != .openApp {
-            fail("\(path).action", "only open.app is allowed in AI output")
+        guard let capability = Capabilities.action(button.action.rawValue) else {
+            fail("\(path).action", "unknown action \"\(button.action.rawValue)\"; use an id from the allowed list")
             return
         }
-        switch button.action {
-        case .openURL, .shortcutRun:
-            let required: FieldSpec.Kind = button.action == .openURL ? .url : .shortcut
-            guard let arg = button.arg, let raw = Bindings.soleBinding(arg),
-                  case .field(let key)? = Bindings.Name(raw), let field = spec.field(key), field.type == required
-            else {
-                fail("\(path).arg", "must be {{field.<key>}} of a \(required.rawValue) field")
-                return
-            }
-        case .counterIncrement, .counterReset, .counterNext, .stopwatchToggle, .openApp:
-            if let arg = button.arg, !arg.isEmpty { text(path: "\(path).arg", arg) }
+        if mode == .ai, !capability.ai {
+            fail("\(path).action", "\(capability.id) is not allowed in AI output")
+            return
         }
+        guard let required = capability.argFieldKind else {
+            if let arg = button.arg, !arg.isEmpty { text(path: "\(path).arg", arg) }
+            return
+        }
+        guard let arg = button.arg, let raw = Bindings.soleBinding(arg),
+              case .field(let key)? = Bindings.Name(raw), let field = spec.field(key), field.type == required
+        else {
+            fail("\(path).arg", "must be {{field.<key>}} of a \(required.rawValue) field")
+            return
+        }
+    }
+
+    /// ADR-029: the new shape kinds' own properties.
+    mutating func checkShapeGeometry(_ shape: ShapeLayer, path: String) {
+        if let sides = shape.sides { count("\(path).sides", sides, in: 3...24) }
+        number("\(path).innerRatio", shape.innerRatio, in: 0...0.95)
+        number("\(path).startAngle", shape.startAngle, in: -720...720)
+        number("\(path).endAngle", shape.endAngle, in: -720...720)
+        if let points = shape.points {
+            if !(3...16).contains(points.count) { fail("\(path).points", "a polygon needs 3 to 16 points") }
+            if points.contains(where: { $0.count != 2 || !$0.allSatisfy { (-0.01...1.01).contains($0) } }) {
+                fail("\(path).points", "each point is [x, y] with fractions of the frame, 0 to 1")
+            }
+        }
+        if let progress = shape.progress {
+            bindingOrLiteral(path: "\(path).progress", progress, kinds: [.number]) { Double($0).map { (0...1).contains($0) } ?? false }
+        }
+    }
+
+    /// ADR-029: a chart of a series binding or literal values.
+    mutating func checkChart(_ chart: ChartLayer, path: String) {
+        bindingOrLiteral(path: "\(path).values", chart.values, kinds: [.levels]) { literal in
+            ChartLayer.parse(literal).map { $0.count <= SpecValidator.maxChartPoints } ?? false
+        }
+        color("\(path).color", chart.color)
+        color("\(path).fill", chart.fill)
+        gradient("\(path).fill", chart.gradient)
+        for (key, value) in [("baselineColor", chart.baselineColor), ("highlightColor", chart.highlightColor),
+                             ("labelColor", chart.labelColor), ("downColor", chart.downColor)] {
+            color("\(path).\(key)", value)
+        }
+        number("\(path).lineWidth", chart.lineWidth, in: 0.5...20)
+        number("\(path).barWidth", chart.barWidth, in: 0.05...1)
+        number("\(path).cornerRadius", chart.cornerRadius, in: 0...40)
+        if let baseline = chart.baseline, !["first", "average"].contains(baseline.lowercased()), Double(baseline) == nil {
+            fail("\(path).baseline", "a number, \"first\" or \"average\"")
+        }
+        if let low = chart.min, let high = chart.max, low >= high { fail("\(path).max", "must be above min") }
+        for (key, labels) in [("xLabels", chart.xLabels), ("yLabels", chart.yLabels)] {
+            for value in labels?.allValues ?? [] {
+                text(path: "\(path).\(key)", value)
+                if value.split(separator: ",").count > 12 { fail("\(path).\(key)", "at most 12 labels") }
+            }
+        }
+        if let font = chart.labelFont { self.font(font, path: "\(path).labelFont") }
     }
 
     static func isAssetSource(_ source: String) -> Bool {

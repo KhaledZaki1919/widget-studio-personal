@@ -58,5 +58,324 @@
     "mode": "photo",
     "size": "small",
     "note": "Drawn sunset landscape: build a widget around it"
+  },
+  {
+    "file": "draw-glass.png",
+    "mode": "recreate",
+    "size": "medium",
+    "note": "Frosted glass card (drawn for this set): handwritten hello top-left, date top-right, weather bottom-left, month bottom-right, center line with the time stacked in an orange pill"
+  },
+  {
+    "file": "draw-wallpaper.png",
+    "mode": "recreate",
+    "size": "auto",
+    "note": "Weather card on a busy home screen wallpaper between rows of app icons (ADR-024): design only the card"
+  },
+  {
+    "file": "draw-shadow.png",
+    "mode": "recreate",
+    "size": "auto",
+    "note": "Steps card with a large drop shadow on a light background (ADR-024): no shadow layers"
+  },
+  {
+    "file": "draw-circle.png",
+    "mode": "recreate",
+    "size": "auto",
+    "note": "Circular orange clock widget on a dark wallpaper (ADR-024): card.shape circle"
+  },
+  {
+    "file": "draw-capsule.png",
+    "mode": "recreate",
+    "size": "auto",
+    "note": "Pill-shaped battery widget on a green wallpaper (ADR-024): card.shape capsule"
+  },
+  {
+    "file": "draw-floating.png",
+    "mode": "recreate",
+    "size": "auto",
+    "note": "Day and date floating on the wallpaper with no card (ADR-024): card.shape none"
+  },
+  {
+    "file": "draw-gallery.png",
+    "mode": "recreate",
+    "size": "auto",
+    "note": "Four widgets in a 2×2 gallery (ADR-024): one per widget with the crop, Create all"
+  },
+  {
+    "file": "draw-i-music.png",
+    "mode": "recreate",
+    "size": "medium",
+    "note": "Music player: song, artist, elapsed and length, seek bar, previous, play, next",
+    "wiring": [
+      "media.title",
+      "media.artist",
+      "media.elapsed|media.remaining",
+      "media.duration|media.remaining",
+      "media.progress",
+      "media.previous",
+      "media.playPause",
+      "media.next"
+    ]
+  },
+  {
+    "file": "draw-i-spotify.png",
+    "mode": "recreate",
+    "size": "medium",
+    "note": "Streaming card: album art, song, artist, seek dots, transport",
+    "wiring": [
+      "media.artwork",
+      "media.title",
+      "media.artist",
+      "media.progress",
+      "media.previous",
+      "media.playPause",
+      "media.next"
+    ]
+  },
+  {
+    "file": "draw-i-volume.png",
+    "mode": "recreate",
+    "size": "large",
+    "note": "Two upright sliders over headphone and bell icons",
+    "wiring": [
+      "volume.level",
+      "volume.ring",
+      "volume.up",
+      "volume.down",
+      "volume.ringUp",
+      "volume.ringDown"
+    ]
+  },
+  {
+    "file": "draw-i-toggles.png",
+    "mode": "recreate",
+    "size": "small",
+    "note": "Three switches: Wi-Fi, Bluetooth, Airplane",
+    "wiring": [
+      "system.toggle.wifi",
+      "system.toggle.bluetooth",
+      "system.toggle.airplane",
+      "system.wifi",
+      "system.bluetooth",
+      "system.airplane"
+    ]
+  },
+  {
+    "file": "draw-i-control.png",
+    "mode": "recreate",
+    "size": "large",
+    "note": "Control center grid of eight round tiles and a brightness bar",
+    "wiring": [
+      "system.toggle.wifi",
+      "system.toggle.bluetooth",
+      "system.toggle.airplane",
+      "system.toggle.mobileData",
+      "system.toggle.torch",
+      "system.toggle.dnd",
+      "system.toggle.rotation",
+      "system.toggle.darkMode",
+      "brightness.level",
+      "brightness.up",
+      "brightness.down"
+    ]
+  },
+  {
+    "file": "draw-i-timer.png",
+    "mode": "recreate",
+    "size": "small",
+    "note": "Timer: progress ring, 12:30 left, Start and Reset",
+    "wiring": [
+      "timer.remaining",
+      "timer.progress",
+      "timer.toggle",
+      "timer.reset"
+    ]
+  },
+  {
+    "file": "draw-i-agenda.png",
+    "mode": "recreate",
+    "size": "large",
+    "note": "Calendar agenda: today, three events with times",
+    "wiring": [
+      "date.EEEE",
+      "date.d",
+      "calendar.1.title|calendar.next.title",
+      "calendar.1.time|calendar.next.time",
+      "calendar.2.title",
+      "calendar.2.time",
+      "calendar.3.title",
+      "calendar.3.time"
+    ]
+  },
+  {
+    "file": "draw-i-batteries.png",
+    "mode": "recreate",
+    "size": "medium",
+    "note": "Battery of devices: phone, earbuds, watch with rings",
+    "wiring": [
+      "battery.level"
+    ]
+  },
+  {
+    "file": "draw-i-compass.png",
+    "mode": "recreate",
+    "size": "small",
+    "note": "Compass: N E S W and a north arrow",
+    "wiring": [
+      "compass.north|qibla.bearing",
+      "compass.open"
+    ]
+  },
+  {
+    "file": "draw-i-dotclock.png",
+    "mode": "recreate",
+    "size": "small",
+    "note": "Dot analog clock with the date",
+    "wiring": [
+      "clock",
+      "date.d",
+      "date.EEE|date.EEEE"
+    ]
+  },
+  {
+    "file": "draw-i-home.png",
+    "mode": "recreate",
+    "size": "medium",
+    "note": "Smart-home tiles: Lights, AC, Fan, Door",
+    "wiring": [
+      "shortcut.run"
+    ]
+  },
+  {
+    "file": "draw-i-dial.png",
+    "mode": "recreate",
+    "size": "small",
+    "note": "Quick dial: four contacts",
+    "wiring": [
+      "call.dial"
+    ]
+  },
+  {
+    "file": "draw-i-status.png",
+    "mode": "recreate",
+    "size": "medium",
+    "note": "Status strip: temperature, battery, steps",
+    "wiring": [
+      "weather.temp",
+      "battery.level",
+      "steps.today"
+    ]
+  },
+  {
+    "file": "draw-i-sliders.png",
+    "mode": "recreate",
+    "size": "medium",
+    "note": "Horizontal brightness and volume sliders",
+    "wiring": [
+      "brightness.level",
+      "volume.level",
+      "volume.up",
+      "volume.down",
+      "brightness.up",
+      "brightness.down"
+    ]
+  },
+  {
+    "file": "draw-i-year.png",
+    "mode": "recreate",
+    "size": "small",
+    "note": "Year progress: label, percent, 48 dots, days left (device report 2026-11-05: must never bind to the battery)",
+    "wiring": [
+      "year.progress"
+    ]
+  },
+  {
+    "file": "draw-i-tasks.png",
+    "mode": "recreate",
+    "size": "medium",
+    "note": "To-do widget: four rows with checkboxes, one ticked, today count, add button",
+    "wiring": [
+      "tasks.1.title",
+      "tasks.2.title",
+      "task.toggle",
+      "task.add",
+      "tasks.today.count|tasks.open.count"
+    ]
+  },
+  {
+    "file": "draw-i-mood.png",
+    "mode": "recreate",
+    "size": "medium",
+    "note": "A smiley beside a battery reading: the mood set, never a frozen face",
+    "wiring": [
+      "battery.level",
+      "battery.charging"
+    ]
+  },
+  {
+    "file": "draw-i-sky.png",
+    "mode": "recreate",
+    "size": "medium",
+    "note": "A big dot sun, temperature, four forecast days: the weather set and each day's own icon",
+    "wiring": [
+      "weather.temp",
+      "weather.kind",
+      "forecast.1.symbol|weather.hi"
+    ]
+  },
+  {
+    "file": "draw-p-week.png",
+    "mode": "recreate",
+    "size": "medium",
+    "note": "ADR-029: a week strip on a wide island card (calendarMonth rows week, card aspect about 3)",
+    "wiring": [
+      "calendar.count"
+    ]
+  },
+  {
+    "file": "draw-p-hourly.png",
+    "mode": "recreate",
+    "size": "medium",
+    "note": "ADR-029: six hours of rain icons and temperatures (forecastRow mode hourly), condition and city",
+    "wiring": [
+      "weather.temp",
+      "weather.cond|weather.kind",
+      "weather.city"
+    ]
+  },
+  {
+    "file": "draw-p-heart.png",
+    "mode": "recreate",
+    "size": "medium",
+    "note": "ADR-029: resting heart rate with a candle chart and y labels (chart, heart bindings)",
+    "wiring": [
+      "heart.resting|heart.rate",
+      "heart.today"
+    ]
+  },
+  {
+    "file": "draw-p-scallop.png",
+    "mode": "recreate",
+    "size": "small",
+    "note": "ADR-029: a scallop card, the date along the arc, thick rounded hands, a dot",
+    "wiring": [
+      "clock",
+      "date.EEE|date.d"
+    ]
+  },
+  {
+    "file": "draw-p-stock.png",
+    "mode": "recreate",
+    "size": "medium",
+    "note": "ADR-029: price, change and an area chart over a dashed baseline (ticker field, stock bindings, chart area)"
+  },
+  {
+    "file": "draw-p-pill.png",
+    "mode": "recreate",
+    "size": "large",
+    "note": "ADR-029: a tall pill with a sparkle (card capsule vertical, assistant.open)",
+    "wiring": [
+      "assistant.open"
+    ]
   }
 ]

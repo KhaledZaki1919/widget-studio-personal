@@ -75,6 +75,25 @@ public struct SharedStore: Sendable {
         return try save(copy, now: now)
     }
 
+    /// The bytes of a photo, kept while a delete can still be undone.
+    public func imageData(named file: String) -> Data? {
+        try? Data(contentsOf: imagesFolder.appendingPathComponent(file))
+    }
+
+    /// Puts a deleted design back, with its photo (Undo, ADR-028).
+    public func restore(_ design: SavedDesign, image: Data?) throws {
+        if let file = design.imageFile, let image { try FileProtection.write(image, to: imagesFolder.appendingPathComponent(file)) }
+        var all = designs().filter { $0.id != design.id }
+        all.append(design)
+        try write(all)
+        try? FileManager.default.removeItem(at: deletedMark)
+    }
+
+    private var deletedMark: URL { folder.appendingPathComponent("deleted") }
+
+    /// A design was deleted, so a widget with nothing to show says so instead of looking empty.
+    public var hasDeletedDesign: Bool { FileManager.default.fileExists(atPath: deletedMark.path) }
+
     /// Removes the design and its photo.
     public func delete(id: String) throws {
         let all = designs()
@@ -82,6 +101,7 @@ public struct SharedStore: Sendable {
             try? FileManager.default.removeItem(at: imagesFolder.appendingPathComponent(file))
         }
         try write(all.filter { $0.id != id })
+        try? FileProtection.write(Data(), to: deletedMark)
     }
 
     private func write(_ designs: [SavedDesign]) throws {

@@ -9,6 +9,8 @@ struct WidgetStudioApp: App {
     @State private var live = LiveDataModel()
     /// Shortcut tiles' setup and runs (ADR-017).
     @State private var tiles = TilesModel()
+    /// The Tasks tab: Apple Reminders (ADR-028).
+    @State private var tasks = TasksModel()
     /// Online/offline for the AI flow's notice (M6).
     @State private var network = NetworkStatus()
     @Environment(\.scenePhase) private var scenePhase
@@ -58,11 +60,14 @@ struct WidgetStudioApp: App {
                 .environment(designs)
                 .environment(appState)
                 .environment(live)
+                .environment(tasks)
                 .environment(tiles)
                 .environment(network)
                 .task { await live.refresh() }
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .active { Task { await live.refresh() } }
+                    // ADR-030: whatever changed in the app shows on the home screen the user returns to.
+                    if phase == .background { AppReloads.all("app went to the background") }
                 }
         }
     }

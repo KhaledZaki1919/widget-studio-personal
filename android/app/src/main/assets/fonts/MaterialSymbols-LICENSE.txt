@@ -1,0 +1,3 @@
+Material Symbols Rounded (filled and outline, weight 400), from Google Fonts.
+Copyright Google LLC. Licensed under the Apache License, Version 2.0:
+https://www.apache.org/licenses/LICENSE-2.0

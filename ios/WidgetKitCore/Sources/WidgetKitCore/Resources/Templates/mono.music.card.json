@@ -1,24 +1,114 @@
 {
-  "schemaVersion": 1,
-  "id": "mono.music.card",
-  "category": "photo",
-  "name": { "en": "Music Card", "ar": "بطاقة موسيقى" },
-  "family": "small",
-  "theme": "dark",
-  "refresh": "none",
-  "background": { "type": "solid", "color": "@bg" },
-  "fields": [
-    { "key": "cover", "type": "image", "label": { "en": "Cover", "ar": "الغلاف" } },
-    { "key": "title", "type": "text", "label": { "en": "Title", "ar": "العنوان" }, "default": { "en": "Song title", "ar": "اسم الأغنية" } },
-    { "key": "artist", "type": "text", "label": { "en": "Artist", "ar": "الفنان" }, "default": { "en": "Artist", "ar": "الفنان" } },
-    { "key": "url", "type": "url", "label": { "en": "Link to open", "ar": "الرابط" } }
-  ],
-  "layers": [
-    { "type": "image", "source": "user_image", "fit": "fill", "mask": "roundedRect", "cornerRadius": 12, "frame": { "x": 14, "y": 14, "w": 74, "h": 74 }, "mirror": true },
-    { "type": "shape", "kind": "circle", "fill": "@accent", "frame": { "x": 120, "y": 14, "w": 36, "h": 36 }, "mirror": true },
-    { "type": "icon", "symbol": "play.fill", "size": 13, "color": "@onAccent", "frame": { "x": 120, "y": 14, "w": 36, "h": 36 }, "mirror": true },
-    { "type": "text", "value": "{{field.title}}", "font": { "family": "system", "size": 14, "weight": "semibold" }, "color": "@fg", "frame": { "x": 16, "y": 104, "w": 138, "h": 20 }, "mirror": true },
-    { "type": "text", "value": "{{field.artist}}", "font": { "family": "system", "size": 11 }, "color": "@muted", "frame": { "x": 16, "y": 126, "w": 138, "h": 16 }, "mirror": true },
-    { "type": "button", "action": "open.url", "arg": "{{field.url}}", "frame": { "x": 0, "y": 0, "w": 170, "h": 170 } }
-  ]
+ "schemaVersion": 1,
+ "id": "mono.music.card",
+ "category": "photo",
+ "name": {
+  "en": "Music Card",
+  "ar": "بطاقة موسيقى"
+ },
+ "family": "small",
+ "theme": "dark",
+ "refresh": "minute",
+ "background": {
+  "type": "solid",
+  "color": "@bg"
+ },
+ "fields": [],
+ "layers": [
+  {
+   "type": "image",
+   "source": "{{media.artwork}}",
+   "fit": "fill",
+   "mask": "roundedRect",
+   "cornerRadius": 12,
+   "frame": {
+    "x": 14,
+    "y": 14,
+    "w": 74,
+    "h": 74
+   },
+   "mirror": true
+  },
+  {
+   "type": "shape",
+   "kind": "circle",
+   "fill": "@accent",
+   "frame": {
+    "x": 120,
+    "y": 14,
+    "w": 36,
+    "h": 36
+   },
+   "mirror": true
+  },
+  {
+   "type": "icon",
+   "symbol": "{{media.symbol}}",
+   "size": 13,
+   "color": "@onAccent",
+   "frame": {
+    "x": 120,
+    "y": 14,
+    "w": 36,
+    "h": 36
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": "{{media.title}}",
+   "font": {
+    "family": "system",
+    "size": 14,
+    "weight": "semibold"
+   },
+   "color": "@fg",
+   "frame": {
+    "x": 16,
+    "y": 104,
+    "w": 138,
+    "h": 20
+   },
+   "mirror": true,
+   "maxLines": 1
+  },
+  {
+   "type": "text",
+   "value": "{{media.artist}}",
+   "font": {
+    "family": "system",
+    "size": 11
+   },
+   "color": "@muted",
+   "frame": {
+    "x": 16,
+    "y": 126,
+    "w": 138,
+    "h": 16
+   },
+   "mirror": true,
+   "maxLines": 1
+  },
+  {
+   "type": "button",
+   "action": "media.open",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 170,
+    "h": 170
+   }
+  },
+  {
+   "type": "button",
+   "action": "media.playPause",
+   "frame": {
+    "x": 114,
+    "y": 8,
+    "w": 48,
+    "h": 48
+   },
+   "mirror": true
+  }
+ ]
 }

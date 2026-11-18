@@ -66,7 +66,7 @@ public enum TemplateLibrary {
         switch size {
         case .small: "mono.clock.digital"
         case .medium: "mono.weather.forecast"
-        case .large: "mono.prayer.day"
+        case .large, .xlarge: "mono.prayer.day"
         }
     }
 
@@ -77,14 +77,15 @@ public enum TemplateLibrary {
     /// Library order: `SpecCategory` order, then TEMPLATES.md order within each category.
     /// Ids not listed sort last, by id.
     static let catalogOrder = [
-        "mono.clock.analog", "mono.clock.dotAnalog", "mono.clock.digital", "mono.date.big", "mono.date.dayZone",
-        "mono.weather.hiLo", "mono.weather.temp", "mono.weather.forecast", "mono.location.coords",
+        "mono.clock.analog", "mono.clock.dotAnalog", "mono.clock.digital", "mono.date.big", "mono.date.dayZone", "mono.year.dots",
+        "mono.weather.hiLo", "mono.weather.temp", "mono.weather.forecast", "mono.weather.art", "mono.location.coords",
         "mono.steps.streak", "mono.steps.month", "mono.sleep.week",
         "mono.prayer.next", "mono.prayer.day", "mono.qibla",
         "mono.focus.today", "mono.countdown.red", "mono.countdown.trip", "mono.stopwatch",
         "mono.photo.square", "mono.photo.circle", "mono.photo.halftone", "mono.music.card",
-        "mono.tiles.pills2", "mono.tiles.pills4", "mono.tiles.round", "mono.tiles.hero",
-        "mono.counter.tasbeeh",
+        "mono.tiles.pills2", "mono.tiles.pills4", "mono.tiles.round", "mono.tiles.hero", "mono.media.player", "mono.control.center", "mono.battery.mood",
+        "mono.counter.tasbeeh", "mono.timer.focus",
+        "mono.tasks.small", "mono.tasks.medium", "mono.tasks.large",
     ]
 
     static func order(_ id: String) -> String {

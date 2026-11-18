@@ -23,6 +23,13 @@ public struct CalendarMonthLayer: Codable, Sendable, Equatable {
         case narrow
         /// "Mon Tue"
         case short
+        /// "Mo Tu" (ADR-029)
+        case two
+    }
+    /// ADR-029: the whole month, the current week, or this week and the next.
+    public enum Rows: String, Codable, Sendable, CaseIterable {
+        case month, week
+        case twoWeeks = "2weeks"
     }
 
     public enum WeekStart: String, Codable, Sendable, CaseIterable {
@@ -66,6 +73,7 @@ public struct CalendarMonthLayer: Codable, Sendable, Equatable {
     /// The number on a filled square or circle; defaults to white.
     public var todayTextColor: String?
     public var otherDays: OtherDays?
+    public var rows: Rows?
 
     public init(font: FontSpec, color: String, titleFormat: TitleFormat? = nil, titleCase: TitleCase? = nil,
                 titleFont: FontSpec? = nil, titleColor: String? = nil, titleAlign: TextAlign? = nil,
@@ -118,6 +126,12 @@ public struct ListLayer: Codable, Sendable, Equatable {
         public var icon: String?
         /// Overrides the marker color for this row.
         public var color: String?
+        /// A condition: the row is a checkbox, ticked and faded while it holds (`{{tasks.1.done}}`, ADR-028).
+        public var done: String?
+        /// ADR-029: a smaller line under the title (a calendar name), and a second detail under the first
+        /// (an end time). Both may hold bindings.
+        public var subtitle: LocalizedText?
+        public var detail2: LocalizedText?
 
         public init(title: LocalizedText, detail: LocalizedText? = nil, icon: String? = nil, color: String? = nil) {
             self.title = title
@@ -161,8 +175,14 @@ public struct ProgressBarLayer: Codable, Sendable, Equatable {
     public var segments: Int?
     /// Defaults to half the bar's height (pill ends).
     public var cornerRadius: Double?
+    /// Fills from the bottom up: a volume or brightness slider (ADR-027).
+    public var vertical: Bool?
+    /// A round knob at the fill's end (ADR-029).
+    public var knob: ProgressKnob?
 
-    public init(progress: String, color: String, trackColor: String? = nil, segments: Int? = nil, cornerRadius: Double? = nil) {
+    public init(progress: String, color: String, trackColor: String? = nil, segments: Int? = nil, cornerRadius: Double? = nil,
+                vertical: Bool? = nil) {
+        self.vertical = vertical
         self.progress = progress
         self.color = color
         self.trackColor = trackColor
@@ -223,7 +243,13 @@ public struct CalendarMonthLayout: Equatable, Sendable {
         }
 
         // Weekday columns.
-        let symbols = (layer.weekdays ?? .narrow) == .short ? calendar.shortStandaloneWeekdaySymbols : calendar.veryShortStandaloneWeekdaySymbols
+        let symbols: [String]
+        switch layer.weekdays ?? .narrow {
+        case .short: symbols = calendar.shortStandaloneWeekdaySymbols
+        // "Mo Tu": the short name cut to two letters (Arabic keeps its short name).
+        case .two: symbols = calendar.shortStandaloneWeekdaySymbols.map { localeIdentifier.hasPrefix("ar") ? $0 : String($0.prefix(2)) }
+        default: symbols = calendar.veryShortStandaloneWeekdaySymbols
+        }
         let weekend = Set((layer.weekendDays ?? []).compactMap { CalendarMonthLayer.weekdayKeys.firstIndex(of: $0.lowercased()) })
         let columns = (0..<7).map { (calendar.firstWeekday - 1 + $0) % 7 }   // 0 = Sunday
         weekdays = (layer.weekdays ?? .narrow) == .none ? [] : columns.map { symbols[$0] }
@@ -253,6 +279,29 @@ public struct CalendarMonthLayout: Equatable, Sendable {
             cells.append(Cell(day: dimmed ? next : nil, isOtherMonth: true, isToday: false, isWeekend: weekendColumns[cells.count % 7]))
             next += 1
         }
-        rows = stride(from: 0, to: cells.count, by: 7).map { Array(cells[$0..<($0 + 7)]) }
+        let all = stride(from: 0, to: cells.count, by: 7).map { Array(cells[$0..<($0 + 7)]) }
+        // ADR-029: a week strip shows the week holding today (and the next for two weeks), with the
+        // neighboring months' days, since a week crosses months.
+        switch layer.rows ?? .month {
+        case .month:
+            rows = all
+        case .week, .twoWeeks:
+            rows = Self.weekRows(count: layer.rows == .week ? 1 : 2, calendar: calendar, date: date, weekend: weekendColumns)
+        }
+    }
+
+    /// `count` weeks from the one holding `date`.
+    static func weekRows(count: Int, calendar: Calendar, date: Date, weekend: [Bool]) -> [[Cell]] {
+        let today = calendar.startOfDay(for: date)
+        let offset = (calendar.component(.weekday, from: today) - calendar.firstWeekday + 7) % 7
+        let firstOfWeek = calendar.date(byAdding: .day, value: -offset, to: today) ?? today
+        return (0..<count).map { row in
+            (0..<7).map { column in
+                let day = calendar.date(byAdding: .day, value: row * 7 + column, to: firstOfWeek) ?? firstOfWeek
+                let sameMonth = calendar.isDate(day, equalTo: date, toGranularity: .month)
+                return Cell(day: calendar.component(.day, from: day), isOtherMonth: !sameMonth,
+                            isToday: calendar.isDate(day, inSameDayAs: today), isWeekend: weekend[column])
+            }
+        }
     }
 }

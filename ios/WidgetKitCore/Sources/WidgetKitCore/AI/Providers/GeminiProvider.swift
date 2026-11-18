@@ -60,7 +60,9 @@ public struct GeminiProvider: AIProvider {
             "responseMimeType": "application/json",
             "maxOutputTokens": .int(Self.outputTokenLimit(request, model: model)),
         ]
-        if structured { config["responseSchema"] = Self.openAPISchema(request.schema) }
+        // ADR-029: the full JSON Schema through responseJsonSchema (limits, anyOf, patterns); the older
+        // OpenAPI-subset responseSchema hung in the eval. A rejection or timeout falls back to the prompt.
+        if structured { config["responseJsonSchema"] = request.schema }
         switch thinking {
         case .off: break
         case .budget(let tokens): config["thinkingConfig"] = ["thinkingBudget": .int(tokens)]

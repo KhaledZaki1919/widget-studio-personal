@@ -118,24 +118,27 @@ public enum LayerEditing {
         guard picked.allSatisfy(canStack), (picked.map(depth).max() ?? 0) + 1 <= SpecValidator.maxStackDepth else { return nil }
 
         let frames = picked.map(\.frame)
-        let axis = chosen ?? Self.axis(for: frames)
-        let ordered = picked.sorted { a, b in
-            precedes(a.frame, b.frame, axis: axis)
-        }
-        let children = ordered.map { member -> Layer in
-            var child = member
-            switch member.content {
-            case .text, .icon:
-                // Natural size: texts wrap and shrink to fit, icons keep their symbol size.
-                child.frame = Frame(x: 0, y: 0, w: 0, h: 0)
-            default:
-                child.frame = Frame(x: 0, y: 0, w: member.frame.w, h: member.frame.h)
+        let stack: StackLayer
+        if let chosen {
+            stack = line(picked.sorted { precedes($0.frame, $1.frame, axis: chosen) }, axis: chosen)
+        } else {
+            // Rows of layers side by side, stacked in a column (eval 2026-11-02: four corner texts
+            // become two rows held apart by spacers, instead of one row wider than the widget).
+            let rows = self.rows(picked)
+            guard rows.count > 1 || rows.first.map({ $0.count > 1 }) == true else { return nil }
+            if rows.count == 1 {
+                stack = line(rows[0], axis: .horizontal)
+            } else {
+                let deepest = picked.map(depth).max() ?? 0
+                guard rows.allSatisfy({ $0.count == 1 }) || deepest + 2 <= SpecValidator.maxStackDepth else { return nil }
+                let items = rows.map { row -> Layer in
+                    guard row.count > 1 else { return row[0] }
+                    return Layer(frame: union(row.map(\.frame)), content: .stack(line(row, axis: .horizontal)))
+                }
+                stack = line(items, axis: .vertical, keepsRowFrames: true)
             }
-            child.mirror = nil
-            return child
         }
-        let stack = StackLayer(axis: axis, spacing: spacing(ordered.map(\.frame), axis: axis),
-                               alignItems: alignment(ordered, axis: axis), children: children)
+        guard stack.children.count <= SpecValidator.maxChildren else { return nil }
         let stackLayer = Layer(frame: union(frames), mirror: picked.contains { $0.mirror == true } ? true : nil,
                                content: .stack(stack))
         let top = members.last ?? 0
@@ -143,6 +146,64 @@ public enum LayerEditing {
         let position = top - (members.count - 1)
         layers.insert(stackLayer, at: position)
         return position
+    }
+
+    /// A gap wider than this between neighbors becomes a spacer, so layers that sat at opposite
+    /// edges stay there.
+    static let spacerGap = 16.0
+
+    /// One stack of `items` (already in order) along `axis`. Texts and icons take their natural
+    /// size; a spacer goes before a trailing-aligned text in a row and into wide gaps, so
+    /// "hello … 20 Saturday" keeps its two sides. `keepsRowFrames`: nested row stacks fill the width.
+    static func line(_ items: [Layer], axis: StackLayer.Axis, keepsRowFrames: Bool = false) -> StackLayer {
+        var children: [Layer] = []
+        for (index, item) in items.enumerated() {
+            if index > 0 {
+                let previous = items[index - 1].frame
+                let gap = axis == .horizontal ? item.frame.x - (previous.x + previous.w) : item.frame.y - (previous.y + previous.h)
+                var trailing = false
+                if axis == .horizontal, case .text(let text) = item.content { trailing = text.align == .trailing }
+                if gap > spacerGap || trailing { children.append(Layer(frame: Frame(x: 0, y: 0, w: 0, h: 0), content: .spacer(SpacerLayer()))) }
+            }
+            var child = item
+            switch item.content {
+            case .text, .icon:
+                // Natural size: texts wrap and shrink to fit, icons keep their symbol size.
+                child.frame = Frame(x: 0, y: 0, w: 0, h: 0)
+            case .stack where keepsRowFrames:
+                child.frame = Frame(x: 0, y: 0, w: 0, h: 0)
+            default:
+                child.frame = Frame(x: 0, y: 0, w: item.frame.w, h: item.frame.h)
+            }
+            child.mirror = nil
+            children.append(child)
+        }
+        return StackLayer(axis: axis, spacing: spacing(items.map(\.frame), axis: axis),
+                          alignItems: alignment(items, axis: axis), children: children)
+    }
+
+    /// Layers grouped into rows (top to bottom, each left to right): a layer joins a row when its
+    /// vertical center is within half the smaller height of the row's. A "row" whose layers sit
+    /// on one spot (centers within 20 units across) is a pile, so it becomes one row per layer.
+    static func rows(_ layers: [Layer]) -> [[Layer]] {
+        func centerY(_ frame: Frame) -> Double { frame.y + frame.h / 2 }
+        var rows: [[Layer]] = []
+        for layer in layers.sorted(by: { centerY($0.frame) < centerY($1.frame) }) {
+            if let last = rows.last, let first = last.first,
+               abs(centerY(layer.frame) - centerY(first.frame)) < min(layer.frame.h, first.frame.h) / 2 {
+                rows[rows.count - 1].append(layer)
+            } else {
+                rows.append([layer])
+            }
+        }
+        return rows.flatMap { row -> [[Layer]] in
+            let xs = row.map { $0.frame.x + $0.frame.w / 2 }
+            let ordered = row.sorted { precedes($0.frame, $1.frame, axis: .horizontal) }
+            if row.count > 1, (xs.max() ?? 0) - (xs.min() ?? 0) < 20 {
+                return ordered.sorted { precedes($0.frame, $1.frame, axis: .vertical) }.map { [$0] }
+            }
+            return [ordered]
+        }
     }
 
     /// The gap the layers had between them, 2…12 units (default 4).
@@ -175,8 +236,9 @@ public enum LayerEditing {
         guard layers.indices.contains(index), case .stack(let stack) = layers[index].content else { return [] }
         let frame = layers[index].frame
         let horizontal = stack.axis == .horizontal
-        let count = Double(stack.children.count)
-        let freed = stack.children.enumerated().map { offset, child -> Layer in
+        let items = stack.children.filter { if case .spacer = $0.content { false } else { true } }
+        let count = Double(max(items.count, 1))
+        let freed = items.enumerated().map { offset, child -> Layer in
             var layer = child
             let share = Double(offset)
             layer.frame = horizontal

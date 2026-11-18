@@ -6,7 +6,7 @@ import Testing
 struct TemplateLibraryTests {
     @Test func everyTemplateIsValid() {
         let entries = TemplateLibrary.load()
-        #expect(entries.count == 28)
+        #expect(entries.count == 37)
         for entry in entries {
             if case .failure(let failure) = entry.result {
                 Issue.record("\(entry.fileName): \(failure.description)")

@@ -1,0 +1,486 @@
+{
+ "schemaVersion": 1,
+ "id": "mono.tasks.large",
+ "category": "tasks",
+ "name": {
+  "en": "Tasks Progress",
+  "ar": "تقدم المهام"
+ },
+ "family": "large",
+ "theme": "dark",
+ "refresh": "hourly",
+ "background": {
+  "type": "solid",
+  "color": "@bg"
+ },
+ "layers": [
+  {
+   "type": "text",
+   "value": {
+    "en": "Today",
+    "ar": "اليوم"
+   },
+   "font": {
+    "family": "system",
+    "size": 20,
+    "weight": "bold"
+   },
+   "color": "@fg",
+   "frame": {
+    "x": 16,
+    "y": 16,
+    "w": 180,
+    "h": 30
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": {
+    "en": "{{tasks.done.count}} done, {{tasks.today.count}} left",
+    "ar": "أُنجز {{tasks.done.count}}، وبقي {{tasks.today.count}}"
+   },
+   "font": {
+    "family": "system",
+    "size": 13,
+    "weight": "medium"
+   },
+   "color": "@muted",
+   "frame": {
+    "x": 16,
+    "y": 48,
+    "w": 200,
+    "h": 20
+   },
+   "mirror": true
+  },
+  {
+   "type": "ring",
+   "progress": "{{tasks.progress}}",
+   "color": "@accent",
+   "trackColor": "@dim",
+   "lineWidth": 9,
+   "frame": {
+    "x": 258,
+    "y": 16,
+    "w": 90,
+    "h": 90
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": "{{tasks.progress}}%",
+   "font": {
+    "family": "dot",
+    "size": 18,
+    "weight": "bold"
+   },
+   "color": "@fg",
+   "align": "center",
+   "frame": {
+    "x": 258,
+    "y": 48,
+    "w": 90,
+    "h": 26
+   },
+   "mirror": true
+  },
+  {
+   "type": "icon",
+   "symbol": "plus",
+   "size": 18,
+   "color": "@fg",
+   "frame": {
+    "x": 16,
+    "y": 76,
+    "w": 28,
+    "h": 28
+   },
+   "mirror": true
+  },
+  {
+   "type": "button",
+   "action": "task.add",
+   "frame": {
+    "x": 10,
+    "y": 70,
+    "w": 40,
+    "h": 40
+   },
+   "mirror": true
+  },
+  {
+   "type": "states",
+   "set": "task.done",
+   "value": "{{tasks.1.done}}",
+   "accent": "@accent",
+   "when": "{{tasks.1.title}}",
+   "frame": {
+    "x": 16,
+    "y": 126,
+    "w": 22,
+    "h": 22
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": "{{tasks.1.title}}",
+   "font": {
+    "family": "system",
+    "size": 14,
+    "weight": "medium"
+   },
+   "color": "@fg",
+   "maxLines": 1,
+   "frame": {
+    "x": 46,
+    "y": 124,
+    "w": 222,
+    "h": 26
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": "{{tasks.1.due}}",
+   "font": {
+    "family": "system",
+    "size": 11
+   },
+   "color": "@muted",
+   "align": "trailing",
+   "maxLines": 1,
+   "frame": {
+    "x": 268,
+    "y": 126,
+    "w": 80,
+    "h": 22
+   },
+   "mirror": true
+  },
+  {
+   "type": "button",
+   "action": "task.toggle",
+   "arg": "{{tasks.1.id}}",
+   "when": "{{tasks.1.title}}",
+   "frame": {
+    "x": 6,
+    "y": 122,
+    "w": 352,
+    "h": 42
+   }
+  },
+  {
+   "type": "states",
+   "set": "task.done",
+   "value": "{{tasks.2.done}}",
+   "accent": "@accent",
+   "when": "{{tasks.2.title}}",
+   "frame": {
+    "x": 16,
+    "y": 168,
+    "w": 22,
+    "h": 22
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": "{{tasks.2.title}}",
+   "font": {
+    "family": "system",
+    "size": 14,
+    "weight": "medium"
+   },
+   "color": "@fg",
+   "maxLines": 1,
+   "frame": {
+    "x": 46,
+    "y": 166,
+    "w": 222,
+    "h": 26
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": "{{tasks.2.due}}",
+   "font": {
+    "family": "system",
+    "size": 11
+   },
+   "color": "@muted",
+   "align": "trailing",
+   "maxLines": 1,
+   "frame": {
+    "x": 268,
+    "y": 168,
+    "w": 80,
+    "h": 22
+   },
+   "mirror": true
+  },
+  {
+   "type": "button",
+   "action": "task.toggle",
+   "arg": "{{tasks.2.id}}",
+   "when": "{{tasks.2.title}}",
+   "frame": {
+    "x": 6,
+    "y": 164,
+    "w": 352,
+    "h": 42
+   }
+  },
+  {
+   "type": "states",
+   "set": "task.done",
+   "value": "{{tasks.3.done}}",
+   "accent": "@accent",
+   "when": "{{tasks.3.title}}",
+   "frame": {
+    "x": 16,
+    "y": 210,
+    "w": 22,
+    "h": 22
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": "{{tasks.3.title}}",
+   "font": {
+    "family": "system",
+    "size": 14,
+    "weight": "medium"
+   },
+   "color": "@fg",
+   "maxLines": 1,
+   "frame": {
+    "x": 46,
+    "y": 208,
+    "w": 222,
+    "h": 26
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": "{{tasks.3.due}}",
+   "font": {
+    "family": "system",
+    "size": 11
+   },
+   "color": "@muted",
+   "align": "trailing",
+   "maxLines": 1,
+   "frame": {
+    "x": 268,
+    "y": 210,
+    "w": 80,
+    "h": 22
+   },
+   "mirror": true
+  },
+  {
+   "type": "button",
+   "action": "task.toggle",
+   "arg": "{{tasks.3.id}}",
+   "when": "{{tasks.3.title}}",
+   "frame": {
+    "x": 6,
+    "y": 206,
+    "w": 352,
+    "h": 42
+   }
+  },
+  {
+   "type": "states",
+   "set": "task.done",
+   "value": "{{tasks.4.done}}",
+   "accent": "@accent",
+   "when": "{{tasks.4.title}}",
+   "frame": {
+    "x": 16,
+    "y": 252,
+    "w": 22,
+    "h": 22
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": "{{tasks.4.title}}",
+   "font": {
+    "family": "system",
+    "size": 14,
+    "weight": "medium"
+   },
+   "color": "@fg",
+   "maxLines": 1,
+   "frame": {
+    "x": 46,
+    "y": 250,
+    "w": 222,
+    "h": 26
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": "{{tasks.4.due}}",
+   "font": {
+    "family": "system",
+    "size": 11
+   },
+   "color": "@muted",
+   "align": "trailing",
+   "maxLines": 1,
+   "frame": {
+    "x": 268,
+    "y": 252,
+    "w": 80,
+    "h": 22
+   },
+   "mirror": true
+  },
+  {
+   "type": "button",
+   "action": "task.toggle",
+   "arg": "{{tasks.4.id}}",
+   "when": "{{tasks.4.title}}",
+   "frame": {
+    "x": 6,
+    "y": 248,
+    "w": 352,
+    "h": 42
+   }
+  },
+  {
+   "type": "states",
+   "set": "task.done",
+   "value": "{{tasks.5.done}}",
+   "accent": "@accent",
+   "when": "{{tasks.5.title}}",
+   "frame": {
+    "x": 16,
+    "y": 294,
+    "w": 22,
+    "h": 22
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": "{{tasks.5.title}}",
+   "font": {
+    "family": "system",
+    "size": 14,
+    "weight": "medium"
+   },
+   "color": "@fg",
+   "maxLines": 1,
+   "frame": {
+    "x": 46,
+    "y": 292,
+    "w": 222,
+    "h": 26
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": "{{tasks.5.due}}",
+   "font": {
+    "family": "system",
+    "size": 11
+   },
+   "color": "@muted",
+   "align": "trailing",
+   "maxLines": 1,
+   "frame": {
+    "x": 268,
+    "y": 294,
+    "w": 80,
+    "h": 22
+   },
+   "mirror": true
+  },
+  {
+   "type": "button",
+   "action": "task.toggle",
+   "arg": "{{tasks.5.id}}",
+   "when": "{{tasks.5.title}}",
+   "frame": {
+    "x": 6,
+    "y": 290,
+    "w": 352,
+    "h": 42
+   }
+  },
+  {
+   "type": "states",
+   "set": "task.done",
+   "value": "{{tasks.6.done}}",
+   "accent": "@accent",
+   "when": "{{tasks.6.title}}",
+   "frame": {
+    "x": 16,
+    "y": 336,
+    "w": 22,
+    "h": 22
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": "{{tasks.6.title}}",
+   "font": {
+    "family": "system",
+    "size": 14,
+    "weight": "medium"
+   },
+   "color": "@fg",
+   "maxLines": 1,
+   "frame": {
+    "x": 46,
+    "y": 334,
+    "w": 222,
+    "h": 26
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": "{{tasks.6.due}}",
+   "font": {
+    "family": "system",
+    "size": 11
+   },
+   "color": "@muted",
+   "align": "trailing",
+   "maxLines": 1,
+   "frame": {
+    "x": 268,
+    "y": 336,
+    "w": 80,
+    "h": 22
+   },
+   "mirror": true
+  },
+  {
+   "type": "button",
+   "action": "task.toggle",
+   "arg": "{{tasks.6.id}}",
+   "when": "{{tasks.6.title}}",
+   "frame": {
+    "x": 6,
+    "y": 332,
+    "w": 352,
+    "h": 42
+   }
+  }
+ ]
+}

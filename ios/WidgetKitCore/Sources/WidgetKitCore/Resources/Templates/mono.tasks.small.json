@@ -1,0 +1,140 @@
+{
+ "schemaVersion": 1,
+ "id": "mono.tasks.small",
+ "category": "tasks",
+ "name": {
+  "en": "Next Task",
+  "ar": "المهمة التالية"
+ },
+ "family": "small",
+ "theme": "dark",
+ "refresh": "hourly",
+ "background": {
+  "type": "solid",
+  "color": "@bg"
+ },
+ "layers": [
+  {
+   "type": "text",
+   "value": "{{tasks.today.count}}",
+   "font": {
+    "family": "dot",
+    "size": 38,
+    "weight": "bold"
+   },
+   "color": "@accent",
+   "frame": {
+    "x": 16,
+    "y": 10,
+    "w": 90,
+    "h": 46
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": {
+    "en": "Today",
+    "ar": "اليوم"
+   },
+   "font": {
+    "family": "system",
+    "size": 11,
+    "weight": "medium"
+   },
+   "color": "@muted",
+   "frame": {
+    "x": 16,
+    "y": 56,
+    "w": 90,
+    "h": 16
+   },
+   "mirror": true
+  },
+  {
+   "type": "icon",
+   "symbol": "plus",
+   "size": 18,
+   "color": "@fg",
+   "frame": {
+    "x": 128,
+    "y": 12,
+    "w": 28,
+    "h": 28
+   },
+   "mirror": true
+  },
+  {
+   "type": "button",
+   "action": "task.add",
+   "frame": {
+    "x": 122,
+    "y": 6,
+    "w": 40,
+    "h": 40
+   },
+   "mirror": true
+  },
+  {
+   "type": "states",
+   "set": "task.done",
+   "value": "{{tasks.1.done}}",
+   "when": "{{tasks.next.id}}",
+   "frame": {
+    "x": 16,
+    "y": 86,
+    "w": 24,
+    "h": 24
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": "{{tasks.next.title}}",
+   "font": {
+    "family": "system",
+    "size": 14,
+    "weight": "semibold"
+   },
+   "color": "@fg",
+   "maxLines": 2,
+   "frame": {
+    "x": 46,
+    "y": 82,
+    "w": 110,
+    "h": 40
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": "{{tasks.next.due}}",
+   "font": {
+    "family": "system",
+    "size": 11
+   },
+   "color": "@muted",
+   "maxLines": 1,
+   "frame": {
+    "x": 46,
+    "y": 126,
+    "w": 110,
+    "h": 18
+   },
+   "mirror": true
+  },
+  {
+   "type": "button",
+   "action": "task.toggle",
+   "arg": "{{tasks.next.id}}",
+   "when": "{{tasks.next.id}}",
+   "frame": {
+    "x": 8,
+    "y": 78,
+    "w": 110,
+    "h": 72
+   },
+   "mirror": true
+  }
+ ]
+}

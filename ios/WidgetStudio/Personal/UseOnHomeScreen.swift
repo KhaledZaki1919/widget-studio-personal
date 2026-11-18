@@ -167,6 +167,7 @@ struct UseOnHomeScreenSheet: View {
         case .small: "detail.size.small"
         case .medium: "detail.size.medium"
         case .large: "detail.size.large"
+        case .xlarge: "detail.size.xlarge"
         }
     }
 
@@ -175,6 +176,7 @@ struct UseOnHomeScreenSheet: View {
         case .small: "square"
         case .medium: "rectangle"
         case .large: "square.fill"
+        case .xlarge: "rectangle.portrait.fill"
         }
     }
 }

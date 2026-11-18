@@ -1,0 +1,191 @@
+{
+  "card": {
+    "shape": "roundedRect"
+  },
+  "family": "small",
+  "background": {
+    "type": "solid",
+    "color": "#111111",
+    "colors": null,
+    "angle": null,
+    "outerColor": null
+  },
+  "palette": {
+    "bg": "#111111",
+    "fg": "#FFFFFF",
+    "accent": "#FF453A"
+  },
+  "theme": "dark",
+  "fields": [],
+  "inventory": [
+    "Year title at top left",
+    "85% percentage at top right in red",
+    "Dot grid in the middle showing year progress",
+    "56 days left at bottom left in gray"
+  ],
+  "wiring": [
+    {
+      "element": "Year title",
+      "shows": null,
+      "tap": null,
+      "states": null,
+      "decorative": null
+    },
+    {
+      "element": "85% percentage",
+      "shows": "{{year.progress}}%",
+      "tap": null,
+      "states": null,
+      "decorative": null
+    },
+    {
+      "element": "Dot grid",
+      "shows": "{{year.progress}}",
+      "tap": null,
+      "states": null,
+      "decorative": null
+    },
+    {
+      "element": "56 days left",
+      "shows": "{{year.daysLeft}} days left",
+      "tap": null,
+      "states": null,
+      "decorative": null
+    }
+  ],
+  "layers": [
+    {
+      "type": "stack",
+      "frame": {
+        "x": 16,
+        "y": 16,
+        "w": 138,
+        "h": 32
+      },
+      "axis": "horizontal",
+      "alignment": null,
+      "alignItems": "center",
+      "justify": "start",
+      "spacing": 0,
+      "padding": 0,
+      "columns": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": true,
+      "when": null,
+      "children": [
+        {
+          "type": "text",
+          "value": {
+            "en": "Year",
+            "ar": "السنة"
+          },
+          "font": {
+            "family": "system",
+            "size": 22,
+            "weight": "bold"
+          },
+          "color": "@fg",
+          "align": "leading",
+          "maxLines": 1,
+          "width": null,
+          "height": null,
+          "live": null,
+          "when": null
+        },
+        {
+          "type": "spacer",
+          "width": null,
+          "height": null,
+          "minLength": null,
+          "when": null
+        },
+        {
+          "type": "text",
+          "value": {
+            "en": "85%",
+            "ar": "85٪"
+          },
+          "font": {
+            "family": "system",
+            "size": 22,
+            "weight": "bold"
+          },
+          "color": "@accent",
+          "align": "trailing",
+          "maxLines": 1,
+          "width": null,
+          "height": null,
+          "live": null,
+          "when": null
+        }
+      ]
+    },
+    {
+      "type": "dotGrid",
+      "frame": {
+        "x": 16,
+        "y": 64,
+        "w": 138,
+        "h": 68
+      },
+      "rows": 6,
+      "cols": 9,
+      "dotSize": 10,
+      "gap": 6,
+      "onColor": "@fg",
+      "offColor": "#2C2C2E",
+      "highlightColor": null,
+      "values": "{{year.progress}}",
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": false,
+      "when": null
+    },
+    {
+      "type": "stack",
+      "frame": {
+        "x": 16,
+        "y": 140,
+        "w": 138,
+        "h": 20
+      },
+      "axis": "horizontal",
+      "alignment": null,
+      "alignItems": "center",
+      "justify": "start",
+      "spacing": 0,
+      "padding": 0,
+      "columns": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": true,
+      "when": null,
+      "children": [
+        {
+          "type": "text",
+          "value": {
+            "en": "{{year.daysLeft}} days left",
+            "ar": "متبقي {{year.daysLeft}} يوم"
+          },
+          "font": {
+            "family": "system",
+            "size": 13,
+            "weight": "regular"
+          },
+          "color": "#8E8E93",
+          "align": "leading",
+          "maxLines": 1,
+          "width": null,
+          "height": null,
+          "live": null,
+          "when": null
+        }
+      ]
+    }
+  ],
+  "name": {
+    "en": "Year Progress",
+    "ar": "تقدم السنة"
+  }
+}

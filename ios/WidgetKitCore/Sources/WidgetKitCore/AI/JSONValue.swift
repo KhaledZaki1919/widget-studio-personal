@@ -102,8 +102,10 @@ public enum JSONSchema {
         ]
     }
 
-    public static func array(_ items: JSONValue, maxItems: Int? = nil) -> JSONValue {
+    /// ADR-029: the validator's limits are mirrored in the schema (`minItems`, `maxItems`, `minimum`, `maximum`, `pattern`).
+    public static func array(_ items: JSONValue, minItems: Int? = nil, maxItems: Int? = nil) -> JSONValue {
         var schema: [String: JSONValue] = ["type": "array", "items": items]
+        if let minItems { schema["minItems"] = .int(minItems) }
         if let maxItems { schema["maxItems"] = .int(maxItems) }
         return .object(schema)
     }
@@ -113,6 +115,18 @@ public enum JSONSchema {
     public static let integer: JSONValue = ["type": "integer"]
     public static let boolean: JSONValue = ["type": "boolean"]
 
+    public static func number(minimum: Double, maximum: Double) -> JSONValue {
+        ["type": "number", "minimum": .number(minimum), "maximum": .number(maximum)]
+    }
+
+    public static func integer(minimum: Int, maximum: Int) -> JSONValue {
+        ["type": "integer", "minimum": .int(minimum), "maximum": .int(maximum)]
+    }
+
+    public static func string(pattern: String) -> JSONValue {
+        ["type": "string", "pattern": .string(pattern)]
+    }
+
     public static func enumeration(_ values: [String]) -> JSONValue {
         ["type": "string", "enum": .array(values.map { .string($0) })]
     }
@@ -120,6 +134,11 @@ public enum JSONSchema {
     /// The same schema, also accepting `null` (a type union; Gemini gets `nullable: true`).
     public static func nullable(_ schema: JSONValue) -> JSONValue {
         guard case .object(var fields) = schema else { return schema }
+        // A union (ADR-029: a string or {en, ar}, a color or a gradient) takes null as one more option.
+        if case .array(let options)? = fields["anyOf"] {
+            if !options.contains(["type": "null"]) { fields["anyOf"] = .array(options + [["type": "null"]]) }
+            return .object(fields)
+        }
         switch fields["type"] {
         case .string(let type)?:
             fields["type"] = [.string(type), "null"]

@@ -84,6 +84,27 @@ Replace all quick-setting tiles in the image (Torch, Wi-Fi, Bluetooth, Hotspot, 
 
 Each tile has fields: `icon` (from the SF Symbol whitelist), `label` (`{en,ar}`), `shortcut` (Shortcut name). Tap → `shortcut.run`. The editor shows a short guide on creating the Shortcut in the Shortcuts app.
 
+## Live controls (ADR-027)
+
+Fixed widgets, so they reach the home screen without an App Group.
+
+| id | name | family | Layout |
+|---|---|---|---|
+| `mono.media.player` | Now Playing / يُشغَّل الآن | medium | Album art, song, artist, progress, times, previous, play/pause, next |
+| `mono.control.center` | Control Center / مركز التحكم | large | Now playing with transport, six switches lit by their state, volume and brightness bars with up/down zones |
+| `mono.timer.focus` | Timer / مؤقت | small | Ring and time left; tap to start or pause, +5, reset |
+
+### Alive (ADR-028)
+
+| id | name | family | Layout |
+|---|---|---|---|
+| `mono.year.dots` | Year Dots / نقاط السنة | small | Year label and percent, a dot grid lit by the real share of the year, days left |
+| `mono.battery.mood` | Battery Mood / مزاج البطارية | small | A face from the `battery.mood` set, percent, a bolt while charging |
+| `mono.weather.art` | Weather Art / رسمة الطقس | medium | A dot drawing from the `weather.art` set, city, temperature, condition, five days |
+| `mono.tasks.small` | Next Task / المهمة التالية | small | Today's count, the next task with its checkbox, add |
+| `mono.tasks.medium` | Tasks / المهام | medium | Header with count and add, four tasks with checkboxes |
+| `mono.tasks.large` | Tasks Progress / تقدم المهام | large | Today's progress ring, six tasks with checkboxes, add |
+
 ## Skipped from the image (with reason)
 - Nothing / brand logos and dot emblems (R4 C9, R5 C3, R6 C9): third-party branding.
 - "Pair new device", Face ID / phone illustration, earbuds battery "CONNECT": system or other-device data iOS widgets can't read.

@@ -23,7 +23,8 @@ public struct SavedDesign: Codable, Sendable, Equatable, Identifiable {
     public var updated: Date
 
     /// Tokens the editor lets the user override.
-    public static let editableColors = ["accent", "bg", "fg", "muted"]
+    /// `outer`: around a circle or capsule card, and the wallpaper color behind floating designs (ADR-024).
+    public static let editableColors = ["accent", "bg", "fg", "muted", "outer"]
     public static let maxNameLength = 60
 
     public init(id: String = UUID().uuidString, name: String, template: WidgetSpec, fieldValues: [String: LocalizedText] = [:],

@@ -1,0 +1,115 @@
+{
+ "schemaVersion": 1,
+ "id": "mono.timer.focus",
+ "category": "counters",
+ "name": {
+  "en": "Timer",
+  "ar": "مؤقت"
+ },
+ "family": "small",
+ "theme": "dark",
+ "refresh": "minute",
+ "background": {
+  "type": "solid",
+  "color": "@bg"
+ },
+ "fields": [],
+ "layers": [
+  {
+   "type": "ring",
+   "progress": "{{timer.progress}}",
+   "color": "@accent",
+   "trackColor": "@dim",
+   "lineWidth": 7,
+   "frame": {
+    "x": 23,
+    "y": 14,
+    "w": 124,
+    "h": 124
+   }
+  },
+  {
+   "type": "stack",
+   "axis": "vertical",
+   "spacing": 2,
+   "frame": {
+    "x": 40,
+    "y": 54,
+    "w": 90,
+    "h": 44
+   },
+   "children": [
+    {
+     "type": "text",
+     "value": "{{timer.remaining}}",
+     "font": {
+      "family": "dot",
+      "size": 24,
+      "weight": "bold"
+     },
+     "color": "@fg",
+     "maxLines": 1,
+     "align": "center"
+    }
+   ],
+   "alignItems": "center",
+   "justify": "center"
+  },
+  {
+   "type": "icon",
+   "symbol": "plus",
+   "size": 14,
+   "color": "@muted",
+   "frame": {
+    "x": 142,
+    "y": 142,
+    "w": 18,
+    "h": 18
+   }
+  },
+  {
+   "type": "icon",
+   "symbol": "arrow.counterclockwise",
+   "size": 14,
+   "color": "@muted",
+   "frame": {
+    "x": 10,
+    "y": 142,
+    "w": 18,
+    "h": 18
+   }
+  },
+  {
+   "type": "button",
+   "action": "timer.toggle",
+   "arg": "25",
+   "frame": {
+    "x": 40,
+    "y": 30,
+    "w": 90,
+    "h": 100
+   }
+  },
+  {
+   "type": "button",
+   "action": "timer.add",
+   "arg": "5",
+   "frame": {
+    "x": 126,
+    "y": 126,
+    "w": 44,
+    "h": 44
+   }
+  },
+  {
+   "type": "button",
+   "action": "timer.reset",
+   "frame": {
+    "x": 0,
+    "y": 126,
+    "w": 44,
+    "h": 44
+   }
+  }
+ ]
+}

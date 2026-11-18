@@ -15,8 +15,43 @@ struct DeveloperWidgets: WidgetBundle {
         SmallPickWidget()
         MediumPickWidget()
         LargePickWidget()
+        #if WS_XL27
+        // ADR-030: with a real Apple account, a large widget that takes WidgetKit push updates (iOS 26+).
+        // Widget bundles accept "if #available" without an else, so it is a second kind next to the first.
+        if #available(iOS 26.0, *) {
+            LargePushPickWidget()
+        }
+        #endif
     }
 }
+
+#if WS_XL27
+/// The large configurable widget with WidgetKit push updates (ADR-030): a server holding the push token can
+/// make it reload at once, with no daily budget. Needs the push entitlement of a real Apple account
+/// (docs/app-store/when-account.md); never on the Fast Store install.
+@available(iOS 26.0, *)
+struct LargePushPickWidget: Widget {
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(kind: "WidgetStudio.pick.push", intent: LargePickIntent.self,
+                               provider: PickProvider<LargePickIntent>()) { PickWidgetView(entry: $0) }
+            .configurationDisplayName("widget.pick.name")
+            .description("widget.pick.description")
+            .supportedFamilies([.systemLarge] + WidgetFamily.extraLargePortrait)
+            .contentMarginsDisabled()
+            .pushHandler(WidgetPushTokens.self)
+    }
+}
+
+/// Keeps the widgets' push token for the owner's server and logs it (ADR-030).
+@available(iOS 26.0, *)
+struct WidgetPushTokens: WidgetPushHandler {
+    func pushTokenDidChange(_ pushInfo: WidgetPushInfo, widgets: [WidgetInfo]) {
+        let token = pushInfo.token.map { String(format: "%02x", $0) }.joined()
+        try? DataCache().write(token, "widgetPushToken")
+        ReloadLog.record(kind: "push", reason: "token \(token.prefix(8))… for \(widgets.count) widgets")
+    }
+}
+#endif
 
 struct SmallPickWidget: Widget {
     var body: some WidgetConfiguration {
@@ -268,9 +303,10 @@ struct PickProvider<Configuration: PickConfiguration>: AppIntentTimelineProvider
         let now = Date.now
         let first = Self.entry(itemID: configuration.itemID, appearance: configuration.appearanceChoice, date: now)
         guard let spec = first.spec else { return Timeline(entries: [first], policy: .never) }
-        let inputs = await WidgetData.inputs(for: DataRequirements.groups(for: spec), now: now)
+        let inputs = await WidgetData.inputs(for: DataRequirements.groups(for: spec), tickers: MarketData.tickers(in: spec), now: now)
         let gap = LiveData.gap(for: spec, inputs)
         let (dates, reload) = LiveSchedule.make(for: spec, inputs: inputs, now: now)
+        ReloadLog.record(kind: "pick", reason: "timeline", entries: dates.count, next: reload, now: now)
         let entries = dates.map {
             PickEntry(date: $0, spec: first.spec, design: first.design, image: first.image, problem: first.problem,
                       appearance: first.appearance, inputs: inputs, gap: gap)
@@ -322,6 +358,7 @@ struct PickWidgetView: View {
                                                  defaultClock: entry.inputs.settings.clockFormat)
             ?? RenderContext(date: entry.date, language: language, data: data)
         if entry.design == nil { context.uses24Hour = entry.inputs.settings.clockFormat.uses24Hour() }
+        context.mediaArtwork = entry.inputs.device.artwork
         switch entry.appearance {
         case .template: break
         case .system: context.theme = colorScheme == .dark ? .dark : .light

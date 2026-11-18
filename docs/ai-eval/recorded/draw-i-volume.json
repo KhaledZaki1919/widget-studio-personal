@@ -1,0 +1,246 @@
+{
+  "name": {
+    "en": "Volume Sliders",
+    "ar": "مستويات الصوت"
+  },
+  "family": "large",
+  "theme": "dark",
+  "palette": {
+    "bg": "#0A0A0A",
+    "fg": "#FFFFFF",
+    "accent": "#FFFFFF"
+  },
+  "background": {
+    "type": "solid",
+    "color": "#0A0A0A",
+    "colors": null,
+    "angle": null,
+    "outerColor": null
+  },
+  "card": {
+    "shape": "roundedRect"
+  },
+  "fields": [],
+  "inventory": [
+    "Media volume vertical slider bar (capsule track with white fill from bottom)",
+    "Media volume icon (headphones) at bottom",
+    "Ringer volume vertical slider bar (capsule track with white fill from bottom)",
+    "Ringer volume icon (bell) at bottom",
+    "Top half touch button for media volume up",
+    "Bottom half touch button for media volume down",
+    "Top half touch button for ringer volume up",
+    "Bottom half touch button for ringer volume down"
+  ],
+  "wiring": [
+    {
+      "element": "Media volume vertical slider bar",
+      "shows": "{{volume.level}}",
+      "tap": null,
+      "decorative": null
+    },
+    {
+      "element": "Media volume icon",
+      "shows": null,
+      "tap": "volume.mute",
+      "decorative": null
+    },
+    {
+      "element": "Ringer volume vertical slider bar",
+      "shows": "{{volume.ring}}",
+      "tap": null,
+      "decorative": null
+    },
+    {
+      "element": "Ringer volume icon",
+      "shows": null,
+      "tap": "system.toggle.silent",
+      "decorative": null
+    },
+    {
+      "element": "Top half touch button for media volume up",
+      "shows": null,
+      "tap": "volume.up",
+      "decorative": null
+    },
+    {
+      "element": "Bottom half touch button for media volume down",
+      "shows": null,
+      "tap": "volume.down",
+      "decorative": null
+    },
+    {
+      "element": "Top half touch button for ringer volume up",
+      "shows": null,
+      "tap": "volume.ringUp",
+      "decorative": null
+    },
+    {
+      "element": "Bottom half touch button for ringer volume down",
+      "shows": null,
+      "tap": "volume.ringDown",
+      "decorative": null
+    }
+  ],
+  "layers": [
+    {
+      "type": "progressBar",
+      "frame": {
+        "x": 92,
+        "y": 24,
+        "w": 52,
+        "h": 300
+      },
+      "progress": "{{volume.level}}",
+      "color": "#FFFFFF",
+      "trackColor": "#222222",
+      "segments": null,
+      "cornerRadius": 26,
+      "vertical": true,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    },
+    {
+      "type": "progressBar",
+      "frame": {
+        "x": 220,
+        "y": 24,
+        "w": 52,
+        "h": 300
+      },
+      "progress": "{{volume.ring}}",
+      "color": "#FFFFFF",
+      "trackColor": "#222222",
+      "segments": null,
+      "cornerRadius": 26,
+      "vertical": true,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    },
+    {
+      "type": "icon",
+      "frame": {
+        "x": 102,
+        "y": 338,
+        "w": 32,
+        "h": 32
+      },
+      "symbol": "headphones",
+      "size": 22,
+      "color": "#666666",
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    },
+    {
+      "type": "icon",
+      "frame": {
+        "x": 230,
+        "y": 338,
+        "w": 32,
+        "h": 32
+      },
+      "symbol": "bell.fill",
+      "size": 22,
+      "color": "#666666",
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    },
+    {
+      "type": "button",
+      "frame": {
+        "x": 92,
+        "y": 24,
+        "w": 52,
+        "h": 150
+      },
+      "action": "volume.up",
+      "arg": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    },
+    {
+      "type": "button",
+      "frame": {
+        "x": 92,
+        "y": 174,
+        "w": 52,
+        "h": 150
+      },
+      "action": "volume.down",
+      "arg": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    },
+    {
+      "type": "button",
+      "frame": {
+        "x": 220,
+        "y": 24,
+        "w": 52,
+        "h": 150
+      },
+      "action": "volume.ringUp",
+      "arg": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    },
+    {
+      "type": "button",
+      "frame": {
+        "x": 220,
+        "y": 174,
+        "w": 52,
+        "h": 150
+      },
+      "action": "volume.ringDown",
+      "arg": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    },
+    {
+      "type": "button",
+      "frame": {
+        "x": 102,
+        "y": 338,
+        "w": 32,
+        "h": 32
+      },
+      "action": "volume.mute",
+      "arg": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    },
+    {
+      "type": "button",
+      "frame": {
+        "x": 230,
+        "y": 338,
+        "w": 32,
+        "h": 32
+      },
+      "action": "system.toggle.silent",
+      "arg": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    }
+  ]
+}

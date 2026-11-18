@@ -1,0 +1,283 @@
+{
+  "name": {
+    "en": "Music Player",
+    "ar": "مشغل الموسيقى"
+  },
+  "family": "medium",
+  "theme": "dark",
+  "palette": {
+    "bg": "#121212",
+    "fg": "#FFFFFF",
+    "accent": "#1DB954"
+  },
+  "card": {
+    "shape": "roundedRect"
+  },
+  "background": {
+    "type": "solid",
+    "color": "#121212",
+    "colors": null,
+    "angle": null,
+    "outerColor": null
+  },
+  "fields": [],
+  "inventory": [
+    "Album artwork square on the left at x 0.04–0.43, y 0.08–0.92 with red/purple gradient",
+    "Song title 'Golden Hour' in white bold text at x 0.47, y 0.12",
+    "Artist name 'Sea and Sand' in muted gray text at x 0.47, y 0.31",
+    "Segmented progress bar with green lit dots and gray unlit dots at x 0.47–0.94, y 0.50",
+    "Previous track button icon (backward.end.fill) at x 0.51, y 0.67",
+    "Play/Pause button icon (play.fill / {{media.symbol}}) in green at x 0.69, y 0.67",
+    "Next track button icon (forward.end.fill) at x 0.86, y 0.67"
+  ],
+  "wiring": [
+    {
+      "element": "Album artwork square",
+      "shows": "{{media.artwork}}",
+      "tap": "media.open",
+      "decorative": null
+    },
+    {
+      "element": "Song title 'Golden Hour'",
+      "shows": "{{media.title}}",
+      "tap": null,
+      "decorative": null
+    },
+    {
+      "element": "Artist name 'Sea and Sand'",
+      "shows": "{{media.artist}}",
+      "tap": null,
+      "decorative": null
+    },
+    {
+      "element": "Segmented progress bar",
+      "shows": "{{media.progress}}",
+      "tap": null,
+      "decorative": null
+    },
+    {
+      "element": "Previous track button",
+      "shows": null,
+      "tap": "media.previous",
+      "decorative": null
+    },
+    {
+      "element": "Play/Pause button",
+      "shows": "{{media.symbol}}",
+      "tap": "media.playPause",
+      "decorative": null
+    },
+    {
+      "element": "Next track button",
+      "shows": null,
+      "tap": "media.next",
+      "decorative": null
+    }
+  ],
+  "layers": [
+    {
+      "type": "image",
+      "source": "{{media.artwork}}",
+      "frame": {
+        "x": 14,
+        "y": 14,
+        "w": 142,
+        "h": 142
+      },
+      "fit": "fill",
+      "mask": "roundedRect",
+      "cornerRadius": 8,
+      "filter": "none",
+      "opacity": 1,
+      "rotation": null,
+      "mirror": false,
+      "when": null
+    },
+    {
+      "type": "stack",
+      "axis": "vertical",
+      "alignment": "start",
+      "spacing": 4,
+      "padding": 0,
+      "frame": {
+        "x": 174,
+        "y": 24,
+        "w": 170,
+        "h": 60
+      },
+      "columns": null,
+      "justify": null,
+      "opacity": 1,
+      "rotation": null,
+      "mirror": true,
+      "when": null,
+      "children": [
+        {
+          "type": "text",
+          "value": {
+            "en": "Golden Hour",
+            "ar": "ساعة ذهبية"
+          },
+          "font": {
+            "family": "system",
+            "size": 20,
+            "weight": "bold"
+          },
+          "color": "@fg",
+          "align": "leading",
+          "maxLines": 1,
+          "live": null,
+          "width": null,
+          "height": null,
+          "when": null
+        },
+        {
+          "type": "text",
+          "value": {
+            "en": "Sea and Sand",
+            "ar": "بحر رمل"
+          },
+          "font": {
+            "family": "system",
+            "size": 14,
+            "weight": "regular"
+          },
+          "color": "#888888",
+          "align": "leading",
+          "maxLines": 1,
+          "live": null,
+          "width": null,
+          "height": null,
+          "when": null
+        }
+      ]
+    },
+    {
+      "type": "progressBar",
+      "frame": {
+        "x": 174,
+        "y": 100,
+        "w": 170,
+        "h": 6
+      },
+      "progress": "{{media.progress}}",
+      "color": "@accent",
+      "trackColor": "#333333",
+      "segments": 20,
+      "cornerRadius": 3,
+      "vertical": false,
+      "opacity": 1,
+      "rotation": null,
+      "mirror": false,
+      "when": null
+    },
+    {
+      "type": "stack",
+      "axis": "horizontal",
+      "alignment": "center",
+      "spacing": 36,
+      "padding": 0,
+      "frame": {
+        "x": 174,
+        "y": 122,
+        "w": 170,
+        "h": 36
+      },
+      "columns": null,
+      "justify": null,
+      "opacity": 1,
+      "rotation": null,
+      "mirror": true,
+      "when": null,
+      "children": [
+        {
+          "type": "icon",
+          "symbol": "backward.end.fill",
+          "size": 22,
+          "color": "@fg",
+          "width": null,
+          "height": null,
+          "when": null
+        },
+        {
+          "type": "icon",
+          "symbol": "{{media.symbol}}",
+          "size": 24,
+          "color": "@accent",
+          "width": null,
+          "height": null,
+          "when": null
+        },
+        {
+          "type": "icon",
+          "symbol": "forward.end.fill",
+          "size": 22,
+          "color": "@fg",
+          "width": null,
+          "height": null,
+          "when": null
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "action": "media.open",
+      "arg": null,
+      "frame": {
+        "x": 14,
+        "y": 14,
+        "w": 142,
+        "h": 142
+      },
+      "opacity": 1,
+      "rotation": null,
+      "mirror": false,
+      "when": null
+    },
+    {
+      "type": "button",
+      "action": "media.previous",
+      "arg": null,
+      "frame": {
+        "x": 174,
+        "y": 122,
+        "w": 36,
+        "h": 36
+      },
+      "opacity": 1,
+      "rotation": null,
+      "mirror": false,
+      "when": null
+    },
+    {
+      "type": "button",
+      "action": "media.playPause",
+      "arg": null,
+      "frame": {
+        "x": 241,
+        "y": 122,
+        "w": 36,
+        "h": 36
+      },
+      "opacity": 1,
+      "rotation": null,
+      "mirror": false,
+      "when": null
+    },
+    {
+      "type": "button",
+      "action": "media.next",
+      "arg": null,
+      "frame": {
+        "x": 308,
+        "y": 122,
+        "w": 36,
+        "h": 36
+      },
+      "opacity": 1,
+      "rotation": null,
+      "mirror": false,
+      "when": null
+    }
+  ]
+}

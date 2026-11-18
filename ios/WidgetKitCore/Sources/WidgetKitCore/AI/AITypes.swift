@@ -111,7 +111,7 @@ public enum AIProviderKind: String, CaseIterable, Codable, Sendable, Identifiabl
     /// and Custom start with the schema in the prompt too, since JSON-mode support varies by model.
     /// Every reply is validated either way.
     public var prefersStructuredOutput: Bool {
-        ![.gemini, .nvidia, .custom].contains(self)
+        ![.nvidia, .custom].contains(self)
     }
 
     /// `customBaseURL` is used by `.custom` only.

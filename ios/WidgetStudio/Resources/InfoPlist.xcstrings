@@ -18,19 +18,53 @@
         }
       }
     },
+    "NSAppleMusicUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يعرض الويدجت ما يُشغَّل في Apple Music ويتحكم في التشغيل."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows what is playing in Apple Music in widgets and controls playback."
+          }
+        }
+      }
+    },
+    "NSCalendarsFullAccessUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يعرض الويدجت أحداث تقويمك القادمة."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows your upcoming calendar events in widgets."
+          }
+        }
+      }
+    },
     "NSHealthShareUsageDescription": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يقرأ التطبيق عدد خطواتك وساعات نومك لعرضها في الويدجت."
+            "value": "يقرأ التطبيق خطواتك ونومك ونبض قلبك ونشاطك لعرضها في الويدجت."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reads steps and sleep to show them in widgets."
+            "value": "Reads steps, sleep, heart rate and activity to show them in widgets."
           }
         }
       }
@@ -48,6 +82,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Your location is used for weather, prayer times and the Qibla direction in widgets."
+          }
+        }
+      }
+    },
+    "NSRemindersFullAccessUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يعرض الويدجت تذكيراتك المفتوحة."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows your open reminders in widgets."
           }
         }
       }

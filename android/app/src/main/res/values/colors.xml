@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="widget_empty">#FF111111</color>
+    <color name="widget_empty_text">#FFFFFFFF</color>
+    <color name="launcher_background">#FF0E0E0E</color>
+</resources>

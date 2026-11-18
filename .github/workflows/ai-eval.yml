@@ -28,10 +28,27 @@ on:
         description: "Comma-separated image file names (empty = all)"
         type: string
         default: ""
+      crop:
+        description: "Crop to the detected widget(s) first: off, on, or both to compare (ADR-024)"
+        type: choice
+        options: ["off", "on", "both"]
+        default: "off"
       pause:
         description: "Seconds between requests (free tiers have per-minute limits)"
         type: string
         default: "8"
+      gate:
+        description: "Fail when the wiring score drops below docs/ai-eval/wiring-best.json (ADR-027)"
+        type: boolean
+        default: false
+      set_zip:
+        description: "A .zip of widget JSON as base64, for the before/after table; never committed"
+        type: string
+        default: ""
+      set_v5:
+        description: "Also run that set through the prompt"
+        type: boolean
+        default: false
 
 concurrency:
   group: ai-eval-${{ inputs.provider }}
@@ -60,9 +77,24 @@ jobs:
           path: ios/WidgetKitCore/.build
           key: spm-${{ runner.os }}-${{ hashFiles('ios/WidgetKitCore/Package.swift') }}
 
+      - name: Unpack the set
+        id: set
+        env:
+          SET_ZIP: ${{ inputs.set_zip }}
+        run: |
+          if [ -n "$SET_ZIP" ]; then
+            mkdir -p "$RUNNER_TEMP/set"
+            echo "$SET_ZIP" | base64 --decode > "$RUNNER_TEMP/set.zip"
+            unzip -q -o "$RUNNER_TEMP/set.zip" -d "$RUNNER_TEMP/set"
+            echo "dir=$RUNNER_TEMP/set" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run the eval
         env:
           AI_EVAL: "1"
+          AI_EVAL_SET: ${{ steps.set.outputs.dir }}
+          AI_EVAL_SET_V5: ${{ inputs.set_v5 && '1' || '0' }}
+          AI_EVAL_GATE: ${{ inputs.gate && '1' || '0' }}
           AI_EVAL_PROVIDER: ${{ inputs.provider }}
           AI_EVAL_KEY: ${{ inputs.provider == 'nvidia' && secrets.NVIDIA_API_KEY || inputs.provider == 'openrouter' && secrets.OPENROUTER_API_KEY || inputs.provider == 'groq' && secrets.GROQ_API_KEY || secrets.GEMINI_API_KEY }}
           AI_EVAL_DIR: ${{ github.workspace }}/docs/ai-eval
@@ -73,11 +105,13 @@ jobs:
           AI_EVAL_CASES: ${{ inputs.cases }}
           AI_EVAL_STRUCTURED: ${{ inputs.structured && '1' || '0' }}
           AI_EVAL_PAUSE: ${{ inputs.pause }}
+          AI_EVAL_CROP: ${{ inputs.crop }}
         run: swift test --package-path ios/WidgetKitCore --filter AIEvalTests
 
       - name: Summary
         if: always()
         run: |
+          [ -f ai-eval-out/set/set.md ] && cat ai-eval-out/set/set.md >> "$GITHUB_STEP_SUMMARY" || true
           [ -f ai-eval-out/summary.md ] && cat ai-eval-out/summary.md >> "$GITHUB_STEP_SUMMARY" || true
 
       - uses: actions/upload-artifact@v4

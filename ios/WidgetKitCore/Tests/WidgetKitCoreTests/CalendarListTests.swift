@@ -103,7 +103,7 @@ struct CalendarListTests {
         many.items = Array(repeating: item, count: 9)
         #expect(issues(.list(many)).contains { $0.path == "layers[0].items" })
         var located = list
-        located.items[0].detail = "{{location.lat}}"
+        located.items[0].detail = "{{prayer.next.key}}"
         #expect(issues(.list(located), mode: .ai).contains { $0.path == "layers[0].items[0].detail" })
         var icon = list
         icon.items[0].icon = "not.a.symbol"

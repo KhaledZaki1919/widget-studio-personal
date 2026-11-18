@@ -18,6 +18,23 @@ public struct DataSnapshot: Sendable, Equatable {
         }
     }
 
+    /// One hour of the forecast (ADR-029): chance of rain in percent, rain in mm.
+    public struct HourForecast: Sendable, Equatable {
+        public var date: Date
+        public var symbol: String
+        public var temperature: Double
+        public var rainChance: Double
+        public var rain: Double
+
+        public init(date: Date, symbol: String, temperature: Double, rainChance: Double, rain: Double) {
+            self.date = date
+            self.symbol = symbol
+            self.temperature = temperature
+            self.rainChance = rainChance
+            self.rain = rain
+        }
+    }
+
     public struct Weather: Sendable, Equatable {
         public var temperature: Double
         public var high: Double
@@ -26,6 +43,10 @@ public struct DataSnapshot: Sendable, Equatable {
         public var symbol: String
         public var city: LocalizedText
         public var forecast: [DayForecast]
+        /// ADR-029: the next hours, the UV index and the air quality (European AQI).
+        public var hourly: [HourForecast] = []
+        public var uv: Double?
+        public var aqi: Double?
 
         public init(temperature: Double, high: Double, low: Double, condition: LocalizedText, symbol: String,
                     city: LocalizedText, forecast: [DayForecast]) {
@@ -74,8 +95,16 @@ public struct DataSnapshot: Sendable, Equatable {
     public var latitude: Double?
     public var longitude: Double?
     public var altitude: Double?
+    /// The place name of the last location fix (`location.city`).
+    public var place: LocalizedText?
     /// 0…1.
     public var batteryLevel: Double?
+    /// What is playing, with its position, so each timeline entry shows the right progress.
+    public var media: MediaPlayback?
+    public var timer: TimerState?
+    /// Every other catalog binding by id (ADR-027): a provider fills this, so a new capability
+    /// needs no field here and no case in `BindingResolver`.
+    public var live: [String: BindingResolver.Value] = [:]
 
     public init() {}
 
@@ -128,7 +157,33 @@ public struct DataSnapshot: Sendable, Equatable {
         data.longitude = 31.24
         data.altitude = 23
         data.batteryLevel = 0.87
+        data.live = sampleLive(now: now, calendar: calendar)
         return data
+    }
+
+    /// The catalog's examples for bindings without a field above: previews show every capability.
+    static func sampleLive(now: Date, calendar: Calendar) -> [String: BindingResolver.Value] {
+        var live: [String: BindingResolver.Value] = [:]
+        for binding in Capabilities.bindings where !binding.parametric {
+            guard let example = binding.example, !example.isEmpty else { continue }
+            switch binding.type {
+            case "number":
+                let value = Double(example.replacingOccurrences(of: ",", with: "")) ?? 0
+                let isShare = example.hasPrefix("0.") || binding.layers.contains("ring")
+                live[binding.id] = .number(value, display: isShare ? String(Int((value * 100).rounded())) : example)
+            case "date":
+                let parts = example.split(separator: ":").compactMap { Int($0) }
+                let date = parts.count == 2 ? calendar.date(bySettingHour: parts[0], minute: parts[1], second: 0, of: now) : nil
+                live[binding.id] = .date(date ?? now)
+            case "levels":
+                live[binding.id] = .levels(SpecLiterals.levels(example) ?? [])
+            case "series":
+                live[binding.id] = .levels(example.split(separator: ",").compactMap { Double($0.trimmingCharacters(in: .whitespaces)) })
+            default:
+                live[binding.id] = .text(example)
+            }
+        }
+        return live
     }
 }
 
@@ -142,6 +197,10 @@ public struct RenderContext {
     public var fieldValues: [String: LocalizedText]
     public var data: DataSnapshot
     public var userImage: CGImage?
+    /// The album art of what is playing (`{{media.artwork}}`).
+    public var mediaArtwork: CGImage?
+    /// Other image bindings by name (ADR-029): `media.appIcon`, `app.<key>.icon`. Filled where the system gives them.
+    public var images: [String: CGImage] = [:]
     /// Renders live texts (relative, timer) as fixed text measured from `date`, because SwiftUI's
     /// live styles measure from the real clock. For snapshot tests only.
     public var freezesLiveText = false
@@ -154,6 +213,11 @@ public struct RenderContext {
     /// Color token overrides from a saved design (`accent`, `bg`, `fg` → hex), applied on top of
     /// the theme (M3 editor, ADR-015).
     public var tokenOverrides: [String: String] = [:]
+    /// Which variant a state layer shows, by `StatesLayer.key`: the editor's preview and the
+    /// renders of every state (ADR-028). Real widgets leave it empty.
+    public var forcedStates: [String: String] = [:]
+    /// Binding values that replace the real ones, as a state's `sample` writes them.
+    public var overrides: [String: String] = [:]
 
     public init(date: Date = .now, language: String = "ar", timeZone: TimeZone = .current,
                 fieldValues: [String: LocalizedText] = [:], data: DataSnapshot = DataSnapshot(), userImage: CGImage? = nil) {
@@ -163,6 +227,13 @@ public struct RenderContext {
         self.fieldValues = fieldValues
         self.data = data
         self.userImage = userImage
+    }
+
+    /// The same context with the album art of what is playing.
+    public func with(artwork: CGImage?) -> RenderContext {
+        var context = self
+        context.mediaArtwork = artwork
+        return context
     }
 
     public var isArabic: Bool { language.hasPrefix("ar") }

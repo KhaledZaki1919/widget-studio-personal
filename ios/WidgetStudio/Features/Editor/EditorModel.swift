@@ -18,6 +18,9 @@ final class EditorModel {
     /// Set by the PhotosPicker; the view calls `loadPhoto` when it changes.
     var photoItem: PhotosPickerItem?
     var previewLanguage = RenderContext.preferredLanguage
+    /// The States panel's preview: which state to show, and with what values (ADR-028).
+    var previewForced: [String: String] = [:]
+    var previewOverrides: [String: String] = [:]
 
     /// `photo`: an already processed photo (the AI flow's "Build around my photo").
     init(design: SavedDesign, isNew: Bool, photo: CGImage? = nil) {
@@ -96,6 +99,21 @@ final class EditorModel {
     func resetColor(_ token: String) {
         design.colors[token] = nil
     }
+
+    /// The frosted glass background (ADR-023); turning it off restores the one it replaced.
+    var glassBackground: Bool {
+        get { design.spec.background.type == .glass }
+        set {
+            let current = design.spec.background
+            if newValue, current.type != .glass {
+                replacedBackground = current
+                design.spec.background = Background(type: .glass, outerColor: current.outerColor)
+            } else if !newValue, current.type == .glass {
+                design.spec.background = replacedBackground ?? Background(type: .solid, color: "@bg", outerColor: current.outerColor)
+            }
+        }
+    }
+    private var replacedBackground: Background?
 
     static func hex(_ color: Color) -> String {
         var red: CGFloat = 0

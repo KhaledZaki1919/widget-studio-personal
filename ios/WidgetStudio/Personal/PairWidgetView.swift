@@ -211,6 +211,7 @@ struct PairWidgetView: View {
         case .small: "detail.size.small"
         case .medium: "detail.size.medium"
         case .large: "detail.size.large"
+        case .xlarge: "detail.size.xlarge"
         }
     }
 

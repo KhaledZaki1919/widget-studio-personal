@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Arabic is the default language (values/); English is in values-en/. -->
+<resources>
+    <string name="app_name">ستوديو الويدجت</string>
+    <string name="widget_name">ستوديو الويدجت</string>
+    <string name="widget_description">اعرض أحد تصاميمك أو أي قالب من المكتبة</string>
+    <string name="widget_choose">اضغط لاختيار تصميم</string>
+    <string name="library_title">المكتبة</string>
+    <string name="library_add_hint">لإضافة ويدجت: اضغط مطولًا على الشاشة الرئيسية ← الأدوات ← ستوديو الويدجت، ثم اختر تصميمًا. غيّر حجمه كما تريد.</string>
+    <string name="configure_title">اختر تصميمًا للويدجت</string>
+    <string name="widget_missing">حُذف التصميم، اختر غيره</string>
+    <string name="widget_small">صغير</string>
+    <string name="widget_medium">متوسط</string>
+    <string name="widget_large">كبير</string>
+    <string name="widget_small_description">مربع 2×2: تصاميمك والقوالب الصغيرة</string>
+    <string name="widget_medium_description">عريض 4×2: تصاميمك والقوالب المتوسطة</string>
+    <string name="widget_xlarge">كبير جدًا</string>
+    <string name="widget_xlarge_description">كبير جدًا 4×6: التصاميم الطويلة</string>
+    <string name="widget_large_description">كبير 4×4: تصاميمك الكبيرة ومركز التحكم</string>
+</resources>

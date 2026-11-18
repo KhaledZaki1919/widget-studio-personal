@@ -15,6 +15,13 @@ public struct WidgetSpec: Codable, Sendable, Equatable {
     public var layers: [Layer]
     /// Library section (ADR-011); optional for specs that aren't templates.
     public var category: SpecCategory?
+    /// Elements that look live but aren't, with why (prompt v5's wiring list, ADR-027).
+    public var decorative: [DecorativeNote]?
+    /// The card inside the widget (ADR-029); layer frames are in its canvas.
+    public var card: CardSpec?
+
+    /// The newest spec version this app reads (ADR-029). Version 1 files still open unchanged.
+    public static let currentVersion = 2
 
     public init(schemaVersion: Int = 1, id: String, name: LocalizedText, family: SpecFamily,
                 theme: SpecTheme = .dark, refresh: RefreshPolicy = .none, background: Background,
@@ -32,12 +39,19 @@ public struct WidgetSpec: Codable, Sendable, Equatable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case schemaVersion, id, name, family, theme, refresh, background, fields, layers, category
+        case schemaVersion, specVersion, id, name, family, theme, refresh, background, fields, layers, category, decorative, card
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
+        // ADR-029: AI replies write `specVersion`; saved designs and templates `schemaVersion`.
+        if let version = try container.decodeIfPresent(Int.self, forKey: .schemaVersion) {
+            schemaVersion = version
+        } else if let version = try container.decodeIfPresent(Int.self, forKey: .specVersion) {
+            schemaVersion = version
+        } else {
+            schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
+        }
         id = try container.decode(String.self, forKey: .id)
         name = try container.decode(LocalizedText.self, forKey: .name)
         family = try container.decode(SpecFamily.self, forKey: .family)
@@ -47,6 +61,24 @@ public struct WidgetSpec: Codable, Sendable, Equatable {
         fields = try container.decodeIfPresent([FieldSpec].self, forKey: .fields) ?? []
         layers = try container.decode([Layer].self, forKey: .layers)
         category = try container.decodeIfPresent(SpecCategory.self, forKey: .category)
+        decorative = try container.decodeIfPresent([DecorativeNote].self, forKey: .decorative)
+        card = try container.decodeIfPresent(CardSpec.self, forKey: .card)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(schemaVersion, forKey: .schemaVersion)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(family, forKey: .family)
+        try container.encode(theme, forKey: .theme)
+        try container.encode(refresh, forKey: .refresh)
+        try container.encode(background, forKey: .background)
+        try container.encode(fields, forKey: .fields)
+        try container.encode(layers, forKey: .layers)
+        try container.encodeIfPresent(category, forKey: .category)
+        try container.encodeIfPresent(decorative, forKey: .decorative)
+        try container.encodeIfPresent(card, forKey: .card)
     }
 
     public func field(_ key: String) -> FieldSpec? {
@@ -56,13 +88,15 @@ public struct WidgetSpec: Codable, Sendable, Equatable {
 
 /// Canvas units per family (brief §4.2).
 public enum SpecFamily: String, Codable, Sendable, CaseIterable {
-    case small, medium, large
+    /// `xlarge` (ADR-030): the 4 × 6 portrait widget of iOS 27 (systemExtraLargePortrait) and Android's XL size.
+    case small, medium, large, xlarge
 
     public var canvas: CGSize {
         switch self {
         case .small: CGSize(width: 170, height: 170)
         case .medium: CGSize(width: 364, height: 170)
         case .large: CGSize(width: 364, height: 382)
+        case .xlarge: CGSize(width: 364, height: 570)
         }
     }
 
@@ -72,19 +106,20 @@ public enum SpecFamily: String, Codable, Sendable, CaseIterable {
         SpecFamily.allCases.filter { $0.rank >= rank }
     }
 
-    /// small 0, medium 1, large 2.
+    /// small 0, medium 1, large 2, xlarge 3.
     public var rank: Int {
         switch self {
         case .small: 0
         case .medium: 1
         case .large: 2
+        case .xlarge: 3
         }
     }
 }
 
 /// Template library sections (brief §6), in display order.
 public enum SpecCategory: String, Codable, Sendable, CaseIterable {
-    case time, weather, health, prayer, countdown, photo, tiles, counters
+    case time, weather, health, prayer, countdown, photo, tiles, counters, tasks
 
     public var title: LocalizedText {
         switch self {
@@ -96,6 +131,7 @@ public enum SpecCategory: String, Codable, Sendable, CaseIterable {
         case .photo: .localized(en: "Photo", ar: "صور")
         case .tiles: .localized(en: "Tiles", ar: "أزرار")
         case .counters: .localized(en: "Counters", ar: "عدّادات")
+        case .tasks: .localized(en: "Tasks", ar: "المهام")
         }
     }
 }
@@ -155,7 +191,9 @@ public enum LocalizedText: Codable, Sendable, Equatable, ExpressibleByStringLite
 }
 
 public struct Background: Codable, Sendable, Equatable {
-    public enum Kind: String, Codable, Sendable { case solid, gradient }
+    /// `glass` (eval 2026-11-02): a frosted panel, a translucent tint (`color`, default white at
+    /// 18 %) with a sheen and a thin light border, for designs drawn as frosted cards.
+    public enum Kind: String, Codable, Sendable, CaseIterable { case solid, gradient, glass }
 
     public var type: Kind
     public var color: String?
@@ -164,8 +202,15 @@ public struct Background: Codable, Sendable, Equatable {
     public var angle: Double?
     /// Drawn behind circle templates, because a widget is always a rounded square (brief §2).
     public var outerColor: String?
+    /// With `outerColor`: the card drawn inside the widget, `circle` (default, the largest
+    /// centered circle) or `capsule` (ADR-024: circular and pill-shaped widgets from images).
+    public var cardShape: CardShape?
 
-    public init(type: Kind, color: String? = nil, colors: [String]? = nil, angle: Double? = nil, outerColor: String? = nil) {
+    public enum CardShape: String, Codable, Sendable, CaseIterable { case circle, capsule }
+
+    public init(type: Kind, color: String? = nil, colors: [String]? = nil, angle: Double? = nil, outerColor: String? = nil,
+                cardShape: CardShape? = nil) {
+        self.cardShape = cardShape
         self.type = type
         self.color = color
         self.colors = colors
@@ -182,6 +227,9 @@ public struct FieldSpec: Codable, Sendable, Equatable {
         case text, number, date, color, image, timezone, city, shortcut, url
         /// An SF Symbol from `Icons.whitelist` (tile icons, ADR-011).
         case icon
+        /// ADR-029: an installed app the user picks (`{{app.<key>.icon}}`, `app.launch`), and a market
+        /// ticker or coin (`{{stock.<key>.price}}`).
+        case app, ticker
     }
 
     public var key: String

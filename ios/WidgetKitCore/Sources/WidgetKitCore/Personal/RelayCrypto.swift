@@ -34,13 +34,14 @@ public enum RelayCode {
 
 /// What one paired item is stored under: `pair` confirms the pairing, the sizes carry designs.
 public enum RelaySlot: String, Codable, Sendable, CaseIterable {
-    case pair, small, medium, large
+    case pair, small, medium, large, xlarge
 
     public init(_ family: SpecFamily) {
         switch family {
         case .small: self = .small
         case .medium: self = .medium
         case .large: self = .large
+        case .xlarge: self = .xlarge
         }
     }
 }

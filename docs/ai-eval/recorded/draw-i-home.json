@@ -1,0 +1,443 @@
+{
+  "name": {
+    "en": "Smart Home",
+    "ar": "المنزل الذكي"
+  },
+  "family": "medium",
+  "theme": "dark",
+  "palette": {
+    "bg": "#121212",
+    "fg": "#FFFFFF",
+    "accent": "#3A3A3C"
+  },
+  "card": {
+    "shape": "roundedRect"
+  },
+  "background": {
+    "type": "solid",
+    "color": "#121212",
+    "colors": null,
+    "angle": null,
+    "outerColor": null
+  },
+  "fields": [
+    {
+      "key": "scene1",
+      "type": "shortcut",
+      "label": {
+        "en": "Lights Scene",
+        "ar": "مشهد الإضاءة"
+      },
+      "default": {
+        "en": "Lights On",
+        "ar": "تشغيل الإضاءة"
+      }
+    },
+    {
+      "key": "scene2",
+      "type": "shortcut",
+      "label": {
+        "en": "AC Scene",
+        "ar": "مشهد التكييف"
+      },
+      "default": {
+        "en": "AC On",
+        "ar": "تشغيل التكييف"
+      }
+    },
+    {
+      "key": "scene3",
+      "type": "shortcut",
+      "label": {
+        "en": "Fan Scene",
+        "ar": "مشهد المروحة"
+      },
+      "default": {
+        "en": "Fan On",
+        "ar": "تشغيل المروحة"
+      }
+    },
+    {
+      "key": "scene4",
+      "type": "shortcut",
+      "label": {
+        "en": "Door Scene",
+        "ar": "مشهد الباب"
+      },
+      "default": {
+        "en": "Unlock Door",
+        "ar": "فتح الباب"
+      }
+    }
+  ],
+  "inventory": [
+    "Tile 1 background, rounded rect, x 0.04–0.24, y 0.12–0.88, dark gray",
+    "Lightbulb icon, x 0.11, y 0.25, white",
+    "Lights label, x 0.11, y 0.65, white, system font",
+    "Tile 2 background, rounded rect, x 0.28–0.48, y 0.12–0.88, dark gray",
+    "Thermometer icon, x 0.38, y 0.25, white",
+    "AC label, x 0.38, y 0.65, white, system font",
+    "Tile 3 background, rounded rect, x 0.52–0.72, y 0.12–0.88, dark gray",
+    "Thermometer icon, x 0.62, y 0.25, white",
+    "Fan label, x 0.62, y 0.65, white, system font",
+    "Tile 4 background, rounded rect, x 0.76–0.96, y 0.12–0.88, dark gray",
+    "Lock icon, x 0.86, y 0.25, white",
+    "Door label, x 0.86, y 0.65, white, system font"
+  ],
+  "wiring": [
+    {
+      "element": "Tile 1 button",
+      "shows": null,
+      "tap": "shortcut.run",
+      "decorative": null
+    },
+    {
+      "element": "Tile 2 button",
+      "shows": null,
+      "tap": "shortcut.run",
+      "decorative": null
+    },
+    {
+      "element": "Tile 3 button",
+      "shows": null,
+      "tap": "shortcut.run",
+      "decorative": null
+    },
+    {
+      "element": "Tile 4 button",
+      "shows": null,
+      "tap": "shortcut.run",
+      "decorative": null
+    }
+  ],
+  "layers": [
+    {
+      "type": "shape",
+      "kind": "roundedRect",
+      "fill": "#2C2C2E",
+      "stroke": null,
+      "cornerRadius": 20,
+      "glass": false,
+      "frame": {
+        "x": 16,
+        "y": 20,
+        "w": 74,
+        "h": 142
+      },
+      "rotation": null,
+      "opacity": 1,
+      "when": null,
+      "mirror": false
+    },
+    {
+      "type": "stack",
+      "axis": "vertical",
+      "spacing": 12,
+      "padding": 0,
+      "alignItems": "center",
+      "justify": "center",
+      "columns": null,
+      "frame": {
+        "x": 16,
+        "y": 20,
+        "w": 74,
+        "h": 142
+      },
+      "rotation": null,
+      "opacity": 1,
+      "when": null,
+      "mirror": false,
+      "children": [
+        {
+          "type": "icon",
+          "symbol": "lightbulb.fill",
+          "size": 28,
+          "color": "#FFFFFF",
+          "width": null,
+          "height": null,
+          "when": null
+        },
+        {
+          "type": "text",
+          "value": {
+            "en": "Lights",
+            "ar": "الإضاءة"
+          },
+          "font": {
+            "family": "system",
+            "size": 15,
+            "weight": "medium"
+          },
+          "color": "#FFFFFF",
+          "align": "center",
+          "maxLines": 1,
+          "width": null,
+          "height": null,
+          "live": null,
+          "when": null
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "action": "shortcut.run",
+      "arg": "{{field.scene1}}",
+      "frame": {
+        "x": 16,
+        "y": 20,
+        "w": 74,
+        "h": 142
+      },
+      "rotation": null,
+      "opacity": 1,
+      "when": null,
+      "mirror": false
+    },
+    {
+      "type": "shape",
+      "kind": "roundedRect",
+      "fill": "#2C2C2E",
+      "stroke": null,
+      "cornerRadius": 20,
+      "glass": false,
+      "frame": {
+        "x": 102,
+        "y": 20,
+        "w": 74,
+        "h": 142
+      },
+      "rotation": null,
+      "opacity": 1,
+      "when": null,
+      "mirror": false
+    },
+    {
+      "type": "stack",
+      "axis": "vertical",
+      "spacing": 12,
+      "padding": 0,
+      "alignItems": "center",
+      "justify": "center",
+      "columns": null,
+      "frame": {
+        "x": 102,
+        "y": 20,
+        "w": 74,
+        "h": 142
+      },
+      "rotation": null,
+      "opacity": 1,
+      "when": null,
+      "mirror": false,
+      "children": [
+        {
+          "type": "icon",
+          "symbol": "thermometer.medium",
+          "size": 28,
+          "color": "#FFFFFF",
+          "width": null,
+          "height": null,
+          "when": null
+        },
+        {
+          "type": "text",
+          "value": {
+            "en": "AC",
+            "ar": "التكييف"
+          },
+          "font": {
+            "family": "system",
+            "size": 15,
+            "weight": "medium"
+          },
+          "color": "#FFFFFF",
+          "align": "center",
+          "maxLines": 1,
+          "width": null,
+          "height": null,
+          "live": null,
+          "when": null
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "action": "shortcut.run",
+      "arg": "{{field.scene2}}",
+      "frame": {
+        "x": 102,
+        "y": 20,
+        "w": 74,
+        "h": 142
+      },
+      "rotation": null,
+      "opacity": 1,
+      "when": null,
+      "mirror": false
+    },
+    {
+      "type": "shape",
+      "kind": "roundedRect",
+      "fill": "#2C2C2E",
+      "stroke": null,
+      "cornerRadius": 20,
+      "glass": false,
+      "frame": {
+        "x": 188,
+        "y": 20,
+        "w": 74,
+        "h": 142
+      },
+      "rotation": null,
+      "opacity": 1,
+      "when": null,
+      "mirror": false
+    },
+    {
+      "type": "stack",
+      "axis": "vertical",
+      "spacing": 12,
+      "padding": 0,
+      "alignItems": "center",
+      "justify": "center",
+      "columns": null,
+      "frame": {
+        "x": 188,
+        "y": 20,
+        "w": 74,
+        "h": 142
+      },
+      "rotation": null,
+      "opacity": 1,
+      "when": null,
+      "mirror": false,
+      "children": [
+        {
+          "type": "icon",
+          "symbol": "fan.fill",
+          "size": 28,
+          "color": "#FFFFFF",
+          "width": null,
+          "height": null,
+          "when": null
+        },
+        {
+          "type": "text",
+          "value": {
+            "en": "Fan",
+            "ar": "المروحة"
+          },
+          "font": {
+            "family": "system",
+            "size": 15,
+            "weight": "medium"
+          },
+          "color": "#FFFFFF",
+          "align": "center",
+          "maxLines": 1,
+          "width": null,
+          "height": null,
+          "live": null,
+          "when": null
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "action": "shortcut.run",
+      "arg": "{{field.scene3}}",
+      "frame": {
+        "x": 188,
+        "y": 20,
+        "w": 74,
+        "h": 142
+      },
+      "rotation": null,
+      "opacity": 1,
+      "when": null,
+      "mirror": false
+    },
+    {
+      "type": "shape",
+      "kind": "roundedRect",
+      "fill": "#2C2C2E",
+      "stroke": null,
+      "cornerRadius": 20,
+      "glass": false,
+      "frame": {
+        "x": 274,
+        "y": 20,
+        "w": 74,
+        "h": 142
+      },
+      "rotation": null,
+      "opacity": 1,
+      "when": null,
+      "mirror": false
+    },
+    {
+      "type": "stack",
+      "axis": "vertical",
+      "spacing": 12,
+      "padding": 0,
+      "alignItems": "center",
+      "justify": "center",
+      "columns": null,
+      "frame": {
+        "x": 274,
+        "y": 20,
+        "w": 74,
+        "h": 142
+      },
+      "rotation": null,
+      "opacity": 1,
+      "when": null,
+      "mirror": false,
+      "children": [
+        {
+          "type": "icon",
+          "symbol": "lock.fill",
+          "size": 28,
+          "color": "#FFFFFF",
+          "width": null,
+          "height": null,
+          "when": null
+        },
+        {
+          "type": "text",
+          "value": {
+            "en": "Door",
+            "ar": "الباب"
+          },
+          "font": {
+            "family": "system",
+            "size": 15,
+            "weight": "medium"
+          },
+          "color": "#FFFFFF",
+          "align": "center",
+          "maxLines": 1,
+          "width": null,
+          "height": null,
+          "live": null,
+          "when": null
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "action": "shortcut.run",
+      "arg": "{{field.scene4}}",
+      "frame": {
+        "x": 274,
+        "y": 20,
+        "w": 74,
+        "h": 142
+      },
+      "rotation": null,
+      "opacity": 1,
+      "when": null,
+      "mirror": false
+    }
+  ]
+}

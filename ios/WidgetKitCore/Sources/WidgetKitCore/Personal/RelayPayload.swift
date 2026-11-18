@@ -21,9 +21,9 @@ public struct RelayPayload: Codable, Sendable, Equatable {
         self.sent = sent
     }
 
-    /// The relay rejects items over 1 MiB; leave room for the envelope and JSON.
-    public static let maxSealedBytes = 1_048_576
-    static let budget = 980_000
+    /// The relay rejects items over 4 MiB (spec v2 designs can be large); leave room for the envelope and JSON.
+    public static let maxSealedBytes = 4_194_304
+    static let budget = 4_000_000
 
     public func encoded() throws -> Data {
         let encoder = JSONEncoder()

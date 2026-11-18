@@ -1,0 +1,224 @@
+{
+  "name": {
+    "en": "Calendar Agenda",
+    "ar": "جدول المواعيد"
+  },
+  "family": "large",
+  "theme": "dark",
+  "palette": {
+    "bg": "#0B0B0B",
+    "fg": "#FFFFFF",
+    "accent": "#E51400"
+  },
+  "background": {
+    "type": "solid",
+    "color": "#0B0B0B",
+    "colors": null,
+    "angle": null,
+    "outerColor": null
+  },
+  "card": {
+    "shape": "roundedRect"
+  },
+  "fields": [],
+  "inventory": [
+    "Day name text: Wednesday, at x 0.06, y 0.05, red, sans-serif medium",
+    "Day number text: 4, at x 0.06, y 0.12, white, sans-serif bold size 52",
+    "Event 1 red marker bar, at x 0.06, y 0.30",
+    "Event 1 title: Team meeting, at x 0.12, y 0.30, white, sans-serif semibold",
+    "Event 1 time: 10:00, at x 0.12, y 0.38, muted gray, sans-serif regular",
+    "Event 2 red marker bar, at x 0.06, y 0.52",
+    "Event 2 title: Lunch with Friend, at x 0.12, y 0.52, white, sans-serif semibold",
+    "Event 2 time: 13:30, at x 0.12, y 0.60, muted gray, sans-serif regular",
+    "Event 3 red marker bar, at x 0.06, y 0.74",
+    "Event 3 title: Gym, at x 0.12, y 0.74, white, sans-serif semibold",
+    "Event 3 time: 18:00, at x 0.12, y 0.82, muted gray, sans-serif regular"
+  ],
+  "wiring": [
+    {
+      "element": "Day name text",
+      "shows": "{{date.EEEE}}",
+      "tap": null,
+      "decorative": null
+    },
+    {
+      "element": "Day number text",
+      "shows": "{{date.d}}",
+      "tap": null,
+      "decorative": null
+    },
+    {
+      "element": "Event 1 title",
+      "shows": "{{calendar.1.title}}",
+      "tap": null,
+      "decorative": null
+    },
+    {
+      "element": "Event 1 time",
+      "shows": "{{calendar.1.time}}",
+      "tap": null,
+      "decorative": null
+    },
+    {
+      "element": "Event 2 title",
+      "shows": "{{calendar.2.title}}",
+      "tap": null,
+      "decorative": null
+    },
+    {
+      "element": "Event 2 time",
+      "shows": "{{calendar.2.time}}",
+      "tap": null,
+      "decorative": null
+    },
+    {
+      "element": "Event 3 title",
+      "shows": "{{calendar.3.title}}",
+      "tap": null,
+      "decorative": null
+    },
+    {
+      "element": "Event 3 time",
+      "shows": "{{calendar.3.time}}",
+      "tap": null,
+      "decorative": null
+    }
+  ],
+  "layers": [
+    {
+      "type": "stack",
+      "axis": "vertical",
+      "alignItems": "start",
+      "justify": "start",
+      "spacing": 4,
+      "padding": 0,
+      "columns": null,
+      "frame": {
+        "x": 24,
+        "y": 24,
+        "w": 316,
+        "h": 90
+      },
+      "mirror": false,
+      "opacity": 1,
+      "rotation": null,
+      "when": null,
+      "children": [
+        {
+          "type": "text",
+          "value": {
+            "en": "{{date.EEEE}}",
+            "ar": "{{date.EEEE}}"
+          },
+          "font": {
+            "family": "system",
+            "size": 26,
+            "weight": "semibold"
+          },
+          "color": "@accent",
+          "align": "leading",
+          "maxLines": 1,
+          "width": null,
+          "height": null,
+          "live": null,
+          "when": null
+        },
+        {
+          "type": "text",
+          "value": {
+            "en": "{{date.d}}",
+            "ar": "{{date.d}}"
+          },
+          "font": {
+            "family": "system",
+            "size": 64,
+            "weight": "bold"
+          },
+          "color": "@fg",
+          "align": "leading",
+          "maxLines": 1,
+          "width": null,
+          "height": null,
+          "live": null,
+          "when": null
+        }
+      ]
+    },
+    {
+      "type": "list",
+      "frame": {
+        "x": 24,
+        "y": 140,
+        "w": 316,
+        "h": 210
+      },
+      "font": {
+        "family": "system",
+        "size": 18,
+        "weight": "semibold"
+      },
+      "color": "@fg",
+      "detailColor": "#A0A0A0",
+      "dividerColor": null,
+      "marker": "bar",
+      "markerColor": "@accent",
+      "mirror": false,
+      "opacity": 1,
+      "rotation": null,
+      "when": null,
+      "items": [
+        {
+          "title": {
+            "en": "{{calendar.1.title}}",
+            "ar": "{{calendar.1.title}}"
+          },
+          "detail": {
+            "en": "{{calendar.1.time}}",
+            "ar": "{{calendar.1.time}}"
+          },
+          "icon": null,
+          "color": null
+        },
+        {
+          "title": {
+            "en": "{{calendar.2.title}}",
+            "ar": "{{calendar.2.title}}"
+          },
+          "detail": {
+            "en": "{{calendar.2.time}}",
+            "ar": "{{calendar.2.time}}"
+          },
+          "icon": null,
+          "color": null
+        },
+        {
+          "title": {
+            "en": "{{calendar.3.title}}",
+            "ar": "{{calendar.3.title}}"
+          },
+          "detail": {
+            "en": "{{calendar.3.time}}",
+            "ar": "{{calendar.3.time}}"
+          },
+          "icon": null,
+          "color": null
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "action": "calendar.open",
+      "arg": null,
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 364,
+        "h": 382
+      },
+      "mirror": false,
+      "opacity": 1,
+      "rotation": null,
+      "when": null
+    }
+  ]
+}

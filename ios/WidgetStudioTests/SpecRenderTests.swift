@@ -62,7 +62,7 @@ final class SpecRenderTests: XCTestCase {
     /// size and both languages, and the result isn't blank.
     func testEverySpecRendersThroughTheWidgetView() throws {
         let specs = TestSpecs.load()
-        XCTAssertEqual(specs.count, 12)
+        XCTAssertEqual(specs.count, 14)
         for entry in specs {
             guard case .success(let spec) = entry.result else {
                 XCTFail("\(entry.fileName) is invalid")
@@ -83,7 +83,7 @@ final class SpecRenderTests: XCTestCase {
     /// languages and both themes, and the result isn't blank (M2).
     func testEveryTemplateRendersThroughTheWidgetView() throws {
         let templates = TemplateLibrary.all()
-        XCTAssertEqual(templates.count, 28)
+        XCTAssertEqual(templates.count, 37)
         for spec in templates {
             for family in spec.family.supportedFamilies {
                 for language in languages {

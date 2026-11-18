@@ -4,188 +4,1019 @@
   "title": "Widget Studio spec v1",
   "description": "Structure of a widget spec (brief §4). SpecValidator enforces further rules: binding whitelist, field references, icon whitelist, frames clamped to the canvas, AI-mode limits.",
   "type": "object",
-  "required": ["schemaVersion", "id", "name", "family", "background", "layers"],
+  "required": [
+    "schemaVersion",
+    "id",
+    "name",
+    "family",
+    "background",
+    "layers"
+  ],
   "properties": {
-    "schemaVersion": { "type": "integer", "enum": [1] },
-    "id": { "type": "string", "pattern": "^[A-Za-z0-9._-]{1,64}$" },
-    "category": { "type": "string", "enum": ["time", "weather", "health", "prayer", "countdown", "photo", "tiles", "counters"] },
-    "name": { "$ref": "#/$defs/localizedPair" },
-    "family": { "type": "string", "enum": ["small", "medium", "large"] },
-    "theme": { "type": "string", "enum": ["light", "dark"] },
-    "refresh": { "type": "string", "enum": ["none", "minute", "hourly", "daily"] },
+    "schemaVersion": {
+      "type": "integer",
+      "enum": [
+        1,
+        2
+      ]
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]{1,64}$"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "time",
+        "weather",
+        "health",
+        "prayer",
+        "countdown",
+        "photo",
+        "tiles",
+        "counters"
+      ]
+    },
+    "name": {
+      "$ref": "#/$defs/localizedPair"
+    },
+    "family": {
+      "type": "string",
+      "enum": [
+        "small",
+        "medium",
+        "large",
+        "xlarge"
+      ]
+    },
+    "theme": {
+      "type": "string",
+      "enum": [
+        "light",
+        "dark"
+      ]
+    },
+    "refresh": {
+      "type": "string",
+      "enum": [
+        "none",
+        "minute",
+        "hourly",
+        "daily"
+      ]
+    },
     "background": {
       "type": "object",
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "properties": {
-        "type": { "type": "string", "enum": ["solid", "gradient"] },
-        "color": { "$ref": "#/$defs/color" },
-        "colors": { "type": "array", "items": { "$ref": "#/$defs/color" }, "minItems": 2, "maxItems": 4 },
-        "angle": { "type": "number", "minimum": -360, "maximum": 360 },
-        "outerColor": { "$ref": "#/$defs/color" }
+        "type": {
+          "type": "string",
+          "enum": [
+            "solid",
+            "gradient",
+            "glass"
+          ]
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "colors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/color"
+          },
+          "minItems": 2,
+          "maxItems": 4
+        },
+        "angle": {
+          "type": "number",
+          "minimum": -360,
+          "maximum": 360
+        },
+        "outerColor": {
+          "$ref": "#/$defs/color"
+        },
+        "cardShape": {
+          "type": "string",
+          "enum": [
+            "circle",
+            "capsule"
+          ],
+          "description": "With outerColor: the card drawn inside the widget"
+        }
       }
     },
     "fields": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["key", "type", "label"],
+        "required": [
+          "key",
+          "type",
+          "label"
+        ],
         "properties": {
-          "key": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
-          "type": { "type": "string", "enum": ["text", "number", "date", "color", "image", "timezone", "city", "shortcut", "url", "icon"] },
-          "label": { "$ref": "#/$defs/localizedPair" },
-          "default": { "$ref": "#/$defs/text" }
+          "key": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "number",
+              "date",
+              "color",
+              "image",
+              "timezone",
+              "city",
+              "shortcut",
+              "url",
+              "icon"
+            ]
+          },
+          "label": {
+            "$ref": "#/$defs/localizedPair"
+          },
+          "default": {
+            "$ref": "#/$defs/text"
+          }
         }
       }
     },
-    "layers": { "type": "array", "minItems": 1, "maxItems": 30, "items": { "$ref": "#/$defs/layer" } }
+    "layers": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 30,
+      "items": {
+        "$ref": "#/$defs/layer"
+      }
+    },
+    "specVersion": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2,
+      "description": "ADR-029: the spec version (AI replies); schemaVersion in saved files"
+    },
+    "card": {
+      "type": "object",
+      "description": "ADR-029: the card inside the widget: shape (roundedRect, circle, capsule, scallop, none), aspect, inset, cornerRadius, orientation, bumps, outerColor"
+    }
   },
   "$defs": {
-    "color": { "type": "string", "pattern": "^(#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})|@(bg|fg|muted|accent|outer|line|dim|onAccent))$" },
+    "color": {
+      "type": "string",
+      "pattern": "^(#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})|@(bg|fg|muted|accent|outer|line|dim|onAccent))$"
+    },
     "localizedPair": {
       "type": "object",
-      "required": ["en", "ar"],
+      "required": [
+        "en",
+        "ar"
+      ],
       "properties": {
-        "en": { "type": "string", "maxLength": 200 },
-        "ar": { "type": "string", "maxLength": 200 }
+        "en": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "ar": {
+          "type": "string",
+          "maxLength": 200
+        }
       }
     },
     "text": {
       "anyOf": [
-        { "type": "string", "maxLength": 200 },
-        { "$ref": "#/$defs/localizedPair" }
+        {
+          "type": "string",
+          "maxLength": 200
+        },
+        {
+          "$ref": "#/$defs/localizedPair"
+        }
       ]
     },
     "font": {
       "type": "object",
-      "required": ["family", "size"],
+      "required": [
+        "family",
+        "size"
+      ],
       "properties": {
-        "family": { "type": "string", "enum": ["system", "system-rounded", "system-serif", "system-mono", "dot", "arabic", "hand", "serif-display", "condensed"] },
-        "size": { "type": "number", "minimum": 6, "maximum": 200 },
-        "weight": { "type": "string", "enum": ["ultraLight", "thin", "light", "regular", "medium", "semibold", "bold", "heavy", "black"] }
+        "family": {
+          "type": "string",
+          "enum": [
+            "system",
+            "system-rounded",
+            "system-serif",
+            "system-mono",
+            "dot",
+            "arabic",
+            "hand",
+            "serif-display",
+            "condensed"
+          ]
+        },
+        "size": {
+          "type": "number",
+          "minimum": 6,
+          "maximum": 200
+        },
+        "weight": {
+          "type": "string",
+          "enum": [
+            "ultraLight",
+            "thin",
+            "light",
+            "regular",
+            "medium",
+            "semibold",
+            "bold",
+            "heavy",
+            "black"
+          ]
+        }
       }
     },
     "frame": {
       "type": "object",
-      "required": ["x", "y", "w", "h"],
+      "required": [
+        "x",
+        "y",
+        "w",
+        "h"
+      ],
       "properties": {
-        "x": { "type": "number" },
-        "y": { "type": "number" },
-        "w": { "type": "number", "exclusiveMinimum": 0 },
-        "h": { "type": "number", "exclusiveMinimum": 0 }
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "h": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
       }
     },
     "layer": {
       "type": "object",
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "description": "Top-level layers need a frame; children of a stack give only width/height (M6.1).",
       "properties": {
-        "type": { "type": "string", "enum": ["text", "image", "shape", "icon", "analogClock", "dotGrid", "dotBars", "ring", "forecastRow", "button", "calendarMonth", "list", "progressBar", "stack", "spacer"] },
-        "frame": { "$ref": "#/$defs/frame" },
-        "width": { "type": "number", "minimum": 0, "description": "Stack children: width in canvas units (absent = natural)" },
-        "height": { "type": "number", "minimum": 0, "description": "Stack children: height in canvas units (absent = natural)" },
-        "axis": { "type": "string", "enum": ["vertical", "horizontal", "grid"] },
-        "spacing": { "type": "number", "minimum": 0, "maximum": 100 },
-        "padding": { "type": "number", "minimum": 0, "maximum": 100 },
-        "alignItems": { "type": "string", "enum": ["start", "center", "end"] },
-        "justify": { "type": "string", "enum": ["start", "center", "end"] },
-        "columns": { "type": "integer", "minimum": 1, "maximum": 8 },
-        "children": { "type": "array", "minItems": 1, "maxItems": 12, "items": { "$ref": "#/$defs/layer" } },
-        "minLength": { "type": "number", "minimum": 0, "maximum": 200 },
-        "opacity": { "type": "number", "minimum": 0, "maximum": 1 },
-        "mirror": { "type": "boolean" },
-        "when": { "type": "string", "description": "{{binding}}, !{{binding}} or {{binding}} == value" },
-        "rotation": { "type": ["number", "string"], "description": "Degrees clockwise or a number binding" },
-        "highlightColor": { "$ref": "#/$defs/color" },
-        "value": { "$ref": "#/$defs/text" },
-        "font": { "$ref": "#/$defs/font" },
-        "color": { "$ref": "#/$defs/color" },
-        "align": { "type": "string", "enum": ["leading", "center", "trailing"] },
-        "maxLines": { "type": "integer", "minimum": 1, "maximum": 10 },
-        "tracking": { "type": "number", "minimum": -10, "maximum": 40 },
+        "type": {
+          "type": "string",
+          "enum": [
+            "text",
+            "image",
+            "shape",
+            "icon",
+            "analogClock",
+            "dotGrid",
+            "dotBars",
+            "ring",
+            "forecastRow",
+            "button",
+            "calendarMonth",
+            "list",
+            "progressBar",
+            "stack",
+            "spacer",
+            "states",
+            "chart"
+          ]
+        },
+        "frame": {
+          "$ref": "#/$defs/frame"
+        },
+        "width": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Stack children: width in canvas units (absent = natural)"
+        },
+        "height": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Stack children: height in canvas units (absent = natural)"
+        },
+        "axis": {
+          "type": "string",
+          "enum": [
+            "vertical",
+            "horizontal",
+            "grid",
+            "radial"
+          ]
+        },
+        "spacing": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "padding": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "alignItems": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "justify": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end"
+          ]
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "children": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": {
+            "$ref": "#/$defs/layer"
+          }
+        },
+        "minLength": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 200
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "mirror": {
+          "type": "boolean"
+        },
+        "when": {
+          "type": "string",
+          "description": "{{binding}}, !{{binding}} or {{binding}} == value"
+        },
+        "rotation": {
+          "type": [
+            "number",
+            "string"
+          ],
+          "description": "Degrees clockwise or a number binding"
+        },
+        "highlightColor": {
+          "$ref": "#/$defs/color"
+        },
+        "value": {
+          "$ref": "#/$defs/text"
+        },
+        "font": {
+          "$ref": "#/$defs/font"
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "leading",
+            "center",
+            "trailing"
+          ]
+        },
+        "maxLines": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "tracking": {
+          "type": "number",
+          "minimum": -10,
+          "maximum": 40
+        },
         "live": {
           "type": "object",
-          "required": ["kind"],
+          "required": [
+            "kind"
+          ],
           "properties": {
-            "kind": { "type": "string", "enum": ["timer", "relative", "time"] },
-            "target": { "type": "string" }
+            "kind": {
+              "type": "string",
+              "enum": [
+                "timer",
+                "relative",
+                "time"
+              ]
+            },
+            "target": {
+              "type": "string"
+            }
           }
         },
-        "source": { "type": "string", "pattern": "^(user_image|asset:[a-z0-9._-]+)$" },
-        "fit": { "type": "string", "enum": ["fill", "fit"] },
-        "mask": { "type": "string", "enum": ["rect", "roundedRect", "circle"] },
-        "cornerRadius": { "type": "number", "minimum": 0, "maximum": 200 },
-        "filter": { "type": "string", "enum": ["none", "mono", "halftone"] },
-        "kind": { "type": "string", "enum": ["rect", "roundedRect", "circle", "capsule"] },
-        "fill": { "$ref": "#/$defs/color" },
+        "source": {
+          "type": "string",
+          "pattern": "^(user_image|\\{\\{media\\.artwork\\}\\}|asset:[a-z0-9._-]+)$"
+        },
+        "fit": {
+          "type": "string",
+          "enum": [
+            "fill",
+            "fit"
+          ]
+        },
+        "mask": {
+          "enum": [
+            "circle",
+            "cloud",
+            "sun",
+            "moon",
+            "drop",
+            "heart",
+            "bolt",
+            "weather"
+          ]
+        },
+        "cornerRadius": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 200
+        },
+        "filter": {
+          "type": "string",
+          "enum": [
+            "none",
+            "mono",
+            "halftone"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "rect",
+            "roundedRect",
+            "circle",
+            "capsule",
+            "line",
+            "triangle",
+            "polygon",
+            "sector",
+            "star",
+            "scallop",
+            "area",
+            "bars",
+            "steps",
+            "candles"
+          ]
+        },
+        "glass": {
+          "type": "boolean",
+          "description": "Frosted glass: translucent fill, sheen, thin light border"
+        },
+        "fill": {
+          "$ref": "#/$defs/color"
+        },
         "stroke": {
           "type": "object",
-          "required": ["color", "width"],
+          "required": [
+            "color",
+            "width"
+          ],
           "properties": {
-            "color": { "$ref": "#/$defs/color" },
-            "width": { "type": "number", "minimum": 0, "maximum": 40 },
-            "dash": { "type": "array", "items": { "type": "number", "minimum": 0, "maximum": 100 }, "maxItems": 8 }
+            "color": {
+              "$ref": "#/$defs/color"
+            },
+            "width": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 40
+            },
+            "dash": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "maxItems": 8
+            }
           }
         },
-        "symbol": { "type": "string" },
-        "size": { "type": "number", "minimum": 4, "maximum": 200 },
-        "style": { "type": "string", "enum": ["classic", "dot"] },
-        "faceColor": { "$ref": "#/$defs/color" },
-        "tickColor": { "$ref": "#/$defs/color" },
-        "hourColor": { "$ref": "#/$defs/color" },
-        "minuteColor": { "$ref": "#/$defs/color" },
-        "accentColor": { "$ref": "#/$defs/color" },
-        "timezone": { "type": "string" },
-        "rows": { "type": "integer", "minimum": 1, "maximum": 40 },
-        "cols": { "type": "integer", "minimum": 1, "maximum": 40 },
-        "dotSize": { "type": "number", "minimum": 0.5, "maximum": 60 },
-        "gap": { "type": "number", "minimum": 0, "maximum": 60 },
-        "onColor": { "$ref": "#/$defs/color" },
-        "offColor": { "$ref": "#/$defs/color" },
-        "values": { "type": "string" },
-        "bars": { "type": "integer", "minimum": 1, "maximum": 31 },
-        "maxDots": { "type": "integer", "minimum": 1, "maximum": 24 },
-        "labels": { "$ref": "#/$defs/text" },
-        "progress": { "type": "string" },
-        "trackColor": { "$ref": "#/$defs/color" },
-        "lineWidth": { "type": "number", "minimum": 0.5, "maximum": 60 },
-        "days": { "type": "integer", "minimum": 1, "maximum": 7 },
-        "action": { "type": "string", "enum": ["counter.increment", "counter.reset", "counter.next", "stopwatch.toggle", "shortcut.run", "open.url", "open.app"] },
-        "arg": { "type": "string" },
-        "titleFormat": { "type": "string", "enum": ["none", "MMM", "MMMM", "MMM yyyy", "MMMM yyyy"] },
-        "titleCase": { "type": "string", "enum": ["upper", "lower", "natural"] },
-        "titleFont": { "$ref": "#/$defs/font" },
-        "titleColor": { "$ref": "#/$defs/color" },
-        "titleAlign": { "type": "string", "enum": ["leading", "center", "trailing"] },
-        "weekdays": { "type": "string", "enum": ["none", "narrow", "short"] },
-        "weekdayFont": { "$ref": "#/$defs/font" },
-        "weekdayColor": { "$ref": "#/$defs/color" },
-        "weekStart": { "type": "string", "enum": ["locale", "saturday", "sunday", "monday"] },
-        "weekendDays": { "type": "array", "items": { "type": "string", "enum": ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] }, "maxItems": 7 },
-        "weekendColor": { "$ref": "#/$defs/color" },
-        "todayStyle": { "type": "string", "enum": ["filled", "circle", "ring", "dot", "none"] },
-        "todayColor": { "$ref": "#/$defs/color" },
-        "todayTextColor": { "$ref": "#/$defs/color" },
-        "otherDays": { "type": "string", "enum": ["hidden", "dimmed"] },
+        "symbol": {
+          "type": "string"
+        },
+        "size": {
+          "type": "number",
+          "minimum": 4,
+          "maximum": 200
+        },
+        "style": {
+          "type": "string"
+        },
+        "faceColor": {
+          "$ref": "#/$defs/color"
+        },
+        "tickColor": {
+          "$ref": "#/$defs/color"
+        },
+        "hourColor": {
+          "$ref": "#/$defs/color"
+        },
+        "minuteColor": {
+          "$ref": "#/$defs/color"
+        },
+        "accentColor": {
+          "$ref": "#/$defs/color"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "rows": {
+          "enum": [
+            "month",
+            "week",
+            "2weeks"
+          ]
+        },
+        "cols": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 40
+        },
+        "dotSize": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 60
+        },
+        "gap": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 60
+        },
+        "onColor": {
+          "$ref": "#/$defs/color"
+        },
+        "offColor": {
+          "$ref": "#/$defs/color"
+        },
+        "values": {
+          "type": "string"
+        },
+        "bars": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 31
+        },
+        "maxDots": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 24
+        },
+        "labels": {
+          "$ref": "#/$defs/text"
+        },
+        "progress": {
+          "type": [
+            "string",
+            "number"
+          ]
+        },
+        "vertical": {
+          "type": "boolean"
+        },
+        "trackColor": {
+          "$ref": "#/$defs/color"
+        },
+        "lineWidth": {
+          "type": "number"
+        },
+        "days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "open.app",
+            "open.url",
+            "open.deeplink",
+            "app.launch",
+            "call.dial",
+            "message.open",
+            "shortcut.run",
+            "camera.open",
+            "qr.scan",
+            "calendar.open",
+            "reminders.open",
+            "compass.open",
+            "weather.open",
+            "counter.increment",
+            "counter.reset",
+            "counter.next",
+            "stopwatch.toggle",
+            "timer.toggle",
+            "timer.add",
+            "timer.reset",
+            "task.toggle",
+            "task.add",
+            "media.playPause",
+            "media.next",
+            "media.previous",
+            "media.open",
+            "volume.up",
+            "volume.down",
+            "volume.mute",
+            "volume.ringUp",
+            "volume.ringDown",
+            "brightness.up",
+            "brightness.down",
+            "system.toggle.torch",
+            "system.toggle.wifi",
+            "system.toggle.bluetooth",
+            "system.toggle.airplane",
+            "system.toggle.mobileData",
+            "system.toggle.darkMode",
+            "system.toggle.lowPower",
+            "system.toggle.silent",
+            "system.toggle.rotation",
+            "system.toggle.dnd",
+            "assistant.open",
+            "system.toggle.hotspot",
+            "system.toggle.nfc",
+            "screen.record",
+            "captions.toggle",
+            "search.open",
+            "alarm.open",
+            "clock.open",
+            "health.open"
+          ]
+        },
+        "arg": {
+          "type": "string"
+        },
+        "titleFormat": {
+          "type": "string",
+          "enum": [
+            "none",
+            "MMM",
+            "MMMM",
+            "MMM yyyy",
+            "MMMM yyyy"
+          ]
+        },
+        "titleCase": {
+          "type": "string",
+          "enum": [
+            "upper",
+            "lower",
+            "natural"
+          ]
+        },
+        "titleFont": {
+          "$ref": "#/$defs/font"
+        },
+        "titleColor": {
+          "$ref": "#/$defs/color"
+        },
+        "titleAlign": {
+          "type": "string",
+          "enum": [
+            "leading",
+            "center",
+            "trailing"
+          ]
+        },
+        "weekdays": {
+          "type": "string",
+          "enum": [
+            "none",
+            "narrow",
+            "short",
+            "two"
+          ]
+        },
+        "weekdayFont": {
+          "$ref": "#/$defs/font"
+        },
+        "weekdayColor": {
+          "$ref": "#/$defs/color"
+        },
+        "weekStart": {
+          "type": "string",
+          "enum": [
+            "locale",
+            "saturday",
+            "sunday",
+            "monday"
+          ]
+        },
+        "weekendDays": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "sun",
+              "mon",
+              "tue",
+              "wed",
+              "thu",
+              "fri",
+              "sat"
+            ]
+          },
+          "maxItems": 7
+        },
+        "weekendColor": {
+          "$ref": "#/$defs/color"
+        },
+        "todayStyle": {
+          "type": "string",
+          "enum": [
+            "filled",
+            "circle",
+            "ring",
+            "dot",
+            "none"
+          ]
+        },
+        "todayColor": {
+          "$ref": "#/$defs/color"
+        },
+        "todayTextColor": {
+          "$ref": "#/$defs/color"
+        },
+        "otherDays": {
+          "type": "string",
+          "enum": [
+            "hidden",
+            "dimmed"
+          ]
+        },
         "items": {
           "type": "array",
           "minItems": 1,
           "maxItems": 8,
           "items": {
             "type": "object",
-            "required": ["title"],
+            "required": [
+              "title"
+            ],
             "properties": {
-              "title": { "$ref": "#/$defs/text" },
-              "detail": { "$ref": "#/$defs/text" },
-              "icon": { "type": "string" },
-              "color": { "$ref": "#/$defs/color" }
+              "title": {
+                "$ref": "#/$defs/text"
+              },
+              "detail": {
+                "$ref": "#/$defs/text"
+              },
+              "icon": {
+                "type": "string"
+              },
+              "color": {
+                "$ref": "#/$defs/color"
+              }
             }
           }
         },
-        "detailColor": { "$ref": "#/$defs/color" },
-        "marker": { "type": "string", "enum": ["none", "dot", "circle", "check", "icon", "bar"] },
-        "markerColor": { "$ref": "#/$defs/color" },
-        "dividerColor": { "$ref": "#/$defs/color" },
-        "segments": { "type": "integer", "minimum": 1, "maximum": 20 }
+        "detailColor": {
+          "$ref": "#/$defs/color"
+        },
+        "marker": {
+          "type": "string",
+          "enum": [
+            "none",
+            "dot",
+            "circle",
+            "check",
+            "icon",
+            "bar"
+          ]
+        },
+        "markerColor": {
+          "$ref": "#/$defs/color"
+        },
+        "dividerColor": {
+          "$ref": "#/$defs/color"
+        },
+        "segments": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "spans": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "object"
+          },
+          "description": "ADR-029: runs of a text with their own font, color, baselineOffset, case, tracking"
+        },
+        "case": {
+          "enum": [
+            "upper",
+            "lower"
+          ]
+        },
+        "minScale": {
+          "type": "number",
+          "minimum": 0.3,
+          "maximum": 1
+        },
+        "path": {
+          "type": "object",
+          "description": "text on a circle: arc (radius), start (degrees), inside"
+        },
+        "points": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 16,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "sides": {
+          "type": "integer",
+          "minimum": 3,
+          "maximum": 24
+        },
+        "innerRatio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.95
+        },
+        "startAngle": {
+          "type": "number"
+        },
+        "endAngle": {
+          "type": "number"
+        },
+        "direction": {
+          "enum": [
+            "up",
+            "down",
+            "left",
+            "right",
+            "horizontal",
+            "vertical",
+            "diagonal",
+            "antidiagonal"
+          ]
+        },
+        "hourWidth": {
+          "type": "number"
+        },
+        "minuteWidth": {
+          "type": "number"
+        },
+        "handCap": {
+          "enum": [
+            "round",
+            "flat"
+          ]
+        },
+        "hourLength": {
+          "type": "number"
+        },
+        "minuteLength": {
+          "type": "number"
+        },
+        "ticks": {
+          "enum": [
+            "none",
+            "12",
+            "60",
+            "dots"
+          ]
+        },
+        "seconds": {
+          "enum": [
+            "none",
+            "hand",
+            "dot"
+          ]
+        },
+        "centerDot": {
+          "type": "boolean"
+        },
+        "levelColors": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "$ref": "#/$defs/color"
+          }
+        },
+        "sizeByLevel": {
+          "type": "boolean"
+        },
+        "order": {
+          "enum": [
+            "rows",
+            "columns",
+            "bottomUp"
+          ]
+        },
+        "fade": {
+          "enum": [
+            "none",
+            "left",
+            "right",
+            "up",
+            "down"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "daily",
+            "hourly"
+          ]
+        },
+        "iconStyle": {
+          "enum": [
+            "fill",
+            "outline"
+          ]
+        },
+        "showLow": {
+          "type": "boolean"
+        },
+        "labelColor": {
+          "type": "string"
+        },
+        "showIcons": {
+          "type": "boolean"
+        },
+        "knob": {
+          "type": "object"
+        },
+        "radius": {
+          "type": "number"
+        },
+        "sweep": {
+          "type": "number"
+        },
+        "rotateChildren": {
+          "type": "boolean"
+        },
+        "barWidth": {
+          "type": "number"
+        },
+        "baseline": {
+          "type": [
+            "string",
+            "number"
+          ]
+        },
+        "baselineColor": {
+          "type": "string"
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "highlight": {
+          "enum": [
+            "none",
+            "last",
+            "max",
+            "min"
+          ]
+        },
+        "xLabels": {
+          "$ref": "#/$defs/localizedPair"
+        },
+        "yLabels": {
+          "$ref": "#/$defs/localizedPair"
+        },
+        "labelFont": {
+          "$ref": "#/$defs/font"
+        },
+        "downColor": {
+          "type": "string"
+        },
+        "smooth": {
+          "type": "boolean"
+        }
       }
     }
   }

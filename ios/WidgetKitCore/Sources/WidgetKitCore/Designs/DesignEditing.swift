@@ -45,6 +45,10 @@ public enum DesignEditing {
             return SpecValidatorText.containsURL(value) ? [SpecIssue(path, "links are only allowed in link fields")] : []
         case .shortcut:
             return value.contains("://") ? [SpecIssue(path, "enter the Shortcut's name, not a link")] : []
+        case .app:
+            return value.contains("/") ? [SpecIssue(path, "enter an app id like com.spotify.music")] : []
+        case .ticker:
+            return value.count > 24 || value.contains(" ") ? [SpecIssue(path, "enter a ticker like TSLA or a coin like bitcoin")] : []
         case .url:
             guard !value.isEmpty else { return [] }
             guard let url = URL(string: value), let scheme = url.scheme?.lowercased(), ["http", "https"].contains(scheme),

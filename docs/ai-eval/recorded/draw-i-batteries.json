@@ -1,0 +1,412 @@
+{
+  "background": {
+    "angle": null,
+    "color": "#121212",
+    "colors": null,
+    "outerColor": null,
+    "type": "solid"
+  },
+  "card": {
+    "shape": "roundedRect"
+  },
+  "family": "medium",
+  "fields": [
+    {
+      "default": {
+        "ar": "+1234567890",
+        "en": "+1234567890"
+      },
+      "key": "phone_number",
+      "label": {
+        "ar": "رقم الهاتف",
+        "en": "Phone Number"
+      },
+      "type": "text"
+    }
+  ],
+  "inventory": [
+    "Left ring progress bar at x 0.08-0.34, y 0.08-0.78",
+    "Left ring phone icon at x 0.17-0.25, y 0.32-0.52",
+    "Left percentage text '82%' at x 0.12-0.30, y 0.78-0.92",
+    "Middle ring progress bar at x 0.37-0.63, y 0.08-0.78",
+    "Middle ring headphone icon at x 0.46-0.54, y 0.32-0.52",
+    "Middle percentage text '64%' at x 0.41-0.59, y 0.78-0.92",
+    "Right ring progress bar at x 0.66-0.92, y 0.08-0.78",
+    "Right ring stopwatch icon at x 0.75-0.83, y 0.32-0.52",
+    "Right percentage text '40%' at x 0.70-0.88, y 0.78-0.92"
+  ],
+  "wiring": [
+    {
+      "decorative": null,
+      "element": "Left ring progress bar",
+      "shows": "{{battery.level}}",
+      "tap": null
+    },
+    {
+      "decorative": null,
+      "element": "Left ring phone icon",
+      "shows": null,
+      "tap": "call.dial"
+    },
+    {
+      "decorative": null,
+      "element": "Left percentage text",
+      "shows": "{{battery.level}}%",
+      "tap": null
+    },
+    {
+      "decorative": null,
+      "element": "Middle ring progress bar",
+      "shows": "{{volume.level}}",
+      "tap": null
+    },
+    {
+      "decorative": null,
+      "element": "Middle ring headphone icon",
+      "shows": null,
+      "tap": "media.playPause"
+    },
+    {
+      "decorative": null,
+      "element": "Middle percentage text",
+      "shows": "{{volume.level}}%",
+      "tap": null
+    },
+    {
+      "decorative": null,
+      "element": "Right ring progress bar",
+      "shows": "{{steps.progress}}",
+      "tap": null
+    },
+    {
+      "decorative": null,
+      "element": "Right ring stopwatch icon",
+      "shows": null,
+      "tap": "stopwatch.toggle"
+    },
+    {
+      "decorative": null,
+      "element": "Right percentage text",
+      "shows": "{{steps.progress}}%",
+      "tap": null
+    }
+  ],
+  "layers": [
+    {
+      "color": "#1E1E1E",
+      "frame": {
+        "h": 110,
+        "w": 110,
+        "x": 16,
+        "y": 14
+      },
+      "lineWidth": 10,
+      "mirror": false,
+      "opacity": 1,
+      "progress": "1",
+      "rotation": null,
+      "trackColor": null,
+      "type": "ring"
+    },
+    {
+      "color": "#22C55E",
+      "frame": {
+        "h": 110,
+        "w": 110,
+        "x": 16,
+        "y": 14
+      },
+      "lineWidth": 10,
+      "mirror": false,
+      "opacity": 1,
+      "progress": "{{battery.level}}",
+      "rotation": null,
+      "trackColor": null,
+      "type": "ring"
+    },
+    {
+      "color": "#FFFFFF",
+      "frame": {
+        "h": 28,
+        "w": 28,
+        "x": 57,
+        "y": 55
+      },
+      "mirror": false,
+      "opacity": 1,
+      "rotation": null,
+      "size": 24,
+      "symbol": "phone.fill",
+      "type": "icon"
+    },
+    {
+      "alignItems": "center",
+      "axis": "vertical",
+      "children": [
+        {
+          "align": "center",
+          "color": "#FFFFFF",
+          "font": {
+            "family": "system",
+            "size": 20,
+            "weight": "bold"
+          },
+          "height": null,
+          "live": null,
+          "maxLines": 1,
+          "type": "text",
+          "value": {
+            "ar": "{{battery.level}}%",
+            "en": "{{battery.level}}%"
+          },
+          "when": null,
+          "width": null
+        }
+      ],
+      "columns": null,
+      "frame": {
+        "h": 30,
+        "w": 110,
+        "x": 16,
+        "y": 132
+      },
+      "justify": "center",
+      "mirror": false,
+      "opacity": 1,
+      "padding": 0,
+      "rotation": null,
+      "spacing": 0,
+      "type": "stack",
+      "when": null
+    },
+    {
+      "action": "call.dial",
+      "arg": "{{field.phone_number}}",
+      "frame": {
+        "h": 110,
+        "w": 110,
+        "x": 16,
+        "y": 14
+      },
+      "mirror": false,
+      "opacity": 1,
+      "rotation": null,
+      "type": "button",
+      "when": null
+    },
+    {
+      "color": "#1E1E1E",
+      "frame": {
+        "h": 110,
+        "w": 110,
+        "x": 127,
+        "y": 14
+      },
+      "lineWidth": 10,
+      "mirror": false,
+      "opacity": 1,
+      "progress": "1",
+      "rotation": null,
+      "trackColor": null,
+      "type": "ring"
+    },
+    {
+      "color": "#22C55E",
+      "frame": {
+        "h": 110,
+        "w": 110,
+        "x": 127,
+        "y": 14
+      },
+      "lineWidth": 10,
+      "mirror": false,
+      "opacity": 1,
+      "progress": "{{volume.level}}",
+      "rotation": null,
+      "trackColor": null,
+      "type": "ring"
+    },
+    {
+      "color": "#FFFFFF",
+      "frame": {
+        "h": 28,
+        "w": 28,
+        "x": 168,
+        "y": 55
+      },
+      "mirror": false,
+      "opacity": 1,
+      "rotation": null,
+      "size": 24,
+      "symbol": "headphones",
+      "type": "icon"
+    },
+    {
+      "alignItems": "center",
+      "axis": "vertical",
+      "children": [
+        {
+          "align": "center",
+          "color": "#FFFFFF",
+          "font": {
+            "family": "system",
+            "size": 20,
+            "weight": "bold"
+          },
+          "height": null,
+          "live": null,
+          "maxLines": 1,
+          "type": "text",
+          "value": {
+            "ar": "{{volume.level}}%",
+            "en": "{{volume.level}}%"
+          },
+          "when": null,
+          "width": null
+        }
+      ],
+      "columns": null,
+      "frame": {
+        "h": 30,
+        "w": 110,
+        "x": 127,
+        "y": 132
+      },
+      "justify": "center",
+      "mirror": false,
+      "opacity": 1,
+      "padding": 0,
+      "rotation": null,
+      "spacing": 0,
+      "type": "stack",
+      "when": null
+    },
+    {
+      "action": "media.playPause",
+      "arg": null,
+      "frame": {
+        "h": 110,
+        "w": 110,
+        "x": 127,
+        "y": 14
+      },
+      "mirror": false,
+      "opacity": 1,
+      "rotation": null,
+      "type": "button",
+      "when": null
+    },
+    {
+      "color": "#1E1E1E",
+      "frame": {
+        "h": 110,
+        "w": 110,
+        "x": 238,
+        "y": 14
+      },
+      "lineWidth": 10,
+      "mirror": false,
+      "opacity": 1,
+      "progress": "1",
+      "rotation": null,
+      "trackColor": null,
+      "type": "ring"
+    },
+    {
+      "color": "#22C55E",
+      "frame": {
+        "h": 110,
+        "w": 110,
+        "x": 238,
+        "y": 14
+      },
+      "lineWidth": 10,
+      "mirror": false,
+      "opacity": 1,
+      "progress": "{{steps.progress}}",
+      "rotation": null,
+      "trackColor": null,
+      "type": "ring"
+    },
+    {
+      "color": "#FFFFFF",
+      "frame": {
+        "h": 28,
+        "w": 28,
+        "x": 279,
+        "y": 55
+      },
+      "mirror": false,
+      "opacity": 1,
+      "rotation": null,
+      "size": 24,
+      "symbol": "stopwatch",
+      "type": "icon"
+    },
+    {
+      "alignItems": "center",
+      "axis": "vertical",
+      "children": [
+        {
+          "align": "center",
+          "color": "#FFFFFF",
+          "font": {
+            "family": "system",
+            "size": 20,
+            "weight": "bold"
+          },
+          "height": null,
+          "live": null,
+          "maxLines": 1,
+          "type": "text",
+          "value": {
+            "ar": "{{steps.progress}}%",
+            "en": "{{steps.progress}}%"
+          },
+          "when": null,
+          "width": null
+        }
+      ],
+      "columns": null,
+      "frame": {
+        "h": 30,
+        "w": 110,
+        "x": 238,
+        "y": 132
+      },
+      "justify": "center",
+      "mirror": false,
+      "opacity": 1,
+      "padding": 0,
+      "rotation": null,
+      "spacing": 0,
+      "type": "stack",
+      "when": null
+    },
+    {
+      "action": "stopwatch.toggle",
+      "arg": null,
+      "frame": {
+        "h": 110,
+        "w": 110,
+        "x": 238,
+        "y": 14
+      },
+      "mirror": false,
+      "opacity": 1,
+      "rotation": null,
+      "type": "button",
+      "when": null
+    }
+  ],
+  "name": {
+    "ar": "حلقات التقدم",
+    "en": "Progress Rings"
+  },
+  "palette": {
+    "accent": "#22C55E",
+    "bg": "#121212",
+    "fg": "#FFFFFF"
+  },
+  "theme": "dark"
+}

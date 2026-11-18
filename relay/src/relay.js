@@ -2,7 +2,7 @@
 // The server never sees the pairing code: an item's ID is a hash derived from it, and the body
 // is AES-GCM ciphertext made on the phone. No accounts, no secrets, no logs of contents.
 //
-//   PUT    /v1/items/<id>         body = ciphertext (max 1 MiB) -> {version, size}
+//   PUT    /v1/items/<id>         body = ciphertext (max 4 MiB) -> {version, size}
 //   GET    /v1/items/<id>         If-None-Match -> 200 body + ETag | 304 | 404
 //   GET    /v1/items/<id>/status  -> {exists, size, uploaded, lastDownload} (ms since 1970)
 //   DELETE /v1/items/<id>
@@ -11,7 +11,7 @@
 // widget downloaded it. Both expire 30 days after the last access (re-put at most once a day,
 // which keeps KV writes within the free plan).
 
-export const MAX_BYTES = 1024 * 1024;
+export const MAX_BYTES = 4 * 1024 * 1024;
 export const TTL_SECONDS = 30 * 24 * 3600;
 export const TOUCH_EVERY_MS = 24 * 3600 * 1000;
 // Fallback when the rate-limit bindings are missing (per isolate only).

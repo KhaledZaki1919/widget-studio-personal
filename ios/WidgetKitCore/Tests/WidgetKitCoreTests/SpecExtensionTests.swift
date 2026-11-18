@@ -150,8 +150,9 @@ struct RotationAndBindingTests {
     }
 
     @Test func supportedFamiliesAreOwnAndLarger() {
-        #expect(SpecFamily.small.supportedFamilies == [.small, .medium, .large])
-        #expect(SpecFamily.medium.supportedFamilies == [.medium, .large])
-        #expect(SpecFamily.large.supportedFamilies == [.large])
+        #expect(SpecFamily.small.supportedFamilies == [.small, .medium, .large, .xlarge])
+        #expect(SpecFamily.medium.supportedFamilies == [.medium, .large, .xlarge])
+        #expect(SpecFamily.large.supportedFamilies == [.large, .xlarge])
+        #expect(SpecFamily.xlarge.supportedFamilies == [.xlarge])
     }
 }

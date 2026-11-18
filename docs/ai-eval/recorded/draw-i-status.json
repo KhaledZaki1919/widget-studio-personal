@@ -1,0 +1,267 @@
+{
+  "name": {
+    "en": "Stats Overview",
+    "ar": "نظرة عامة على الإحصائيات"
+  },
+  "family": "medium",
+  "theme": "dark",
+  "palette": {
+    "bg": "#0D0D0D",
+    "fg": "#FFFFFF",
+    "accent": "#2ECC71"
+  },
+  "card": {
+    "shape": "roundedRect"
+  },
+  "background": {
+    "type": "solid",
+    "color": "#0D0D0D",
+    "colors": null,
+    "angle": null,
+    "outerColor": null
+  },
+  "fields": [],
+  "inventory": [
+    "Temperature value '24°' at x 0.08–0.28, y 0.28–0.52 in white",
+    "City label 'Cairo' at x 0.08–0.28, y 0.58–0.70 in muted grey",
+    "Battery percentage '82%' at x 0.40–0.60, y 0.28–0.52 in green",
+    "Battery label 'Battery' at x 0.40–0.60, y 0.58–0.70 in muted grey",
+    "Steps count '6,214' at x 0.72–0.92, y 0.28–0.52 in white",
+    "Steps label 'Steps' at x 0.72–0.92, y 0.58–0.70 in muted grey"
+  ],
+  "wiring": [
+    {
+      "element": "Temperature value '24°'",
+      "shows": "{{weather.temp}}°",
+      "tap": "weather.open",
+      "decorative": null
+    },
+    {
+      "element": "City label 'Cairo'",
+      "shows": "{{weather.city}}",
+      "tap": "weather.open",
+      "decorative": null
+    },
+    {
+      "element": "Battery percentage '82%'",
+      "shows": "{{battery.level}}%",
+      "tap": null,
+      "decorative": null
+    },
+    {
+      "element": "Battery label 'Battery'",
+      "shows": null,
+      "tap": null,
+      "decorative": "Fixed label"
+    },
+    {
+      "element": "Steps count '6,214'",
+      "shows": "{{steps.today}}",
+      "tap": null,
+      "decorative": null
+    },
+    {
+      "element": "Steps label 'Steps'",
+      "shows": null,
+      "tap": null,
+      "decorative": "Fixed label"
+    }
+  ],
+  "layers": [
+    {
+      "type": "stack",
+      "axis": "vertical",
+      "alignment": null,
+      "alignItems": "center",
+      "justify": "center",
+      "spacing": 6,
+      "padding": 0,
+      "columns": null,
+      "frame": {
+        "x": 30,
+        "y": 42,
+        "w": 90,
+        "h": 90
+      },
+      "when": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": false,
+      "children": [
+        {
+          "type": "text",
+          "value": {
+            "en": "{{weather.temp}}°",
+            "ar": "{{weather.temp}}°"
+          },
+          "font": {
+            "family": "system",
+            "size": 36,
+            "weight": "bold"
+          },
+          "color": "@fg",
+          "align": "center",
+          "maxLines": 1,
+          "width": null,
+          "height": null,
+          "live": null,
+          "when": null
+        },
+        {
+          "type": "text",
+          "value": {
+            "en": "{{weather.city}}",
+            "ar": "{{weather.city}}"
+          },
+          "font": {
+            "family": "system",
+            "size": 15,
+            "weight": "regular"
+          },
+          "color": "#8E8E93",
+          "align": "center",
+          "maxLines": 1,
+          "width": null,
+          "height": null,
+          "live": null,
+          "when": null
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "action": "weather.open",
+      "arg": null,
+      "frame": {
+        "x": 30,
+        "y": 42,
+        "w": 90,
+        "h": 90
+      },
+      "when": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": false
+    },
+    {
+      "type": "stack",
+      "axis": "vertical",
+      "alignment": null,
+      "alignItems": "center",
+      "justify": "center",
+      "spacing": 6,
+      "padding": 0,
+      "columns": null,
+      "frame": {
+        "x": 137,
+        "y": 42,
+        "w": 90,
+        "h": 90
+      },
+      "when": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": false,
+      "children": [
+        {
+          "type": "text",
+          "value": {
+            "en": "{{battery.level}}%",
+            "ar": "{{battery.level}}%"
+          },
+          "font": {
+            "family": "system",
+            "size": 36,
+            "weight": "bold"
+          },
+          "color": "@accent",
+          "align": "center",
+          "maxLines": 1,
+          "width": null,
+          "height": null,
+          "live": null,
+          "when": null
+        },
+        {
+          "type": "text",
+          "value": {
+            "en": "Battery",
+            "ar": "الضرية"
+          },
+          "font": {
+            "family": "system",
+            "size": 15,
+            "weight": "regular"
+          },
+          "color": "#8E8E93",
+          "align": "center",
+          "maxLines": 1,
+          "width": null,
+          "height": null,
+          "live": null,
+          "when": null
+        }
+      ]
+    },
+    {
+      "type": "stack",
+      "axis": "vertical",
+      "alignment": null,
+      "alignItems": "center",
+      "justify": "center",
+      "spacing": 6,
+      "padding": 0,
+      "columns": null,
+      "frame": {
+        "x": 244,
+        "y": 42,
+        "w": 90,
+        "h": 90
+      },
+      "when": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": false,
+      "children": [
+        {
+          "type": "text",
+          "value": {
+            "en": "{{steps.today}}",
+            "ar": "{{steps.today}}"
+          },
+          "font": {
+            "family": "system",
+            "size": 36,
+            "weight": "bold"
+          },
+          "color": "@fg",
+          "align": "center",
+          "maxLines": 1,
+          "width": null,
+          "height": null,
+          "live": null,
+          "when": null
+        },
+        {
+          "type": "text",
+          "value": {
+            "en": "Steps",
+            "ar": "الخطوات"
+          },
+          "font": {
+            "family": "system",
+            "size": 15,
+            "weight": "regular"
+          },
+          "color": "#8E8E93",
+          "align": "center",
+          "maxLines": 1,
+          "width": null,
+          "height": null,
+          "live": null,
+          "when": null
+        }
+      ]
+    }
+  ]
+}

@@ -170,8 +170,11 @@ struct LayerRow: View {
             case .vertical: "editor.layer.kind.column"
             case .horizontal: "editor.layer.kind.row"
             case .grid: "editor.layer.kind.grid"
+            case .radial: "editor.layer.kind.radial"
             }
         case .spacer: "editor.layer.kind.spacer"
+        case .states: "editor.layer.kind.states"
+        case .chart: "editor.layer.kind.chart"
         case .unknown: "editor.layer.kind.unknown"
         }
     }
@@ -195,8 +198,11 @@ struct LayerRow: View {
             case .vertical: "rectangle.split.1x2"
             case .horizontal: "rectangle.split.2x1"
             case .grid: "square.grid.2x2"
+            case .radial: "circle.dotted"
             }
         case .spacer: "arrow.up.and.down"
+        case .states: "circle.lefthalf.filled"
+        case .chart: "chart.xyaxis.line"
         case .unknown: "questionmark.square"
         }
     }

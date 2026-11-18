@@ -24,7 +24,7 @@ final class LiveDataModel: NSObject, CLLocationManagerDelegate {
         settings = next
         try? next.save(cache)
         inputs.settings = next
-        WidgetCenter.shared.reloadAllTimelines()
+        AppReloads.all("settings changed")
         Task { await refresh() }
     }
 
@@ -185,7 +185,7 @@ final class LiveDataModel: NSObject, CLLocationManagerDelegate {
         Task { @MainActor in
             self.authorization = status
             if status == .authorizedWhenInUse || status == .authorizedAlways { await self.refresh() }
-            WidgetCenter.shared.reloadAllTimelines()
+            AppReloads.all("location access changed")
         }
     }
 }

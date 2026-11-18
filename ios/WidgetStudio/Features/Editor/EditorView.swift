@@ -1,5 +1,7 @@
 import PhotosUI
 import SwiftUI
+import UIKit
+import UniformTypeIdentifiers
 import WidgetKitCore
 
 /// The editor (brief §7.3, M3): a live preview at real size above every field the template
@@ -9,7 +11,9 @@ import WidgetKitCore
 struct EditorView: View {
     @Environment(DesignsModel.self) private var designs
     @Environment(AppState.self) private var appState
+    @Environment(LiveDataModel.self) private var live
     @Environment(\.dismiss) private var dismiss
+    @State private var confirmingDelete = false
     @State private var model: EditorModel
     @State private var saveError: String?
 
@@ -48,9 +52,17 @@ struct EditorView: View {
                     TextField("editor.name", text: $model.design.name)
                         .accessibilityIdentifier("ax.editor.name")
                 }
+                PreviewRequestSection(model: model)
+                InteractiveSection(model: model)
                 if model.hasPhoto { photoSection }
                 appearanceSection
                 layersSection
+                if !model.isNew {
+                    Section {
+                        Button("mywidgets.delete", role: .destructive) { confirmingDelete = true }
+                            .accessibilityIdentifier("ax.editor.delete")
+                    }
+                }
                 if !model.editableFields.isEmpty {
                     Section("editor.fields") {
                         ForEach(model.editableFields, id: \.key) { field in
@@ -82,6 +94,12 @@ struct EditorView: View {
                     Button("common.save", action: save)
                         .disabled(!model.canSave)
                         .accessibilityIdentifier("ax.editor.save")
+                }
+            }
+            .confirmationDialog("mywidgets.delete.title", isPresented: $confirmingDelete, titleVisibility: .visible) {
+                Button("mywidgets.delete.confirm", role: .destructive) {
+                    designs.delete(model.design)
+                    dismiss()
                 }
             }
             .onChange(of: model.photoItem) { _, item in
@@ -215,10 +233,16 @@ struct EditorView: View {
                 Text("settings.clock.h24").tag(ClockFormat.h24.rawValue)
             }
             .accessibilityIdentifier("ax.editor.clock")
+            Toggle("editor.glass", isOn: $model.glassBackground)
+                .accessibilityIdentifier("ax.editor.glass")
             colorRow("editor.color.accent", token: "accent")
             colorRow("editor.color.bg", token: "bg")
             colorRow("editor.color.fg", token: "fg")
             colorRow("editor.color.muted", token: "muted")
+            // Around a circle or capsule card (ADR-024).
+            if model.design.spec.background.outerColor == "@outer" {
+                colorRow("editor.color.outer", token: "outer")
+            }
         }
     }
 
@@ -243,10 +267,47 @@ struct EditorView: View {
     private func save() {
         do {
             try designs.save(model.design, newPhoto: model.newPhoto)
+            let spec = model.design.spec
+            let live = live
             dismiss()
             appState.tab = .myWidgets
+            // What this design needs, asked for right after saving (ADR-027).
+            Task { await WidgetPermissions.request(for: [spec], live: live) }
         } catch {
             saveError = error.localizedDescription
         }
+    }
+}
+
+/// "Copy preview + fix request" (ADR-029): the design drawn by the real renderer with sample data, as a PNG on
+/// the clipboard with a request to compare it with the original image, so another AI (ChatGPT, Claude, Gemini)
+/// can see its JSON's result and fix it.
+private struct PreviewRequestSection: View {
+    let model: EditorModel
+    @State private var copied = false
+
+    var body: some View {
+        Section {
+            Button {
+                copy()
+            } label: {
+                Label(copied ? LocalizedStringKey("editor.preview.copied") : "editor.preview.copy",
+                      systemImage: copied ? "checkmark.circle.fill" : "photo.on.rectangle.angled")
+            }
+            .accessibilityIdentifier("ax.editor.preview.copy")
+        } footer: {
+            Text("editor.preview.footer")
+        }
+    }
+
+    private func copy() {
+        let design = model.design
+        guard let image = SpecSnapshot.render(design.spec, colors: design.colors, language: "en", userImage: model.newPhoto),
+              let png = UIImage(cgImage: image).pngData() else { return }
+        let notes = DesignRules.check(design.spec).findings.map { $0.message.resolved(language: "en") }
+            + model.issues.map(\.description)
+        let text = ExternalAI.previewRequest(names: [design.name], notes: notes)
+        UIPasteboard.general.setItems([[UTType.png.identifier: png, UTType.utf8PlainText.identifier: text]])
+        copied = true
     }
 }

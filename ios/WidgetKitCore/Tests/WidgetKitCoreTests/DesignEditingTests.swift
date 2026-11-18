@@ -61,7 +61,9 @@ struct DesignEditingTests {
     }
 
     @Test func urlFieldsAcceptOnlyWebLinks() throws {
-        var music = SavedDesign.new(from: try template("mono.music.card"), language: "en")
+        var card = try template("mono.music.card")
+        card.fields.append(FieldSpec(key: "url", type: .url, label: .localized(en: "Link", ar: "رابط")))
+        var music = SavedDesign.new(from: card, language: "en")
         music.fieldValues["url"] = "https://example.com/song"
         #expect(DesignEditing.validate(music).isEmpty)
         for bad in ["javascript:alert(1)", "file:///etc/passwd", "example.com", "https://"] {

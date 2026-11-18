@@ -1,0 +1,58 @@
+{
+ "schemaVersion": 1,
+ "id": "mono.battery.mood",
+ "category": "tiles",
+ "name": {
+  "en": "Battery Mood",
+  "ar": "مزاج البطارية"
+ },
+ "family": "small",
+ "theme": "dark",
+ "refresh": "hourly",
+ "background": {
+  "type": "solid",
+  "color": "@bg"
+ },
+ "layers": [
+  {
+   "type": "states",
+   "set": "battery.mood",
+   "frame": {
+    "x": 35,
+    "y": 12,
+    "w": 100,
+    "h": 100
+   }
+  },
+  {
+   "type": "text",
+   "value": "{{battery.level}}%",
+   "font": {
+    "family": "dot",
+    "size": 28,
+    "weight": "bold"
+   },
+   "color": "@fg",
+   "align": "center",
+   "frame": {
+    "x": 20,
+    "y": 118,
+    "w": 130,
+    "h": 36
+   }
+  },
+  {
+   "type": "icon",
+   "symbol": "bolt.fill",
+   "size": 16,
+   "color": "@accent",
+   "when": "{{battery.charging}}",
+   "frame": {
+    "x": 134,
+    "y": 14,
+    "w": 22,
+    "h": 22
+   }
+  }
+ ]
+}

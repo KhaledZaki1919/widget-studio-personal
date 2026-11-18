@@ -23,6 +23,13 @@ struct FieldEditor: View {
                     .multilineTextAlignment(.leading)
                     .accessibilityIdentifier("ax.editor.field.\(field.key).en")
             }
+        case .app, .ticker:
+            labeled(title) {
+                TextField(text: model.plain(field)) { Text(verbatim: field.type == .app ? "com.spotify.music" : "TSLA") }
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .environment(\.layoutDirection, .leftToRight)
+            }
         case .shortcut:
             labeled(title) {
                 TextField(text: model.plain(field)) { Text("editor.shortcut.placeholder") }

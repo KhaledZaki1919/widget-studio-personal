@@ -46,6 +46,11 @@ public struct ShortcutRecipe: Sendable, Equatable {
         } else {
             .custom
         }
+        // Catalog actions with their own Shortcut (Volume Up, Play Pause…; ADR-027).
+        if kind == .custom, let capability = Capabilities.action(shortcutName: name), let shortcut = capability.shortcut {
+            return ShortcutRecipe(kind: .custom, action: shortcut.action, option: shortcut.option,
+                                  symbol: capability.icons.first ?? "square.on.square")
+        }
         return recipe(kind)
     }
 

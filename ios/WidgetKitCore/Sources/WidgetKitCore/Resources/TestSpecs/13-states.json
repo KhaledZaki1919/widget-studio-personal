@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "id": "test.states",
+  "name": {
+    "en": "States",
+    "ar": "الحالات"
+  },
+  "family": "medium",
+  "theme": "dark",
+  "refresh": "hourly",
+  "background": {
+    "type": "solid",
+    "color": "@bg"
+  },
+  "layers": [
+    {
+      "type": "states",
+      "frame": {
+        "x": 16,
+        "y": 20,
+        "w": 130,
+        "h": 130
+      },
+      "set": "battery.mood"
+    },
+    {
+      "type": "states",
+      "frame": {
+        "x": 160,
+        "y": 20,
+        "w": 130,
+        "h": 130
+      },
+      "set": "weather.art"
+    },
+    {
+      "type": "states",
+      "frame": {
+        "x": 304,
+        "y": 20,
+        "w": 44,
+        "h": 44
+      },
+      "variants": [
+        {
+          "id": "high",
+          "title": {
+            "en": "High",
+            "ar": "مرتفع"
+          },
+          "when": "{{battery.level}} in 0.5..1",
+          "layers": [
+            {
+              "type": "icon",
+              "frame": {
+                "x": 0,
+                "y": 0,
+                "w": 44,
+                "h": 44
+              },
+              "symbol": "battery.100",
+              "size": 32,
+              "color": "@fg"
+            }
+          ]
+        },
+        {
+          "id": "low",
+          "title": {
+            "en": "Low",
+            "ar": "منخفض"
+          },
+          "layers": [
+            {
+              "type": "icon",
+              "frame": {
+                "x": 0,
+                "y": 0,
+                "w": 44,
+                "h": 44
+              },
+              "symbol": "battery.25",
+              "size": 32,
+              "color": "@accent"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "states",
+      "frame": {
+        "x": 304,
+        "y": 90,
+        "w": 44,
+        "h": 26
+      },
+      "set": "toggle.onoff",
+      "value": "{{system.wifi}}"
+    }
+  ]
+}

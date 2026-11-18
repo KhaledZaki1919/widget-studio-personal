@@ -57,6 +57,11 @@ struct SwitcherEntry: TimelineEntry {
         }
     }
 
+    var design: SavedDesign? {
+        if case .design(let design, _) = content { return design }
+        return nil
+    }
+
     func at(_ date: Date) -> SwitcherEntry {
         var entry = SwitcherEntry(date: date, size: size, content: content, locked: locked)
         entry.inputs = inputs
@@ -103,7 +108,9 @@ struct SwitcherProvider: TimelineProvider {
                 return
             }
             var live = first
-            live.inputs = await WidgetData.inputs(for: DataRequirements.groups(for: spec), now: now)
+            let fields = first.design?.fieldValues ?? [:]
+            live.inputs = await WidgetData.inputs(for: DataRequirements.groups(for: spec),
+                                                  tickers: MarketData.tickers(in: spec, fieldValues: fields), now: now)
             live.gap = LiveData.gap(for: spec, live.inputs)
             let (dates, reload) = LiveSchedule.make(for: spec, inputs: live.inputs, now: now)
             WidgetLog.add("switcher \(size.rawValue): \(spec.id), \(dates.count) entries")
@@ -184,16 +191,8 @@ struct SwitcherWidgetView: View {
                     .widgetURL(DataRequirements.showsQibla(spec) ? URL(string: "widgetstudio://qibla") : nil)
             }
         case .design(let design, let image):
-            if let gap = entry.gap {
-                DataGapView(gap: gap, title: design.name)
-            } else {
-                SpecWidgetContent(spec: design.spec, context: design.renderContext(
-                    date: entry.date, language: RenderContext.preferredLanguage,
-                    data: LiveData.snapshot(entry.inputs, now: entry.date), image: image,
-                    defaultClock: entry.inputs.settings.clockFormat
-                ))
-                .environment(\.specActionButton, WidgetActionButtons.make)
-            }
+            // The official My widget view: same renderer, live data, states, artwork and tap actions.
+            MyWidgetView(entry: MyWidgetEntry(date: entry.date, content: .design(design, image), inputs: entry.inputs, gap: entry.gap))
         }
     }
 

@@ -5,7 +5,7 @@ import Testing
 struct TestSpecsTests {
     @Test func allTestSpecsAreValid() {
         let entries = TestSpecs.load()
-        #expect(entries.count == 12)
+        #expect(entries.count == 14)
         for entry in entries {
             if case .failure(let failure) = entry.result {
                 Issue.record("\(entry.fileName): \(failure.description)")

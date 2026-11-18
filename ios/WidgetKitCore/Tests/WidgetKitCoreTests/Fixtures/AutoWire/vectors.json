@@ -1,0 +1,2643 @@
+[
+ {
+  "name": "music card: fields, static bar, transport row under one open.app button",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.music",
+   "name": {
+    "en": "Music Player",
+    "ar": "Music Player"
+   },
+   "family": "medium",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [
+    {
+     "key": "title",
+     "type": "text",
+     "label": {
+      "en": "Song",
+      "ar": "Song"
+     },
+     "default": {
+      "en": "Blinding Lights",
+      "ar": "Blinding Lights"
+     }
+    },
+    {
+     "key": "artist",
+     "type": "text",
+     "label": {
+      "en": "Artist",
+      "ar": "Artist"
+     },
+     "default": {
+      "en": "The Weekend",
+      "ar": "The Weekend"
+     }
+    },
+    {
+     "key": "length",
+     "type": "text",
+     "label": {
+      "en": "Length",
+      "ar": "Length"
+     },
+     "default": {
+      "en": "4:23",
+      "ar": "4:23"
+     }
+    }
+   ],
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 16,
+      "y": 38,
+      "w": 270,
+      "h": 42
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "{{field.title}}",
+        "ar": "{{field.title}}"
+       },
+       "font": {
+        "family": "system",
+        "size": 17
+       },
+       "color": "#FFFFFF"
+      },
+      {
+       "type": "text",
+       "value": {
+        "en": "{{field.artist}}",
+        "ar": "{{field.artist}}"
+       },
+       "font": {
+        "family": "system",
+        "size": 12
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 296,
+      "y": 64,
+      "w": 52,
+      "h": 16
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "{{field.length}}",
+        "ar": "{{field.length}}"
+       },
+       "font": {
+        "family": "system",
+        "size": 11
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "progressBar",
+     "progress": "0.4",
+     "color": "#FFFFFF",
+     "trackColor": "#3A3A3A",
+     "segments": 20,
+     "frame": {
+      "x": 16,
+      "y": 86,
+      "w": 332,
+      "h": 8
+     }
+    },
+    {
+     "type": "stack",
+     "axis": "horizontal",
+     "frame": {
+      "x": 232,
+      "y": 112,
+      "w": 116,
+      "h": 40
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "⏮︎",
+        "ar": "⏮︎"
+       },
+       "font": {
+        "family": "system",
+        "size": 16
+       },
+       "color": "#FFFFFF"
+      },
+      {
+       "type": "icon",
+       "symbol": "pause.fill",
+       "size": 18,
+       "color": "#FFFFFF"
+      },
+      {
+       "type": "text",
+       "value": {
+        "en": "⏭︎",
+        "ar": "⏭︎"
+       },
+       "font": {
+        "family": "system",
+        "size": 16
+       },
+       "color": "#FFFFFF"
+      }
+     ],
+     "spacing": 22,
+     "justify": "end"
+    },
+    {
+     "type": "button",
+     "action": "open.app",
+     "frame": {
+      "x": 232,
+      "y": 112,
+      "w": 116,
+      "h": 40
+     }
+    }
+   ]
+  },
+  "wired": [
+   "media.title",
+   "media.artist",
+   "media.duration",
+   "media.progress",
+   "media.symbol",
+   "media.playPause",
+   "media.next",
+   "media.previous"
+  ],
+  "notWired": [
+   "open.app",
+   "field.title"
+  ]
+ },
+ {
+  "name": "literal song text beside controls",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.song",
+   "name": {
+    "en": "Player",
+    "ar": "Player"
+   },
+   "family": "medium",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [],
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 16,
+      "y": 16,
+      "w": 200,
+      "h": 50
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "Song name",
+        "ar": "Song name"
+       },
+       "font": {
+        "family": "system",
+        "size": 18
+       },
+       "color": "#FFFFFF"
+      },
+      {
+       "type": "text",
+       "value": {
+        "en": "Some artist",
+        "ar": "Some artist"
+       },
+       "font": {
+        "family": "system",
+        "size": 12
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "icon",
+     "symbol": "play.fill",
+     "size": 24,
+     "color": "#FFFFFF",
+     "frame": {
+      "x": 160,
+      "y": 100,
+      "w": 30,
+      "h": 30
+     }
+    },
+    {
+     "type": "icon",
+     "symbol": "forward.end.fill",
+     "size": 24,
+     "color": "#FFFFFF",
+     "frame": {
+      "x": 210,
+      "y": 100,
+      "w": 30,
+      "h": 30
+     }
+    },
+    {
+     "type": "icon",
+     "symbol": "backward.end.fill",
+     "size": 24,
+     "color": "#FFFFFF",
+     "frame": {
+      "x": 110,
+      "y": 100,
+      "w": 30,
+      "h": 30
+     }
+    }
+   ]
+  },
+  "wired": [
+   "media.title",
+   "media.artist",
+   "media.playPause",
+   "media.next",
+   "media.previous"
+  ]
+ },
+ {
+  "name": "airplane switches: pill and knob become a toggle whose knob moves",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.toggle",
+   "name": {
+    "en": "Flight Toggles",
+    "ar": "Flight Toggles"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [],
+   "layers": [
+    {
+     "type": "shape",
+     "kind": "capsule",
+     "fill": "#333333",
+     "frame": {
+      "x": 20,
+      "y": 22,
+      "w": 130,
+      "h": 40
+     }
+    },
+    {
+     "type": "shape",
+     "kind": "circle",
+     "fill": "#8E8E8E",
+     "frame": {
+      "x": 23,
+      "y": 25,
+      "w": 34,
+      "h": 34
+     }
+    },
+    {
+     "type": "icon",
+     "symbol": "airplane",
+     "size": 18,
+     "color": "#FFFFFF",
+     "frame": {
+      "x": 28,
+      "y": 30,
+      "w": 24,
+      "h": 24
+     }
+    },
+    {
+     "type": "button",
+     "action": "open.app",
+     "frame": {
+      "x": 20,
+      "y": 22,
+      "w": 130,
+      "h": 40
+     }
+    }
+   ]
+  },
+  "wired": [
+   "system.toggle.airplane",
+   "system.airplane"
+  ],
+  "notWired": [
+   "open.app"
+  ]
+ },
+ {
+  "name": "volume sliders: capsule fill and dot track become level bars with zones",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.volume",
+   "name": {
+    "en": "Volume",
+    "ar": "Volume"
+   },
+   "family": "large",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [],
+   "layers": [
+    {
+     "type": "dotGrid",
+     "rows": 15,
+     "cols": 1,
+     "dotSize": 6,
+     "gap": 2,
+     "onColor": "#5A5A5A",
+     "offColor": "#5A5A5A",
+     "values": "111111111111111",
+     "frame": {
+      "x": 129,
+      "y": 24,
+      "w": 6,
+      "h": 118
+     }
+    },
+    {
+     "type": "shape",
+     "kind": "capsule",
+     "fill": "#FFFFFF",
+     "frame": {
+      "x": 120,
+      "y": 150,
+      "w": 24,
+      "h": 180
+     }
+    },
+    {
+     "type": "icon",
+     "symbol": "headphones",
+     "size": 24,
+     "color": "#FFFFFF",
+     "frame": {
+      "x": 118,
+      "y": 344,
+      "w": 28,
+      "h": 28
+     }
+    }
+   ]
+  },
+  "wired": [
+   "volume.level",
+   "volume.up",
+   "volume.down"
+  ]
+ },
+ {
+  "name": "battery: static percent and bar",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.battery",
+   "name": {
+    "en": "Phone Battery",
+    "ar": "Phone Battery"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [],
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 14,
+      "y": 92,
+      "w": 142,
+      "h": 34
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "22 %",
+        "ar": "22 %"
+       },
+       "font": {
+        "family": "system",
+        "size": 26
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "progressBar",
+     "progress": "0.22",
+     "color": "#FFFFFF",
+     "segments": 16,
+     "frame": {
+      "x": 14,
+      "y": 134,
+      "w": 142,
+      "h": 12
+     }
+    }
+   ]
+  },
+  "wired": [
+   "battery.level"
+  ]
+ },
+ {
+  "name": "static clock, date, temperature",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.clock",
+   "name": {
+    "en": "Morning",
+    "ar": "Morning"
+   },
+   "family": "medium",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [],
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "horizontal",
+     "frame": {
+      "x": 16,
+      "y": 12,
+      "w": 332,
+      "h": 60
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "08:36 AM",
+        "ar": "08:36 AM"
+       },
+       "font": {
+        "family": "system",
+        "size": 30
+       },
+       "color": "#FFFFFF"
+      },
+      {
+       "type": "spacer"
+      },
+      {
+       "type": "text",
+       "value": {
+        "en": "Thursday 22",
+        "ar": "Thursday 22"
+       },
+       "font": {
+        "family": "system",
+        "size": 15
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 16,
+      "y": 120,
+      "w": 100,
+      "h": 30
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "24°C",
+        "ar": "24°C"
+       },
+       "font": {
+        "family": "system",
+        "size": 14
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    }
+   ]
+  },
+  "wired": [
+   "time.hh",
+   "time.mm",
+   "time.ampm",
+   "date.EEEE",
+   "date.d",
+   "weather.temp"
+  ]
+ },
+ {
+  "name": "sleep duration field",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.sleep",
+   "name": {
+    "en": "Sleep",
+    "ar": "Sleep"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [
+    {
+     "key": "total",
+     "type": "text",
+     "label": {
+      "en": "Total sleep",
+      "ar": "Total sleep"
+     },
+     "default": {
+      "en": "8H 32M",
+      "ar": "8H 32M"
+     }
+    }
+   ],
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 10,
+      "y": 10,
+      "w": 150,
+      "h": 60
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "{{field.total}}",
+        "ar": "{{field.total}}"
+       },
+       "font": {
+        "family": "system",
+        "size": 20
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    }
+   ]
+  },
+  "wired": [
+   "sleep.lastNight"
+  ]
+ },
+ {
+  "name": "compass: arrow turns and the card opens the live compass",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.compass",
+   "name": {
+    "en": "Compass",
+    "ar": "Compass"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [],
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 28,
+      "y": 24,
+      "w": 22,
+      "h": 18
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "W",
+        "ar": "W"
+       },
+       "font": {
+        "family": "system",
+        "size": 11
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "icon",
+     "symbol": "location.north.fill",
+     "size": 40,
+     "color": "#FFFFFF",
+     "frame": {
+      "x": 62,
+      "y": 62,
+      "w": 46,
+      "h": 46
+     }
+    }
+   ]
+  },
+  "wired": [
+   "compass.north",
+   "compass.open"
+  ]
+ },
+ {
+  "name": "control grid: tiles switch, the status icon on a plain card stays",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.grid",
+   "name": {
+    "en": "Control Center",
+    "ar": "Control Center"
+   },
+   "family": "medium",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [],
+   "layers": [
+    {
+     "type": "shape",
+     "kind": "roundedRect",
+     "fill": "#333333",
+     "frame": {
+      "x": 10,
+      "y": 10,
+      "w": 70,
+      "h": 70
+     }
+    },
+    {
+     "type": "icon",
+     "symbol": "wifi",
+     "size": 24,
+     "color": "#FFFFFF",
+     "frame": {
+      "x": 30,
+      "y": 30,
+      "w": 30,
+      "h": 30
+     }
+    },
+    {
+     "type": "shape",
+     "kind": "roundedRect",
+     "fill": "#333333",
+     "frame": {
+      "x": 90,
+      "y": 10,
+      "w": 70,
+      "h": 70
+     }
+    },
+    {
+     "type": "icon",
+     "symbol": "flashlight.on.fill",
+     "size": 24,
+     "color": "#FFFFFF",
+     "frame": {
+      "x": 110,
+      "y": 30,
+      "w": 30,
+      "h": 30
+     }
+    },
+    {
+     "type": "shape",
+     "kind": "roundedRect",
+     "fill": "#333333",
+     "frame": {
+      "x": 170,
+      "y": 10,
+      "w": 70,
+      "h": 70
+     }
+    },
+    {
+     "type": "icon",
+     "symbol": "moon.fill",
+     "size": 24,
+     "color": "#FFFFFF",
+     "frame": {
+      "x": 190,
+      "y": 30,
+      "w": 30,
+      "h": 30
+     }
+    },
+    {
+     "type": "shape",
+     "kind": "roundedRect",
+     "fill": "#333333",
+     "frame": {
+      "x": 250,
+      "y": 10,
+      "w": 70,
+      "h": 70
+     }
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 255,
+      "y": 30,
+      "w": 60,
+      "h": 30
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "Bluetooth",
+        "ar": "Bluetooth"
+       },
+       "font": {
+        "family": "system",
+        "size": 11
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    }
+   ]
+  },
+  "wired": [
+   "system.toggle.wifi",
+   "system.toggle.torch",
+   "system.toggle.dnd",
+   "system.toggle.bluetooth"
+  ]
+ },
+ {
+  "name": "smart home tile gets a Shortcut field",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.home",
+   "name": {
+    "en": "Smart Home",
+    "ar": "Smart Home"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [],
+   "layers": [
+    {
+     "type": "shape",
+     "kind": "roundedRect",
+     "fill": "#333333",
+     "frame": {
+      "x": 10,
+      "y": 10,
+      "w": 70,
+      "h": 70
+     }
+    },
+    {
+     "type": "icon",
+     "symbol": "lightbulb.fill",
+     "size": 24,
+     "color": "#FFFFFF",
+     "frame": {
+      "x": 30,
+      "y": 30,
+      "w": 30,
+      "h": 30
+     }
+    }
+   ]
+  },
+  "wired": [
+   "shortcut.run",
+   "field.shortcut1"
+  ]
+ },
+ {
+  "name": "quick dial tile gets a number field",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.dial",
+   "name": {
+    "en": "Quick Dial",
+    "ar": "Quick Dial"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [],
+   "layers": [
+    {
+     "type": "shape",
+     "kind": "circle",
+     "fill": "#333333",
+     "frame": {
+      "x": 50,
+      "y": 50,
+      "w": 70,
+      "h": 70
+     }
+    },
+    {
+     "type": "icon",
+     "symbol": "phone.fill",
+     "size": 24,
+     "color": "#FFFFFF",
+     "frame": {
+      "x": 70,
+      "y": 70,
+      "w": 30,
+      "h": 30
+     }
+    }
+   ]
+  },
+  "wired": [
+   "call.dial",
+   "field.value1"
+  ]
+ },
+ {
+  "name": "timer: time left, progress ring, tap",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.timer",
+   "name": {
+    "en": "Timer",
+    "ar": "Timer"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [],
+   "layers": [
+    {
+     "type": "ring",
+     "progress": "0.6",
+     "color": "#FFFFFF",
+     "lineWidth": 6,
+     "frame": {
+      "x": 35,
+      "y": 35,
+      "w": 100,
+      "h": 100
+     }
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 45,
+      "y": 70,
+      "w": 80,
+      "h": 30
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "12:30",
+        "ar": "12:30"
+       },
+       "font": {
+        "family": "system",
+        "size": 20
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    }
+   ]
+  },
+  "wired": [
+   "timer.remaining",
+   "timer.progress",
+   "timer.toggle"
+  ]
+ },
+ {
+  "name": "a quote stays a quote",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.quote",
+   "name": {
+    "en": "Daily Quote",
+    "ar": "Daily Quote"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [],
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 10,
+      "y": 10,
+      "w": 150,
+      "h": 150
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "Stay hungry",
+        "ar": "Stay hungry"
+       },
+       "font": {
+        "family": "system",
+        "size": 18
+       },
+       "color": "#FFFFFF"
+      },
+      {
+       "type": "text",
+       "value": {
+        "en": "Someone",
+        "ar": "Someone"
+       },
+       "font": {
+        "family": "system",
+        "size": 12
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    }
+   ]
+  },
+  "wired": [],
+  "notWired": [
+   "media.title",
+   "open.app",
+   "weather.open"
+  ]
+ },
+ {
+  "name": "a Wi-Fi mark in the corner of a clock stays an icon",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.status",
+   "name": {
+    "en": "Clock",
+    "ar": "Clock"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [],
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 10,
+      "y": 40,
+      "w": 150,
+      "h": 60
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "{{time.hh}}:{{time.mm}}",
+        "ar": "{{time.hh}}:{{time.mm}}"
+       },
+       "font": {
+        "family": "system",
+        "size": 30
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "icon",
+     "symbol": "wifi",
+     "size": 14,
+     "color": "#FFFFFF",
+     "frame": {
+      "x": 140,
+      "y": 10,
+      "w": 20,
+      "h": 20
+     }
+    }
+   ]
+  },
+  "wired": [
+   "time.hh"
+  ],
+  "notWired": [
+   "system.toggle.wifi"
+  ]
+ },
+ {
+  "name": "a text badge on a card with a headphones icon is no slider",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.badge",
+   "name": {
+    "en": "Sleep",
+    "ar": "Sleep"
+   },
+   "family": "medium",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [],
+   "layers": [
+    {
+     "type": "shape",
+     "kind": "roundedRect",
+     "fill": "#2A2A2A",
+     "frame": {
+      "x": 276,
+      "y": 56,
+      "w": 72,
+      "h": 20
+     }
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 276,
+      "y": 56,
+      "w": 72,
+      "h": 20
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "8H 32M",
+        "ar": "8H 32M"
+       },
+       "font": {
+        "family": "system",
+        "size": 11
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "icon",
+     "symbol": "headphones",
+     "size": 14,
+     "color": "#FFFFFF",
+     "frame": {
+      "x": 320,
+      "y": 134,
+      "w": 20,
+      "h": 20
+     }
+    }
+   ]
+  },
+  "wired": [
+   "sleep.lastNight"
+  ],
+  "notWired": [
+   "volume.level",
+   "volume.up"
+  ]
+ },
+ {
+  "name": "switch drawn on: the knob moves to the off end",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.on",
+   "name": {
+    "en": "Flight Toggles",
+    "ar": "Flight Toggles"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [],
+   "layers": [
+    {
+     "type": "shape",
+     "kind": "capsule",
+     "fill": "#F2F2F2",
+     "frame": {
+      "x": 20,
+      "y": 106,
+      "w": 130,
+      "h": 40
+     }
+    },
+    {
+     "type": "shape",
+     "kind": "circle",
+     "fill": "#000000",
+     "frame": {
+      "x": 113,
+      "y": 109,
+      "w": 34,
+      "h": 34
+     }
+    },
+    {
+     "type": "button",
+     "action": "open.app",
+     "frame": {
+      "x": 20,
+      "y": 106,
+      "w": 130,
+      "h": 40
+     }
+    },
+    {
+     "type": "icon",
+     "symbol": "airplane",
+     "size": 18,
+     "color": "#FFFFFF",
+     "frame": {
+      "x": 118,
+      "y": 114,
+      "w": 24,
+      "h": 24
+     }
+    }
+   ]
+  },
+  "wired": [
+   "system.toggle.airplane",
+   "system.airplane"
+  ],
+  "notWired": [
+   "open.app"
+  ]
+ },
+ {
+  "name": "the model named the binding in its wiring list; a progress word is no music",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.list",
+   "name": {
+    "en": "Timer",
+    "ar": "Timer"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [],
+   "layers": [
+    {
+     "type": "ring",
+     "progress": "0.6",
+     "color": "#FFFFFF",
+     "lineWidth": 6,
+     "frame": {
+      "x": 35,
+      "y": 35,
+      "w": 100,
+      "h": 100
+     }
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 45,
+      "y": 70,
+      "w": 80,
+      "h": 30
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "12:30",
+        "ar": "12:30"
+       },
+       "font": {
+        "family": "system",
+        "size": 20
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    }
+   ]
+  },
+  "inventory": [
+   "circular progress ring",
+   "time left '12:30'"
+  ],
+  "wiring": [
+   {
+    "element": "Timer remaining time text '12:30'",
+    "shows": "{{timer.remaining}}",
+    "tap": null
+   }
+  ],
+  "wired": [
+   "timer.remaining",
+   "timer.progress"
+  ],
+  "notWired": [
+   "media.elapsed",
+   "media.progress"
+  ]
+ },
+ {
+  "name": "a timer countdown to a fixed date follows the timer",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.dots",
+   "name": {
+    "en": "Dot Timer",
+    "ar": "Dot Timer"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [
+    {
+     "key": "event",
+     "type": "date",
+     "label": {
+      "en": "Ends at",
+      "ar": "ينتهي في"
+     },
+     "default": {
+      "en": "2030-11-04T03:13:00",
+      "ar": "2030-11-04T03:13:00"
+     }
+    }
+   ],
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 14,
+      "y": 116,
+      "w": 142,
+      "h": 40
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "{{field.event}}",
+        "ar": "{{field.event}}"
+       },
+       "font": {
+        "family": "system",
+        "size": 24
+       },
+       "color": "#FFFFFF",
+       "live": {
+        "kind": "timer",
+        "target": "{{field.event}}"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  "wired": [
+   "timer.remaining",
+   "timer.toggle"
+  ],
+  "notWired": [
+   "field.event"
+  ]
+ },
+ {
+  "name": "a trip countdown stays a countdown",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.trip",
+   "name": {
+    "en": "Trip countdown",
+    "ar": "Trip countdown"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [
+    {
+     "key": "event",
+     "type": "date",
+     "label": {
+      "en": "Trip",
+      "ar": "الرحلة"
+     },
+     "default": {
+      "en": "2030-11-04T03:13:00",
+      "ar": "2030-11-04T03:13:00"
+     }
+    }
+   ],
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 14,
+      "y": 116,
+      "w": 142,
+      "h": 40
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "{{field.event}}",
+        "ar": "{{field.event}}"
+       },
+       "font": {
+        "family": "system",
+        "size": 24
+       },
+       "color": "#FFFFFF",
+       "live": {
+        "kind": "timer",
+        "target": "{{field.event}}"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  "wired": [
+   "field.event"
+  ],
+  "notWired": [
+   "timer.remaining",
+   "timer.toggle"
+  ]
+ },
+ {
+  "name": "switches inside stacks get their on look laid over them",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.rows",
+   "name": {
+    "en": "Switches",
+    "ar": "Switches"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [],
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "horizontal",
+     "frame": {
+      "x": 16,
+      "y": 16,
+      "w": 138,
+      "h": 40
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "Wi-Fi",
+        "ar": "Wi-Fi"
+       },
+       "font": {
+        "family": "system",
+        "size": 14
+       },
+       "color": "#FFFFFF"
+      },
+      {
+       "type": "spacer"
+      },
+      {
+       "type": "shape",
+       "kind": "capsule",
+       "fill": "#333333",
+       "width": 56,
+       "height": 30
+      }
+     ]
+    },
+    {
+     "type": "button",
+     "action": "system.toggle.wifi",
+     "frame": {
+      "x": 90,
+      "y": 16,
+      "w": 64,
+      "h": 40
+     }
+    }
+   ]
+  },
+  "wired": [
+   "system.toggle.wifi",
+   "system.wifi"
+  ]
+ },
+ {
+  "name": "agenda rows: titles and times",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.agenda",
+   "name": {
+    "en": "Calendar agenda",
+    "ar": "Calendar agenda"
+   },
+   "family": "large",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [],
+   "layers": [
+    {
+     "type": "list",
+     "items": [
+      {
+       "title": {
+        "en": "Team meeting",
+        "ar": "Team meeting"
+       },
+       "detail": {
+        "en": "10:00",
+        "ar": "10:00"
+       }
+      },
+      {
+       "title": {
+        "en": "{{calendar.2.title}}",
+        "ar": "{{calendar.2.title}}"
+       },
+       "detail": {
+        "en": "13:30",
+        "ar": "13:30"
+       }
+      }
+     ],
+     "font": {
+      "family": "system",
+      "size": 14
+     },
+     "color": "#FFFFFF",
+     "frame": {
+      "x": 20,
+      "y": 40,
+      "w": 320,
+      "h": 200
+     }
+    }
+   ]
+  },
+  "wired": [
+   "calendar.1.title",
+   "calendar.1.time",
+   "calendar.2.title",
+   "calendar.2.time"
+  ],
+  "notWired": [
+   "time.hh"
+  ]
+ },
+ {
+  "name": "reminder rows",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.todo",
+   "name": {
+    "en": "Reminders",
+    "ar": "Reminders"
+   },
+   "family": "large",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [],
+   "layers": [
+    {
+     "type": "list",
+     "items": [
+      {
+       "title": {
+        "en": "Buy milk",
+        "ar": "Buy milk"
+       }
+      },
+      {
+       "title": {
+        "en": "Call mom",
+        "ar": "Call mom"
+       }
+      }
+     ],
+     "font": {
+      "family": "system",
+      "size": 14
+     },
+     "color": "#FFFFFF",
+     "frame": {
+      "x": 20,
+      "y": 40,
+      "w": 320,
+      "h": 200
+     }
+    }
+   ]
+  },
+  "wired": [
+   "reminders.1.title",
+   "reminders.2.title"
+  ]
+ },
+ {
+  "name": "prayer rows",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.prayer",
+   "name": {
+    "en": "Prayer times",
+    "ar": "Prayer times"
+   },
+   "family": "large",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [],
+   "layers": [
+    {
+     "type": "list",
+     "items": [
+      {
+       "title": {
+        "en": "Fajr",
+        "ar": "Fajr"
+       },
+       "detail": {
+        "en": "04:32",
+        "ar": "04:32"
+       }
+      },
+      {
+       "title": {
+        "en": "Isha",
+        "ar": "Isha"
+       },
+       "detail": {
+        "en": "18:38",
+        "ar": "18:38"
+       }
+      }
+     ],
+     "font": {
+      "family": "system",
+      "size": 14
+     },
+     "color": "#FFFFFF",
+     "frame": {
+      "x": 20,
+      "y": 40,
+      "w": 320,
+      "h": 200
+     }
+    }
+   ]
+  },
+  "wired": [
+   "prayer.fajr",
+   "prayer.isha"
+  ]
+ },
+ {
+  "name": "a sleep card with a temperature does not open the weather",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.sleepcard",
+   "name": {
+    "en": "Sleep",
+    "ar": "Sleep"
+   },
+   "family": "medium",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "fields": [],
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 16,
+      "y": 20,
+      "w": 300,
+      "h": 100
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "7h 20m",
+        "ar": "7h 20m"
+       },
+       "font": {
+        "family": "system",
+        "size": 20
+       },
+       "color": "#FFFFFF"
+      },
+      {
+       "type": "text",
+       "value": {
+        "en": "24°C",
+        "ar": "24°C"
+       },
+       "font": {
+        "family": "system",
+        "size": 14
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    }
+   ]
+  },
+  "wired": [
+   "sleep.lastNight",
+   "weather.temp"
+  ],
+  "notWired": [
+   "weather.open"
+  ]
+ },
+ {
+  "name": "year dots: the label beats the battery, 15 of 48 lit is a level",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.year",
+   "name": {
+    "en": "Progress",
+    "ar": "Progress"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 16,
+      "y": 14,
+      "w": 80,
+      "h": 20
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "Year",
+        "ar": "السنة"
+       },
+       "font": {
+        "family": "system",
+        "size": 13
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 100,
+      "y": 14,
+      "w": 54,
+      "h": 20
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "53%",
+        "ar": "53%"
+       },
+       "font": {
+        "family": "system",
+        "size": 13
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "dotGrid",
+     "frame": {
+      "x": 16,
+      "y": 50,
+      "w": 138,
+      "h": 104
+     },
+     "rows": 6,
+     "cols": 8,
+     "dotSize": 6,
+     "gap": 4,
+     "onColor": "#FFFFFF",
+     "offColor": "#333333",
+     "values": "111111111111111000000000000000000000000000000000"
+    }
+   ]
+  },
+  "wired": [
+   "year.progress"
+  ],
+  "notWired": [
+   "battery.level",
+   "battery.symbol"
+  ]
+ },
+ {
+  "name": "a percent in one text keeps its label",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.year2",
+   "name": {
+    "en": "Stats",
+    "ar": "Stats"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 16,
+      "y": 14,
+      "w": 140,
+      "h": 20
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "Year 53%",
+        "ar": "السنة 53%"
+       },
+       "font": {
+        "family": "system",
+        "size": 13
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    }
+   ]
+  },
+  "wired": [
+   "year.progress"
+  ],
+  "notWired": [
+   "battery.level"
+  ]
+ },
+ {
+  "name": "month and steps labels pick their own share",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.mix",
+   "name": {
+    "en": "Stats",
+    "ar": "Stats"
+   },
+   "family": "medium",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 16,
+      "y": 14,
+      "w": 70,
+      "h": 20
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "Month",
+        "ar": "الشهر"
+       },
+       "font": {
+        "family": "system",
+        "size": 13
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 90,
+      "y": 14,
+      "w": 50,
+      "h": 20
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "16%",
+        "ar": "16%"
+       },
+       "font": {
+        "family": "system",
+        "size": 13
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 200,
+      "y": 14,
+      "w": 70,
+      "h": 20
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "Steps",
+        "ar": "الخطوات"
+       },
+       "font": {
+        "family": "system",
+        "size": 13
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 280,
+      "y": 14,
+      "w": 50,
+      "h": 20
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "55%",
+        "ar": "55%"
+       },
+       "font": {
+        "family": "system",
+        "size": 13
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    }
+   ]
+  },
+  "wired": [
+   "month.progress",
+   "steps.progress"
+  ],
+  "notWired": [
+   "battery.level"
+  ]
+ },
+ {
+  "name": "a lone percent with nothing near it stays static",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.unsure",
+   "name": {
+    "en": "Card",
+    "ar": "Card"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 16,
+      "y": 60,
+      "w": 100,
+      "h": 40
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "42%",
+        "ar": "42%"
+       },
+       "font": {
+        "family": "system",
+        "size": 28
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    }
+   ]
+  },
+  "wired": [],
+  "notWired": [
+   "battery.level",
+   "year.progress"
+  ]
+ },
+ {
+  "name": "a percent beside a battery icon is the battery",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.battery",
+   "name": {
+    "en": "Phone",
+    "ar": "Phone"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "layers": [
+    {
+     "type": "icon",
+     "frame": {
+      "x": 16,
+      "y": 14,
+      "w": 24,
+      "h": 24
+     },
+     "symbol": "battery.75",
+     "size": 20,
+     "color": "#FFFFFF"
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 50,
+      "y": 14,
+      "w": 70,
+      "h": 24
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "76%",
+        "ar": "76%"
+       },
+       "font": {
+        "family": "system",
+        "size": 16
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    }
+   ]
+  },
+  "wired": [
+   "battery.level"
+  ],
+  "notWired": [
+   "year.progress"
+  ]
+ },
+ {
+  "name": "the model bound a year label to the battery: the label wins",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.fix",
+   "name": {
+    "en": "Progress",
+    "ar": "Progress"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 16,
+      "y": 14,
+      "w": 80,
+      "h": 20
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "Year",
+        "ar": "السنة"
+       },
+       "font": {
+        "family": "system",
+        "size": 13
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 100,
+      "y": 14,
+      "w": 54,
+      "h": 20
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "{{battery.level}}%",
+        "ar": "{{battery.level}}%"
+       },
+       "font": {
+        "family": "system",
+        "size": 13
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "dotGrid",
+     "frame": {
+      "x": 16,
+      "y": 50,
+      "w": 138,
+      "h": 104
+     },
+     "rows": 6,
+     "cols": 8,
+     "dotSize": 6,
+     "gap": 4,
+     "onColor": "#FFFFFF",
+     "offColor": "#333333",
+     "values": "{{battery.level}}"
+    }
+   ]
+  },
+  "wired": [
+   "year.progress"
+  ],
+  "notWired": [
+   "battery.level"
+  ]
+ },
+ {
+  "name": "a row of weather icons follows each day",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.fc",
+   "name": {
+    "en": "Forecast",
+    "ar": "Forecast"
+   },
+   "family": "medium",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 16,
+      "y": 14,
+      "w": 50,
+      "h": 18
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "Mon",
+        "ar": "Mon"
+       },
+       "font": {
+        "family": "system",
+        "size": 12
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 76,
+      "y": 14,
+      "w": 50,
+      "h": 18
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "Tue",
+        "ar": "Tue"
+       },
+       "font": {
+        "family": "system",
+        "size": 12
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 136,
+      "y": 14,
+      "w": 50,
+      "h": 18
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "Wed",
+        "ar": "Wed"
+       },
+       "font": {
+        "family": "system",
+        "size": 12
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "icon",
+     "frame": {
+      "x": 28,
+      "y": 40,
+      "w": 24,
+      "h": 24
+     },
+     "symbol": "sun.max.fill",
+     "size": 20,
+     "color": "#FFFFFF"
+    },
+    {
+     "type": "icon",
+     "frame": {
+      "x": 88,
+      "y": 40,
+      "w": 24,
+      "h": 24
+     },
+     "symbol": "cloud.fill",
+     "size": 20,
+     "color": "#FFFFFF"
+    },
+    {
+     "type": "icon",
+     "frame": {
+      "x": 148,
+      "y": 40,
+      "w": 24,
+      "h": 24
+     },
+     "symbol": "cloud.rain.fill",
+     "size": 20,
+     "color": "#FFFFFF"
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 16,
+      "y": 70,
+      "w": 50,
+      "h": 18
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "30°",
+        "ar": "30°"
+       },
+       "font": {
+        "family": "system",
+        "size": 12
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 76,
+      "y": 70,
+      "w": 50,
+      "h": 18
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "28°",
+        "ar": "28°"
+       },
+       "font": {
+        "family": "system",
+        "size": 12
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 136,
+      "y": 70,
+      "w": 50,
+      "h": 18
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "24°",
+        "ar": "24°"
+       },
+       "font": {
+        "family": "system",
+        "size": 12
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    }
+   ]
+  },
+  "wired": [
+   "forecast.1.symbol",
+   "forecast.3.symbol",
+   "forecast.2.day",
+   "forecast.1.hi",
+   "forecast.3.hi"
+  ],
+  "notWired": [
+   "weather.temp",
+   "date.EEE"
+  ]
+ },
+ {
+  "name": "an emoji face on a battery card is the mood set",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.mood",
+   "name": {
+    "en": "Battery",
+    "ar": "Battery"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 50,
+      "y": 20,
+      "w": 70,
+      "h": 70
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "😀",
+        "ar": "😀"
+       },
+       "font": {
+        "family": "system",
+        "size": 48
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 16,
+      "y": 110,
+      "w": 120,
+      "h": 20
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "Battery",
+        "ar": "البطارية"
+       },
+       "font": {
+        "family": "system",
+        "size": 13
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    }
+   ]
+  },
+  "wired": [
+   "battery.level",
+   "battery.charging"
+  ],
+  "notWired": []
+ },
+ {
+  "name": "a face drawn from shapes on a battery card is the mood set",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.face",
+   "name": {
+    "en": "Battery",
+    "ar": "Battery"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "layers": [
+    {
+     "type": "shape",
+     "frame": {
+      "x": 40,
+      "y": 20,
+      "w": 90,
+      "h": 90
+     },
+     "kind": "circle",
+     "stroke": {
+      "color": "#FFFFFF",
+      "width": 3
+     }
+    },
+    {
+     "type": "shape",
+     "frame": {
+      "x": 62,
+      "y": 48,
+      "w": 10,
+      "h": 10
+     },
+     "kind": "circle",
+     "fill": "#FFFFFF"
+    },
+    {
+     "type": "shape",
+     "frame": {
+      "x": 98,
+      "y": 48,
+      "w": 10,
+      "h": 10
+     },
+     "kind": "circle",
+     "fill": "#FFFFFF"
+    },
+    {
+     "type": "shape",
+     "frame": {
+      "x": 66,
+      "y": 80,
+      "w": 38,
+      "h": 5
+     },
+     "kind": "capsule",
+     "fill": "#FFFFFF"
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 16,
+      "y": 130,
+      "w": 120,
+      "h": 20
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "Battery",
+        "ar": "البطارية"
+       },
+       "font": {
+        "family": "system",
+        "size": 13
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    }
+   ]
+  },
+  "wired": [
+   "battery.level",
+   "battery.charging"
+  ],
+  "notWired": []
+ },
+ {
+  "name": "a dot drawing on a weather card is the weather set",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.art",
+   "name": {
+    "en": "Weather",
+    "ar": "Weather"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "layers": [
+    {
+     "type": "dotGrid",
+     "frame": {
+      "x": 30,
+      "y": 14,
+      "w": 110,
+      "h": 110
+     },
+     "rows": 8,
+     "cols": 8,
+     "dotSize": 10,
+     "gap": 4,
+     "onColor": "#FFFFFF",
+     "offColor": "#00000000",
+     "values": "0011110000111110110111111110111111110111111110110111110000111100"
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 16,
+      "y": 130,
+      "w": 120,
+      "h": 20
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "Sunny",
+        "ar": "مشمس"
+       },
+       "font": {
+        "family": "system",
+        "size": 13
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    }
+   ]
+  },
+  "wired": [
+   "weather.kind",
+   "time.isDay"
+  ],
+  "notWired": []
+ }
+]

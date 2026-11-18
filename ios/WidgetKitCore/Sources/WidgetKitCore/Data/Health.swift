@@ -10,15 +10,30 @@ public struct HealthSummary: Codable, Sendable, Equatable {
     public var steps: [String: Double]
     /// Minutes asleep per night, keyed by the morning's date.
     public var sleep: [String: Double]
+    /// Bedtime and wake time per night, same keys (ADR-027; absent in older caches).
+    public var sleepWindows: [String: SleepWindow]?
+    /// ADR-029: heart, variability, exercise, energy, stages, steps per hour (absent in older caches).
+    public var extras: HealthExtras?
     public var fetched: Date
+
+    public struct SleepWindow: Codable, Sendable, Equatable {
+        public var start: Date
+        public var end: Date
+    }
 
     public static let cacheName = "health"
     public static let stepDays = 62
 
-    public init(steps: [String: Double], sleep: [String: Double], fetched: Date) {
+    public init(steps: [String: Double], sleep: [String: Double], sleepWindows: [String: SleepWindow]? = nil, fetched: Date) {
         self.steps = steps
         self.sleep = sleep
+        self.sleepWindows = sleepWindows
         self.fetched = fetched
+    }
+
+    /// Last night's bedtime and wake time.
+    public func sleepWindow(now: Date, calendar: Calendar) -> SleepWindow? {
+        sleepWindows?[Self.key(now, calendar)]
     }
 
     static func key(_ date: Date, _ calendar: Calendar) -> String {
@@ -108,7 +123,7 @@ public enum HealthReader {
         var types: Set<HKObjectType> = []
         if let steps = HKQuantityType.quantityType(forIdentifier: .stepCount) { types.insert(steps) }
         if let sleep = HKCategoryType.categoryType(forIdentifier: .sleepAnalysis) { types.insert(sleep) }
-        return types
+        return types.union(extraTypes)
     }
 
     /// Asks for read access (the app only; extensions can't show the prompt).
@@ -120,9 +135,11 @@ public enum HealthReader {
         guard isAvailable else { return .failure(.unavailable) }
         do {
             let steps = try await dailySteps(now: now, calendar: calendar)
-            let sleep = try await nightlySleep(now: now, calendar: calendar)
+            let (sleep, windows) = try await nightlySleep(now: now, calendar: calendar)
             if steps.isEmpty && sleep.isEmpty { return .failure(.noData) }
-            return .success(HealthSummary(steps: steps, sleep: sleep, fetched: now))
+            var summary = HealthSummary(steps: steps, sleep: sleep, sleepWindows: windows, fetched: now)
+            summary.extras = await extras(now: now, calendar: calendar)
+            return .success(summary)
         } catch let error as HKError where error.code == .errorAuthorizationDenied || error.code == .errorAuthorizationNotDetermined {
             return .failure(.noData)
         } catch let error as HKError where error.code == .errorHealthDataUnavailable {
@@ -160,9 +177,9 @@ public enum HealthReader {
         }
     }
 
-    static func nightlySleep(now: Date, calendar: Calendar) async throws -> [String: Double] {
+    static func nightlySleep(now: Date, calendar: Calendar) async throws -> ([String: Double], [String: HealthSummary.SleepWindow]) {
         guard let type = HKCategoryType.categoryType(forIdentifier: .sleepAnalysis),
-              let start = calendar.date(byAdding: .day, value: -8, to: calendar.startOfDay(for: now)) else { return [:] }
+              let start = calendar.date(byAdding: .day, value: -8, to: calendar.startOfDay(for: now)) else { return ([:], [:]) }
         let predicate = HKQuery.predicateForSamples(withStart: start, end: now)
         let asleep: Set<Int> = [
             HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue, HKCategoryValueSleepAnalysis.asleepCore.rawValue,
@@ -172,18 +189,22 @@ public enum HealthReader {
             let query = HKSampleQuery(sampleType: type, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) {
                 _, samples, error in
                 if let error {
-                    if (error as? HKError)?.code == .errorNoData { continuation.resume(returning: [:]) } else {
+                    if (error as? HKError)?.code == .errorNoData { continuation.resume(returning: ([:], [:])) } else {
                         continuation.resume(throwing: error)
                     }
                     return
                 }
                 var nights: [String: Double] = [:]
+                var windows: [String: HealthSummary.SleepWindow] = [:]
                 for case let sample as HKCategorySample in samples ?? [] where asleep.contains(sample.value) {
                     // A night belongs to the morning it ends in: start + 12 h lands on that day.
                     let night = HealthSummary.key(sample.startDate.addingTimeInterval(12 * 3600), calendar)
                     nights[night, default: 0] += sample.endDate.timeIntervalSince(sample.startDate) / 60
+                    let window = windows[night]
+                    windows[night] = HealthSummary.SleepWindow(start: min(window?.start ?? sample.startDate, sample.startDate),
+                                                               end: max(window?.end ?? sample.endDate, sample.endDate))
                 }
-                continuation.resume(returning: nights)
+                continuation.resume(returning: (nights, windows))
             }
             store.execute(query)
         }

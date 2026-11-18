@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import WidgetKitCore
 
 /// Saved designs (brief §7.4): preview, rename, duplicate, edit again, delete. Without an App
@@ -11,7 +12,23 @@ struct MyWidgetsView: View {
     @State private var newName = ""
     @State private var deleting: SavedDesign?
     @State private var sendingHome: SavedDesign? // Personal build (docs/personal.md)
+    /// Select mode: delete many at once (ADR-028).
+    @State private var selecting = false
+    @State private var selected = Set<String>()
+    @State private var confirmingMany = false
+    /// Files, a folder or pasted designs (ADR-027).
+    @State private var bulk: BulkRequest?
     private let language = RenderContext.preferredLanguage
+
+    private func takePendingBulk() {
+        guard let pending = appState.pendingBulk else { return }
+        appState.pendingBulk = nil
+        bulk = pending
+    }
+
+    private func importClipboard() {
+        bulk = BulkRequest(text: UIPasteboard.general.string ?? "")
+    }
 
     var body: some View {
         List {
@@ -54,6 +71,26 @@ struct MyWidgetsView: View {
                     Label("create.button", systemImage: "sparkles")
                 }
                 .accessibilityIdentifier("ax.mywidgets.create")
+                Button {
+                    DocumentPicker.present { bulk = BulkRequest(urls: $0) }
+                } label: {
+                    Label("mywidgets.import", systemImage: "square.and.arrow.down")
+                }
+                .accessibilityIdentifier("ax.mywidgets.import")
+                Button {
+                    DocumentPicker.present(folder: true) { bulk = BulkRequest(urls: $0) }
+                } label: {
+                    Label("mywidgets.importFolder", systemImage: "folder")
+                }
+                .accessibilityIdentifier("ax.mywidgets.importFolder")
+                Button {
+                    importClipboard()
+                } label: {
+                    Label("mywidgets.importClipboard", systemImage: "doc.on.clipboard")
+                }
+                .accessibilityIdentifier("ax.mywidgets.importClipboard")
+            } footer: {
+                Text("bulk.pick.hint")
             }
             ForEach(designs.designs) { design in
                 row(design)
@@ -61,7 +98,32 @@ struct MyWidgetsView: View {
         }
         .accessibilityIdentifier("ax.mywidgets.list")
         .navigationTitle("mywidgets.title")
-        .onAppear { designs.reload() }
+        .toolbar {
+            if !designs.designs.isEmpty {
+                ToolbarItem(placement: .primaryAction) {
+                    Button(selecting ? "common.done" : "mywidgets.select") {
+                        selecting.toggle()
+                        selected = []
+                    }
+                    .accessibilityIdentifier("ax.mywidgets.select")
+                }
+            }
+        }
+        .safeAreaInset(edge: .bottom) { bottomBar }
+        .confirmationDialog("mywidgets.delete.many", isPresented: $confirmingMany, titleVisibility: .visible) {
+            Button("mywidgets.delete.confirm", role: .destructive) {
+                designs.delete(designs.designs.filter { selected.contains($0.id) })
+                selected = []
+                selecting = false
+            }
+            .accessibilityIdentifier("ax.mywidgets.deleteMany.confirm")
+        }
+        .onAppear {
+            designs.reload()
+            takePendingBulk()
+        }
+        .onChange(of: appState.pendingBulk) { _, _ in takePendingBulk() }
+        .navigationDestination(item: $bulk) { BulkImportView(request: $0) }
         .sheet(item: $editing) { design in
             EditorView(design: design, isNew: false)
         }
@@ -83,11 +145,46 @@ struct MyWidgetsView: View {
         }
     }
 
+    /// Delete for the selection, or Undo after a delete.
+    @ViewBuilder private var bottomBar: some View {
+        if selecting {
+            Button(role: .destructive) {
+                confirmingMany = true
+            } label: {
+                Label("mywidgets.delete", systemImage: "trash")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .disabled(selected.isEmpty)
+            .padding(12)
+            .background(.bar)
+            .accessibilityIdentifier("ax.mywidgets.deleteMany")
+        } else if designs.undoable != nil {
+            HStack {
+                Text("mywidgets.deleted").font(.footnote)
+                Spacer()
+                Button("mywidgets.undo") { designs.undoDelete() }
+                    .accessibilityIdentifier("ax.mywidgets.undo")
+            }
+            .padding(12)
+            .background(.bar)
+        }
+    }
+
+    private func toggleSelection(_ design: SavedDesign) {
+        if selected.contains(design.id) { selected.remove(design.id) } else { selected.insert(design.id) }
+    }
+
     private func row(_ design: SavedDesign) -> some View {
         Button {
-            editing = design
+            if selecting { toggleSelection(design) } else { editing = design }
         } label: {
             HStack(spacing: 14) {
+                if selecting {
+                    Image(systemName: selected.contains(design.id) ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(selected.contains(design.id) ? Color.accentColor : .secondary)
+                        .accessibilityHidden(true)
+                }
                 DesignPreview(design: design, image: designs.image(for: design), language: language)
                     .frame(width: design.spec.family == .small ? 76 : 150)
                 VStack(alignment: .leading, spacing: 4) {
@@ -132,6 +229,7 @@ struct MyWidgetsView: View {
         case .small: language == "ar" ? "صغير" : "Small"
         case .medium: language == "ar" ? "متوسط" : "Medium"
         case .large: language == "ar" ? "كبير" : "Large"
+        case .xlarge: language == "ar" ? "كبير جدًا" : "Extra large"
         }
         return [design.spec.category?.title.resolved(language: language), size].compactMap { $0 }.joined(separator: " · ")
     }

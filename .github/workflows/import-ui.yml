@@ -1,0 +1,39 @@
+# The import UI tests alone (ADR-027), for working on the file picker without the whole suite.
+name: Import UI tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Import UI tests (Simulator)
+    runs-on: macos-15
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: ios
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate project
+        run: xcodegen generate
+
+      - name: Run them
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 scripts/pick-simulator.py)
+          xcodebuild test \
+            -project WidgetStudio.xcodeproj -scheme WidgetStudio \
+            -destination "id=$UDID" \
+            -only-testing:WidgetStudioUITests/ImportPickerUITests \
+            -resultBundlePath build/TestResults.xcresult \
+            -quiet
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ImportUIResults
+          path: ios/build/TestResults.xcresult
+          retention-days: 7

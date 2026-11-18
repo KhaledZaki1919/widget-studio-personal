@@ -9,10 +9,11 @@ import WidgetKitCore
 /// outcome goes to `SourceStatus` (the large check widget shows it) and to `WidgetLog`.
 enum WidgetData {
     /// Inputs for a spec that reads `groups`, fetching what's missing or stale.
-    static func inputs(for groups: Set<Bindings.Group>, now: Date = .now) async -> LiveInputs {
+    static func inputs(for groups: Set<Bindings.Group>, tickers: [String] = [], now: Date = .now) async -> LiveInputs {
         let cache = DataCache()
         let settings = AppSettings.load(cache)
-        var inputs = LiveInputs(counter: CounterState.load(cache), stopwatch: StopwatchState.load(cache), settings: settings)
+        var inputs = LiveInputs(counter: CounterState.load(cache), stopwatch: StopwatchState.load(cache), timer: TimerState.load(cache),
+                                settings: settings)
         var status: [SourceStatus.Source: SourceStatus.Entry] = [:]
 
         if !groups.isDisjoint(with: [.weather, .prayer, .location]) {
@@ -42,6 +43,12 @@ enum WidgetData {
             status[.battery] = .init(ok: inputs.battery != nil, detail: inputs.battery.map { "\(Int($0 * 100))%" } ?? "unknown",
                                      updated: now, checked: now)
         }
+        // Media, volume, system switches, calendar, reminders, charging (ADR-027).
+        inputs.device = await DeviceData.read(groups: groups, language: RenderContext.preferredLanguage, now: now)
+        // ADR-029: prices of the spec's ticker fields.
+        if !tickers.isEmpty {
+            inputs.device.live.merge(MarketData.values(await MarketData.refresh(tickers, cache: cache, now: now))) { _, new in new }
+        }
         if groups.contains(.app) {
             status[.counter] = .init(ok: true, detail: "\(inputs.counter.value)", updated: inputs.counter.updated, checked: now)
             status[.stopwatch] = .init(ok: true, detail: inputs.stopwatch.isRunning ? "running" : "stopped",
@@ -60,7 +67,7 @@ enum WidgetData {
         return LiveInputs(location: cache.read(StoredLocation.self, StoredLocation.cacheName),
                           weather: cache.read(WeatherReport.self, WeatherReport.cacheName),
                           health: health.map { .success($0) }, counter: CounterState.load(cache),
-                          stopwatch: StopwatchState.load(cache), settings: AppSettings.load(cache))
+                          stopwatch: StopwatchState.load(cache), timer: TimerState.load(cache), settings: AppSettings.load(cache))
     }
 
     // MARK: Sources

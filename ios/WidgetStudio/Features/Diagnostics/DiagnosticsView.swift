@@ -30,6 +30,15 @@ struct DiagnosticsView: View {
             Section("diag.section.battery") {
                 outcomeRow("diag.battery.app", model.battery)
             }
+            reloadSection
+            // Whether Apple Music is reachable here; the check widget's step log shows the widget's own taps (ADR-027).
+            Section("diag.section.media") {
+                LabeledContent {
+                    Text(verbatim: MediaControl.isAuthorized ? "authorized" : "not authorized")
+                } label: {
+                    Text("diag.media.access")
+                }
+            }
             Section {
                 Button("diag.refresh", action: model.refresh)
                     .accessibilityIdentifier("ax.diag.refresh")
@@ -46,6 +55,23 @@ struct DiagnosticsView: View {
         .onAppear(perform: model.refresh)
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { model.refresh() }
+        }
+    }
+
+    /// ADR-030: the last reload per widget kind, with its reason, and how to lift the budget for testing.
+    private var reloadSection: some View {
+        Section {
+            let latest = ReloadLog.latest()
+            if latest.isEmpty {
+                Text("diag.reloads.none").foregroundStyle(.secondary)
+            }
+            ForEach(Array(latest.prefix(12))) { entry in
+                ReloadRow(entry: entry)
+            }
+        } header: {
+            Text("diag.section.reloads")
+        } footer: {
+            Text("diag.reloads.footer")
         }
     }
 
@@ -258,5 +284,25 @@ struct DiagnosticsView: View {
                 EmptyView()
             }
         }
+    }
+}
+
+/// One reload log line (ADR-030), left to right like the other log lines.
+private struct ReloadRow: View {
+    let entry: ReloadLog.Entry
+
+    private var detail: String {
+        var parts: [String] = [entry.date.formatted(date: .omitted, time: .standard), entry.reason]
+        if let count = entry.entries { parts.append("\(count) entries") }
+        if let next = entry.next { parts.append("next " + next.formatted(date: .omitted, time: .shortened)) }
+        return parts.joined(separator: " · ")
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(verbatim: entry.kind).font(.footnote.monospaced())
+            Text(verbatim: detail).font(.caption).foregroundStyle(.secondary)
+        }
+        .environment(\.layoutDirection, .leftToRight)
     }
 }

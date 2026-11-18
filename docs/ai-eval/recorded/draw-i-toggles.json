@@ -1,0 +1,414 @@
+{
+  "name": {
+    "en": "Settings",
+    "ar": "الإعدادات"
+  },
+  "family": "small",
+  "theme": "dark",
+  "palette": {
+    "bg": "#121212",
+    "fg": "#FFFFFF",
+    "accent": "#22C55E"
+  },
+  "card": {
+    "shape": "roundedRect"
+  },
+  "background": {
+    "type": "solid",
+    "color": "#121212",
+    "colors": null,
+    "angle": null,
+    "outerColor": null
+  },
+  "fields": [],
+  "inventory": [
+    "Wi-Fi icon at x 0.08, y 0.18, white",
+    "Wi-Fi text at x 0.22, y 0.17, white",
+    "Wi-Fi toggle switch (on) at x 0.70, y 0.15, green/white",
+    "Bluetooth icon at x 0.08, y 0.48, white",
+    "Bluetooth text at x 0.22, y 0.47, white",
+    "Bluetooth toggle switch (on) at x 0.70, y 0.45, green/white",
+    "Airplane mode icon at x 0.08, y 0.78, white",
+    "Airplane text at x 0.22, y 0.77, white",
+    "Airplane mode toggle switch (off) at x 0.70, y 0.75, dark grey/white"
+  ],
+  "wiring": [
+    {
+      "element": "Wi-Fi icon",
+      "shows": null,
+      "tap": null,
+      "decorative": "icon representing wi-fi"
+    },
+    {
+      "element": "Wi-Fi text",
+      "shows": null,
+      "tap": null,
+      "decorative": "fixed label"
+    },
+    {
+      "element": "Wi-Fi toggle switch",
+      "shows": null,
+      "tap": "system.toggle.wifi",
+      "decorative": null
+    },
+    {
+      "element": "Bluetooth icon",
+      "shows": null,
+      "tap": null,
+      "decorative": "icon representing bluetooth"
+    },
+    {
+      "element": "Bluetooth text",
+      "shows": null,
+      "tap": null,
+      "decorative": "fixed label"
+    },
+    {
+      "element": "Bluetooth toggle switch",
+      "shows": null,
+      "tap": "system.toggle.bluetooth",
+      "decorative": null
+    },
+    {
+      "element": "Airplane mode icon",
+      "shows": null,
+      "tap": null,
+      "decorative": "icon representing airplane mode"
+    },
+    {
+      "element": "Airplane text",
+      "shows": null,
+      "tap": null,
+      "decorative": "fixed label"
+    },
+    {
+      "element": "Airplane mode toggle switch",
+      "shows": null,
+      "tap": "system.toggle.airplane",
+      "decorative": null
+    }
+  ],
+  "layers": [
+    {
+      "type": "stack",
+      "axis": "vertical",
+      "frame": {
+        "x": 16,
+        "y": 16,
+        "w": 138,
+        "h": 138
+      },
+      "spacing": 16,
+      "padding": 0,
+      "alignItems": "center",
+      "justify": "center",
+      "columns": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": true,
+      "when": null,
+      "children": [
+        {
+          "type": "stack",
+          "axis": "horizontal",
+          "width": null,
+          "height": null,
+          "spacing": 12,
+          "padding": 0,
+          "alignItems": "center",
+          "justify": "start",
+          "columns": null,
+          "when": null,
+          "children": [
+            {
+              "type": "icon",
+              "symbol": "wifi",
+              "size": 24,
+              "color": "@fg",
+              "width": null,
+              "height": null,
+              "when": null
+            },
+            {
+              "type": "text",
+              "value": {
+                "en": "Wi-Fi",
+                "ar": "الواي فاي"
+              },
+              "font": {
+                "family": "system",
+                "size": 18,
+                "weight": "regular"
+              },
+              "color": "@fg",
+              "align": "leading",
+              "maxLines": 1,
+              "live": null,
+              "width": null,
+              "height": null,
+              "when": null
+            },
+            {
+              "type": "spacer",
+              "width": null,
+              "height": null,
+              "minLength": null,
+              "when": null
+            },
+            {
+              "type": "stack",
+              "axis": "horizontal",
+              "width": 52,
+              "height": 28,
+              "spacing": 0,
+              "padding": 2,
+              "alignItems": "center",
+              "justify": "start",
+              "columns": null,
+              "when": null,
+              "children": [
+                {
+                  "type": "shape",
+                  "kind": "capsule",
+                  "fill": "@accent",
+                  "stroke": null,
+                  "cornerRadius": null,
+                  "glass": null,
+                  "width": 52,
+                  "height": 28,
+                  "when": null
+                },
+                {
+                  "type": "shape",
+                  "kind": "circle",
+                  "fill": "@fg",
+                  "stroke": null,
+                  "cornerRadius": null,
+                  "glass": null,
+                  "width": 24,
+                  "height": 24,
+                  "when": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "stack",
+          "axis": "horizontal",
+          "width": null,
+          "height": null,
+          "spacing": 12,
+          "padding": 0,
+          "alignItems": "center",
+          "justify": "start",
+          "columns": null,
+          "when": null,
+          "children": [
+            {
+              "type": "icon",
+              "symbol": "dot.radiowaves.left.and.right",
+              "size": 24,
+              "color": "@fg",
+              "width": null,
+              "height": null,
+              "when": null
+            },
+            {
+              "type": "text",
+              "value": {
+                "en": "Bluetooth",
+                "ar": "البلوتوث"
+              },
+              "font": {
+                "family": "system",
+                "size": 18,
+                "weight": "regular"
+              },
+              "color": "@fg",
+              "align": "leading",
+              "maxLines": 1,
+              "live": null,
+              "width": null,
+              "height": null,
+              "when": null
+            },
+            {
+              "type": "spacer",
+              "width": null,
+              "height": null,
+              "minLength": null,
+              "when": null
+            },
+            {
+              "type": "stack",
+              "axis": "horizontal",
+              "width": 52,
+              "height": 28,
+              "spacing": 0,
+              "padding": 2,
+              "alignItems": "center",
+              "justify": "start",
+              "columns": null,
+              "when": null,
+              "children": [
+                {
+                  "type": "shape",
+                  "kind": "capsule",
+                  "fill": "@accent",
+                  "stroke": null,
+                  "cornerRadius": null,
+                  "glass": null,
+                  "width": 52,
+                  "height": 28,
+                  "when": null
+                },
+                {
+                  "type": "shape",
+                  "kind": "circle",
+                  "fill": "@fg",
+                  "stroke": null,
+                  "cornerRadius": null,
+                  "glass": null,
+                  "width": 24,
+                  "height": 24,
+                  "when": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "stack",
+          "axis": "horizontal",
+          "width": null,
+          "height": null,
+          "spacing": 12,
+          "padding": 0,
+          "alignItems": "center",
+          "justify": "start",
+          "columns": null,
+          "when": null,
+          "children": [
+            {
+              "type": "icon",
+              "symbol": "airplane",
+              "size": 24,
+              "color": "@fg",
+              "width": null,
+              "height": null,
+              "when": null
+            },
+            {
+              "type": "text",
+              "value": {
+                "en": "Airplane",
+                "ar": "الطيران"
+              },
+              "font": {
+                "family": "system",
+                "size": 18,
+                "weight": "regular"
+              },
+              "color": "@fg",
+              "align": "leading",
+              "maxLines": 1,
+              "live": null,
+              "width": null,
+              "height": null,
+              "when": null
+            },
+            {
+              "type": "spacer",
+              "width": null,
+              "height": null,
+              "minLength": null,
+              "when": null
+            },
+            {
+              "type": "stack",
+              "axis": "horizontal",
+              "width": 52,
+              "height": 28,
+              "spacing": 0,
+              "padding": 2,
+              "alignItems": "center",
+              "justify": "end",
+              "columns": null,
+              "when": null,
+              "children": [
+                {
+                  "type": "shape",
+                  "kind": "circle",
+                  "fill": "@fg",
+                  "stroke": null,
+                  "cornerRadius": null,
+                  "glass": null,
+                  "width": 24,
+                  "height": 24,
+                  "when": null
+                },
+                {
+                  "type": "shape",
+                  "kind": "capsule",
+                  "fill": "#333333",
+                  "stroke": null,
+                  "cornerRadius": null,
+                  "glass": null,
+                  "width": 52,
+                  "height": 28,
+                  "when": null
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "action": "system.toggle.wifi",
+      "arg": null,
+      "frame": {
+        "x": 100,
+        "y": 16,
+        "w": 56,
+        "h": 40
+      },
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    },
+    {
+      "type": "button",
+      "action": "system.toggle.bluetooth",
+      "arg": null,
+      "frame": {
+        "x": 100,
+        "y": 65,
+        "w": 56,
+        "h": 40
+      },
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    },
+    {
+      "type": "button",
+      "action": "system.toggle.airplane",
+      "arg": null,
+      "frame": {
+        "x": 100,
+        "y": 114,
+        "w": 56,
+        "h": 40
+      },
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    }
+  ]
+}

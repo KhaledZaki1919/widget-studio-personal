@@ -1,0 +1,400 @@
+[
+ {
+  "name": "frozen percent and level dots",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.year",
+   "name": {
+    "en": "Progress",
+    "ar": "Progress"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 16,
+      "y": 14,
+      "w": 80,
+      "h": 20
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "Year",
+        "ar": "السنة"
+       },
+       "font": {
+        "family": "system",
+        "size": 13
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 100,
+      "y": 14,
+      "w": 54,
+      "h": 20
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "53%",
+        "ar": "53%"
+       },
+       "font": {
+        "family": "system",
+        "size": 13
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "dotGrid",
+     "frame": {
+      "x": 16,
+      "y": 50,
+      "w": 138,
+      "h": 104
+     },
+     "rows": 6,
+     "cols": 8,
+     "dotSize": 6,
+     "gap": 4,
+     "onColor": "#FFFFFF",
+     "offColor": "#333333",
+     "values": "111111111111111000000000000000000000000000000000"
+    }
+   ]
+  },
+  "findings": [
+   "correct",
+   "live",
+   "live"
+  ]
+ },
+ {
+  "name": "a control with no action",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.play",
+   "name": {
+    "en": "Music",
+    "ar": "Music"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "layers": [
+    {
+     "type": "icon",
+     "frame": {
+      "x": 60,
+      "y": 60,
+      "w": 44,
+      "h": 44
+     },
+     "symbol": "play.fill",
+     "size": 40,
+     "color": "#FFFFFF"
+    }
+   ]
+  },
+  "findings": [
+   "interactive"
+  ]
+ },
+ {
+  "name": "a frozen weather icon beside a live condition",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.icon",
+   "name": {
+    "en": "Weather",
+    "ar": "Weather"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "layers": [
+    {
+     "type": "icon",
+     "frame": {
+      "x": 16,
+      "y": 14,
+      "w": 44,
+      "h": 44
+     },
+     "symbol": "sun.max.fill",
+     "size": 40,
+     "color": "#FFFFFF"
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 16,
+      "y": 90,
+      "w": 130,
+      "h": 20
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "{{weather.cond}}",
+        "ar": "{{weather.cond}}"
+       },
+       "font": {
+        "family": "system",
+        "size": 13
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    }
+   ]
+  },
+  "findings": [
+   "alive",
+   "correct"
+  ]
+ },
+ {
+  "name": "the battery with nothing to say so",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.bat",
+   "name": {
+    "en": "Card",
+    "ar": "Card"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 16,
+      "y": 60,
+      "w": 100,
+      "h": 40
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "{{battery.level}}%",
+        "ar": "{{battery.level}}%"
+       },
+       "font": {
+        "family": "system",
+        "size": 28
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    }
+   ]
+  },
+  "findings": [
+   "correct"
+  ]
+ },
+ {
+  "name": "a label that names another share",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.lab",
+   "name": {
+    "en": "Card",
+    "ar": "Card"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 16,
+      "y": 14,
+      "w": 80,
+      "h": 20
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "Year",
+        "ar": "السنة"
+       },
+       "font": {
+        "family": "system",
+        "size": 13
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 100,
+      "y": 14,
+      "w": 54,
+      "h": 20
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "{{steps.progress}}%",
+        "ar": "{{steps.progress}}%"
+       },
+       "font": {
+        "family": "system",
+        "size": 13
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    }
+   ]
+  },
+  "findings": [
+   "correct"
+  ]
+ },
+ {
+  "name": "a quote is nothing to do with any rule",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.q",
+   "name": {
+    "en": "Quote",
+    "ar": "Quote"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "layers": [
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 16,
+      "y": 60,
+      "w": 130,
+      "h": 40
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "Be here now",
+        "ar": "كن هنا"
+       },
+       "font": {
+        "family": "system",
+        "size": 14
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    }
+   ]
+  },
+  "findings": []
+ },
+ {
+  "name": "live, tappable, with states: clean",
+  "spec": {
+   "schemaVersion": 1,
+   "id": "v.ok",
+   "name": {
+    "en": "Battery",
+    "ar": "Battery"
+   },
+   "family": "small",
+   "background": {
+    "type": "solid",
+    "color": "#111111"
+   },
+   "layers": [
+    {
+     "type": "states",
+     "frame": {
+      "x": 40,
+      "y": 14,
+      "w": 90,
+      "h": 90
+     },
+     "set": "battery.mood"
+    },
+    {
+     "type": "stack",
+     "axis": "vertical",
+     "frame": {
+      "x": 16,
+      "y": 120,
+      "w": 130,
+      "h": 24
+     },
+     "children": [
+      {
+       "type": "text",
+       "value": {
+        "en": "{{battery.level}}%",
+        "ar": "{{battery.level}}%"
+       },
+       "font": {
+        "family": "system",
+        "size": 16
+       },
+       "color": "#FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "button",
+     "frame": {
+      "x": 0,
+      "y": 0,
+      "w": 170,
+      "h": 170
+     },
+     "action": "open.app"
+    }
+   ]
+  },
+  "findings": []
+ }
+]

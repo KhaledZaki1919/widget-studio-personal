@@ -1,0 +1,106 @@
+{
+ "schemaVersion": 1,
+ "id": "mono.weather.art",
+ "category": "weather",
+ "name": {
+  "en": "Weather Art",
+  "ar": "رسمة الطقس"
+ },
+ "family": "medium",
+ "theme": "dark",
+ "refresh": "hourly",
+ "background": {
+  "type": "solid",
+  "color": "@bg"
+ },
+ "layers": [
+  {
+   "type": "states",
+   "set": "weather.art",
+   "frame": {
+    "x": 14,
+    "y": 16,
+    "w": 116,
+    "h": 116
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": "{{weather.city}}",
+   "font": {
+    "family": "system",
+    "size": 12,
+    "weight": "medium"
+   },
+   "color": "@muted",
+   "align": "center",
+   "maxLines": 1,
+   "frame": {
+    "x": 14,
+    "y": 136,
+    "w": 116,
+    "h": 18
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": "{{weather.temp}}°",
+   "font": {
+    "family": "dot",
+    "size": 38,
+    "weight": "bold"
+   },
+   "color": "@fg",
+   "frame": {
+    "x": 146,
+    "y": 12,
+    "w": 110,
+    "h": 50
+   },
+   "mirror": true
+  },
+  {
+   "type": "text",
+   "value": "{{weather.cond}}",
+   "font": {
+    "family": "system",
+    "size": 12,
+    "weight": "medium"
+   },
+   "color": "@muted",
+   "align": "trailing",
+   "maxLines": 2,
+   "frame": {
+    "x": 256,
+    "y": 20,
+    "w": 92,
+    "h": 36
+   },
+   "mirror": true
+  },
+  {
+   "type": "forecastRow",
+   "days": 5,
+   "color": "@fg",
+   "frame": {
+    "x": 146,
+    "y": 72,
+    "w": 204,
+    "h": 84
+   },
+   "mirror": true
+  },
+  {
+   "type": "button",
+   "action": "weather.open",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 364,
+    "h": 170
+   }
+  }
+ ]
+}

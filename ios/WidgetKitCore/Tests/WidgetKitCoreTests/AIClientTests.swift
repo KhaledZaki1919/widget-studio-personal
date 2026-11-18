@@ -40,13 +40,10 @@ struct AIClientTests {
         let config = try #require(body["generationConfig"])
         #expect(config["responseMimeType"] == "application/json")
         #expect(config["thinkingConfig"]?["thinkingLevel"] == "low")
-        let responseSchema = try #require(config["responseSchema"])
-        #expect(responseSchema["additionalProperties"] == nil)
-        #expect(responseSchema["properties"]?["note"]?["type"] == "string")
-        // Compact for Gemini (ADR-019): nullable properties are optional, not required-and-null.
-        #expect(responseSchema["required"] == ["ok"])
-        #expect(responseSchema["properties"]?["note"]?["nullable"] == nil)
-        #expect(responseSchema["properties"]?["kind"]?["enum"] == ["a", "b"])
+        // ADR-029: the JSON Schema as is, through responseJsonSchema.
+        let responseSchema = try #require(config["responseJsonSchema"])
+        #expect(responseSchema == request(images: []).schema)
+        #expect(config["responseSchema"] == nil)
         guard case .array(let parts)? = body["contents"]?.arrayFirst?["parts"] else {
             Issue.record("no parts")
             return
@@ -208,13 +205,13 @@ struct AIClientTests {
         #expect(provider.requests[1].request.system.contains("JSON Schema"))
     }
 
-    /// ADR-019: Gemini starts in JSON mode (schema in the prompt); the others start structured.
-    @Test func geminiStartsInJSONMode() async throws {
+    /// ADR-029: Gemini starts structured too (responseJsonSchema), like the others; the schema stays out of the prompt.
+    @Test func geminiStartsStructured() async throws {
         let gemini = ScriptedProvider(kind: .gemini, [.success("{\"ok\": true}")])
         _ = try await StructuredAI(provider: gemini, model: "m").run(ConnectionTest.Reply.self, request: request(), feature: .connectionTest)
-        #expect(gemini.requests.map(\.structured) == [false])
-        #expect(gemini.requests[0].request.system.contains("JSON Schema"))
-        #expect(!AIProviderKind.gemini.prefersStructuredOutput && AIProviderKind.openai.prefersStructuredOutput)
+        #expect(gemini.requests.map(\.structured) == [true])
+        #expect(!gemini.requests[0].request.system.contains("JSON Schema"))
+        #expect(AIProviderKind.gemini.prefersStructuredOutput && AIProviderKind.openai.prefersStructuredOutput)
     }
 
     @Test func runawayStructuredAnswerFallsBackToPromptMode() async throws {

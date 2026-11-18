@@ -36,9 +36,11 @@ struct TemplateWidget<ID: TemplateIdentity>: Widget {
 
     /// The template's own size only: nothing is shrunk or stretched.
     static var families: [WidgetFamily] {
+        // ADR-030: tall templates also fill iOS 27's 4 × 6 widget, scaled and centered.
         switch spec?.family {
         case .medium?: [.systemMedium]
-        case .large?: [.systemLarge]
+        case .large?: [.systemLarge] + WidgetFamily.extraLargePortrait
+        case .xlarge?: WidgetFamily.extraLargePortrait.isEmpty ? [.systemLarge] : WidgetFamily.extraLargePortrait
         default: [.systemSmall]
         }
     }
@@ -53,6 +55,7 @@ struct TimeTemplateWidgets: WidgetBundle {
         TemplateWidget<TemplateIDs.ClockDigital>()
         TemplateWidget<TemplateIDs.DateBig>()
         TemplateWidget<TemplateIDs.DateDayZone>()
+        TemplateWidget<TemplateIDs.YearDots>()
     }
 }
 
@@ -61,6 +64,7 @@ struct WeatherTemplateWidgets: WidgetBundle {
         TemplateWidget<TemplateIDs.WeatherHiLo>()
         TemplateWidget<TemplateIDs.WeatherTemp>()
         TemplateWidget<TemplateIDs.WeatherForecast>()
+        TemplateWidget<TemplateIDs.WeatherArt>()
         TemplateWidget<TemplateIDs.LocationCoords>()
     }
 }
@@ -105,12 +109,19 @@ struct TilesTemplateWidgets: WidgetBundle {
         TemplateWidget<TemplateIDs.TilesPills4>()
         TemplateWidget<TemplateIDs.TilesRound>()
         TemplateWidget<TemplateIDs.TilesHero>()
+        TemplateWidget<TemplateIDs.MediaPlayer>()
+        TemplateWidget<TemplateIDs.ControlCenter>()
+        TemplateWidget<TemplateIDs.BatteryMood>()
     }
 }
 
 struct CounterTemplateWidgets: WidgetBundle {
     var body: some Widget {
         TemplateWidget<TemplateIDs.CounterTasbeeh>()
+        TemplateWidget<TemplateIDs.TimerFocus>()
+        TemplateWidget<TemplateIDs.TasksSmall>()
+        TemplateWidget<TemplateIDs.TasksMedium>()
+        TemplateWidget<TemplateIDs.TasksLarge>()
     }
 }
 
@@ -159,9 +170,10 @@ struct TemplateProvider: TimelineProvider {
                 completion(Timeline(entries: [first], policy: .never))
                 return
             }
-            let inputs = await WidgetData.inputs(for: DataRequirements.groups(for: spec), now: start)
+            let inputs = await WidgetData.inputs(for: DataRequirements.groups(for: spec), tickers: MarketData.tickers(in: spec), now: start)
             let gap = LiveData.gap(for: spec, inputs)
             let (dates, reload) = LiveSchedule.make(for: spec, inputs: inputs, now: start)
+            ReloadLog.record(kind: templateID, reason: "timeline", entries: dates.count, next: reload, now: start)
             let entries = dates.map {
                 TemplateEntry(date: $0, templateID: templateID, spec: spec, problem: nil, inputs: inputs, gap: gap)
             }
@@ -197,11 +209,19 @@ enum LiveSchedule {
         if !groups.isDisjoint(with: [.weather, .health, .location, .device, .prayer]) {
             reload = min(reload, now.addingTimeInterval(3600))
         }
+        // Values that change without telling the widget: iOS allows a reload about every 15 minutes.
+        if !groups.isDisjoint(with: [.media, .audio, .system, .calendar, .reminders]) {
+            reload = min(reload, now.addingTimeInterval(900))
+        }
         if groups.contains(.prayer), let next = LiveData.snapshot(inputs, now: now).prayer?.nextTime {
             reload = min(reload, next.addingTimeInterval(60))
         }
         if reload == .distantFuture { reload = now.addingTimeInterval(6 * 3600) }
-        return (schedule.dates.filter { $0 < reload }.isEmpty ? [now] : schedule.dates.filter { $0 < reload }, reload)
+        // ADR-030: entries at the moments data is known to change (midnight, prayers, events, the timer's end),
+        // so they show on time without spending a reload.
+        let boundaries = TimelineBoundaries.dates(for: spec, data: LiveData.snapshot(inputs, now: now), now: now, until: reload)
+        let dates = Array(Set(schedule.dates.filter { $0 < reload } + boundaries)).sorted()
+        return (dates.isEmpty ? [now] : dates, reload)
     }
 }
 
@@ -233,6 +253,7 @@ struct TemplateWidgetView: View {
             data: entry.sample ? .sample(now: entry.date) : LiveData.snapshot(entry.inputs, now: entry.date)
         )
         context.uses24Hour = entry.inputs.settings.clockFormat.uses24Hour()
+        context.mediaArtwork = entry.inputs.device.artwork
         return context
     }
 }
@@ -269,6 +290,7 @@ struct DataGapView: View {
         case .noWeather: "cloud"
         case .noHealth: "heart.text.square"
         case .noBattery: "battery.0"
+        case .noTasks: "checklist"
         }
     }
 
@@ -278,6 +300,7 @@ struct DataGapView: View {
         case .noWeather: "widget.gap.noWeather"
         case .noHealth: "widget.gap.noHealth"
         case .noBattery: "widget.gap.noBattery"
+        case .noTasks: "widget.gap.noTasks"
         }
     }
 }

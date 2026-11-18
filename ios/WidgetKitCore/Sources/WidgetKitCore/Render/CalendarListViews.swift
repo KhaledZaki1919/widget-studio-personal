@@ -7,6 +7,7 @@ struct CalendarMonthView: View {
     let resolver: BindingResolver
     let scale: CGFloat
     let mirrored: Bool
+    @Environment(\.specAccented) private var accented
 
     var body: some View {
         let context = resolver.context
@@ -72,7 +73,9 @@ struct CalendarMonthView: View {
 
     @ViewBuilder private func cell(_ cell: CalendarMonthLayout.Cell, width: CGFloat, height: CGFloat) -> some View {
         let side = min(width, height) * 0.86
-        let style = layer.todayStyle ?? .filled
+        // Accented mode: today's box and circle become outlines in the accent tint (ADR-023).
+        let base = layer.todayStyle ?? .filled
+        let style: CalendarMonthLayer.TodayStyle = accented && (base == .filled || base == .circle) ? .ring : base
         let highlight = Color(hex: layer.todayColor ?? layer.color)
         let onHighlight = cell.isToday && (style == .filled || style == .circle)
         ZStack {
@@ -81,6 +84,7 @@ struct CalendarMonthView: View {
                 case .filled: RoundedRectangle(cornerRadius: side * 0.28, style: .continuous).fill(highlight).frame(width: side, height: side)
                 case .circle: Circle().fill(highlight).frame(width: side, height: side)
                 case .ring: Circle().stroke(highlight, lineWidth: max(1, 1.5 * scale)).frame(width: side, height: side)
+                    .widgetAccentableIf(accented)
                 case .dot: Circle().fill(highlight).frame(width: side * 0.16, height: side * 0.16).offset(y: side * 0.42)
                 case .none: EmptyView()
                 }
@@ -123,8 +127,19 @@ struct ListLayerView: View {
     private var size: CGFloat { layer.font.size * scale }
 
     @ViewBuilder private func row(_ item: ListLayer.Item, height: CGFloat) -> some View {
-        let title = text(item.title, color: Color(hex: layer.color))
-        let detail = item.detail.map { text($0, color: layer.detailColor.map(Color.init(hex:)) ?? Color(hex: layer.color).opacity(0.6)) }
+        let isDone = item.done.map(resolver.isSatisfied) ?? false
+        let secondary = layer.detailColor.map(Color.init(hex:)) ?? Color(hex: layer.color).opacity(0.6)
+        // ADR-029: a subtitle under the title and a second detail under the first.
+        let title = VStack(alignment: mirrored ? .trailing : .leading, spacing: 0) {
+            text(item.title, color: Color(hex: layer.color).opacity(isDone ? 0.5 : 1))
+            if let subtitle = item.subtitle { text(subtitle, color: secondary, small: true) }
+        }
+        let detail = item.detail.map { first in
+            VStack(alignment: mirrored ? .leading : .trailing, spacing: 0) {
+                text(first, color: secondary, small: item.detail2 != nil)
+                if let second = item.detail2 { text(second, color: secondary, small: true) }
+            }
+        }
         HStack(spacing: 8 * scale) {
             if mirrored {
                 detail
@@ -140,18 +155,20 @@ struct ListLayerView: View {
         }
     }
 
-    private func text(_ value: LocalizedText, color: Color) -> some View {
+    private func text(_ value: LocalizedText, color: Color, small: Bool = false) -> some View {
         let rendered = BidiText.isolatingNumbers(resolver.render(value.resolved(language: resolver.context.language)))
         return Text(verbatim: rendered)
-            .font(FontRegistry.font(layer.font, size: size, for: rendered))
+            .font(FontRegistry.font(layer.font, size: size * (small ? 0.82 : 1), for: rendered))
             .foregroundStyle(color)
             .lineLimit(1)
             .minimumScaleFactor(0.6)
     }
 
     @ViewBuilder private func marker(_ item: ListLayer.Item, height: CGFloat) -> some View {
-        let color = Color(hex: item.color ?? layer.markerColor ?? layer.color)
-        switch layer.marker ?? .none {
+        // A row color may be a binding: a calendar's own color (ADR-029).
+        let color = Color(hex: item.color.map(resolver.render) ?? layer.markerColor ?? layer.color)
+        // A row with a done state is a checkbox, whatever the list's marker says.
+        switch item.done.map({ resolver.isSatisfied($0) ? ListLayer.Marker.check : .circle }) ?? layer.marker ?? .none {
         case .none: EmptyView()
         case .dot: Circle().fill(color).frame(width: size * 0.45, height: size * 0.45)
         case .circle: Circle().stroke(color, lineWidth: max(1, 1.5 * scale)).frame(width: size * 0.95, height: size * 0.95)
@@ -161,7 +178,7 @@ struct ListLayerView: View {
                 .font(.system(size: size * 0.9))
                 .foregroundStyle(color)
                 .frame(width: size * 1.2)
-        case .bar: RoundedRectangle(cornerRadius: 1.5 * scale).fill(color).frame(width: 3 * scale, height: height * 0.6)
+        case .bar: RoundedRectangle(cornerRadius: 1.5 * scale).fill(color).frame(width: 3 * scale, height: height * 0.76)
         }
     }
 }
@@ -172,15 +189,34 @@ struct ProgressBarView: View {
     let progress: Double
     let scale: CGFloat
     let mirrored: Bool
+    @Environment(\.specAccented) private var accented
 
     var body: some View {
         GeometryReader { proxy in
             let value = min(max(progress, 0), 1)
-            let radius = layer.cornerRadius.map { $0 * scale } ?? proxy.size.height / 2
+            let vertical = layer.vertical == true
+            let radius = layer.cornerRadius.map { $0 * scale } ?? (vertical ? proxy.size.width : proxy.size.height) / 2
             let fill = Color(hex: layer.color)
-            let track = Color(hex: layer.trackColor ?? "#8080804D")
+            let track = Accented.fill(layer.trackColor ?? "#8080804D", accented: accented)
             let segments = layer.segments ?? 1
-            if segments > 1 {
+            if vertical {
+                if segments > 1 {
+                    let lit = Int((value * Double(segments)).rounded())
+                    VStack(spacing: max(1, 2 * scale)) {
+                        ForEach(0..<segments, id: \.self) { index in
+                            RoundedRectangle(cornerRadius: min(radius, proxy.size.width / 2), style: .continuous)
+                                .fill(index >= segments - lit ? fill : track)
+                        }
+                    }
+                } else {
+                    ZStack(alignment: .bottom) {
+                        RoundedRectangle(cornerRadius: radius, style: .continuous).fill(track)
+                        RoundedRectangle(cornerRadius: radius, style: .continuous).fill(fill)
+                            .frame(height: proxy.size.height * value)
+                            .widgetAccentableIf(accented)
+                    }
+                }
+            } else if segments > 1 {
                 let lit = Int((value * Double(segments)).rounded())
                 HStack(spacing: max(1, 2 * scale)) {
                     ForEach(0..<segments, id: \.self) { index in
@@ -193,7 +229,15 @@ struct ProgressBarView: View {
                     RoundedRectangle(cornerRadius: radius, style: .continuous).fill(track)
                     RoundedRectangle(cornerRadius: radius, style: .continuous).fill(fill)
                         .frame(width: proxy.size.width * value)
+                        .widgetAccentableIf(accented)
                 }
+            }
+            // ADR-029: a round knob at the fill's end.
+            if let knob = layer.knob {
+                let side = knob.size.map { $0 * scale } ?? 2 * min(proxy.size.width, proxy.size.height)
+                let x = vertical ? proxy.size.width / 2 : (mirrored ? proxy.size.width * (1 - value) : proxy.size.width * value)
+                let y = vertical ? proxy.size.height * (1 - value) : proxy.size.height / 2
+                Circle().fill(Color(hex: knob.color ?? layer.color)).frame(width: side, height: side).position(x: x, y: y)
             }
         }
     }

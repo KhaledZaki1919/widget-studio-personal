@@ -49,6 +49,7 @@ struct LayerDetailView: View {
                 if isTopLevel { Text("editor.layer.mirror.footer") }
             }
             kindSection(layer)
+            WiringSections(model: model, path: path)
             Section {
                 Button {
                     model.duplicateLayer(path)
@@ -114,6 +115,12 @@ struct LayerDetailView: View {
                     changed.fill = $0
                     layer.wrappedValue.content = .shape(changed)
                 }), model: model)
+                Toggle("editor.layer.glass", isOn: Binding(get: { shape.glass == true }, set: {
+                    var changed = shape
+                    changed.glass = $0 ? true : nil
+                    if $0, changed.fill.map({ !$0.hasPrefix("#") || $0.count == 7 }) ?? true { changed.fill = "#FFFFFF2E" }
+                    layer.wrappedValue.content = .shape(changed)
+                }))
             }
         case .stack(let stack):
             StackSettings(stack: Binding(get: { stack }, set: { layer.wrappedValue.content = .stack($0) }))
@@ -129,6 +136,8 @@ struct LayerDetailView: View {
                 }
                 .accessibilityIdentifier("ax.editor.layer.items")
             }
+        case .states(let states):
+            StatesSettings(states: Binding(get: { states }, set: { layer.wrappedValue.content = .states($0) }), model: model)
         default:
             EmptyView()
         }
@@ -248,7 +257,7 @@ private struct StackSettings: View {
 }
 
 /// A theme color (so the design's color pickers keep reaching it) or a custom one.
-private struct ColorTokenPicker: View {
+struct ColorTokenPicker: View {
     let title: LocalizedStringKey
     @Binding var value: String
     let model: EditorModel

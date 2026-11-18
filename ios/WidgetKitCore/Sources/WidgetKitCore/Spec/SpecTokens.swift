@@ -54,12 +54,20 @@ public struct SpecCondition: Sendable, Equatable {
         case truthy
         case falsy
         case equals(String)
+        case notEquals(String)
+        /// `>=`, `<=`, `>` or `<` on the binding's number.
+        case compare(String, Double)
+        /// `in 0.5..0.89`: a number from low to high, both included.
+        case range(Double, Double)
+        /// `in rain,storm`: one of these texts.
+        case anyOf([String])
     }
 
     public let binding: String
     public let test: Test
 
-    /// `"{{b}}"`, `"!{{b}}"` or `"{{b}} == value"`; nil for anything else.
+    /// `"{{b}}"`, `"!{{b}}"`, `"{{b}} == value"`, `"{{b}} != value"`, `"{{b}} >= 0.9"` (also `<=`, `>`, `<`),
+    /// `"{{b}} in 0.5..0.89"` or `"{{b}} in rain,storm"`; nil for anything else.
     public init?(_ text: String) {
         var rest = text.trimmingCharacters(in: .whitespaces)
         var negated = false
@@ -72,13 +80,47 @@ public struct SpecCondition: Sendable, Equatable {
         let tail = rest[close.upperBound...].trimmingCharacters(in: .whitespaces)
         if tail.isEmpty {
             test = negated ? .falsy : .truthy
-        } else if !negated, tail.hasPrefix("==") {
+        } else if negated {
+            return nil
+        } else if tail.hasPrefix("==") || tail.hasPrefix("!=") {
             let value = tail.dropFirst(2).trimmingCharacters(in: .whitespaces)
             guard !value.isEmpty else { return nil }
-            test = .equals(value)
+            test = tail.hasPrefix("==") ? .equals(value) : .notEquals(value)
+        } else if let symbol = [">=", "<=", ">", "<"].first(where: { tail.hasPrefix($0) }) {
+            guard let number = Double(tail.dropFirst(symbol.count).trimmingCharacters(in: .whitespaces)) else { return nil }
+            test = .compare(symbol, number)
+        } else if tail.hasPrefix("in ") {
+            let list = tail.dropFirst(3).trimmingCharacters(in: .whitespaces)
+            let bounds = list.components(separatedBy: "..").map { Double($0.trimmingCharacters(in: .whitespaces)) }
+            if bounds.count == 2, let low = bounds[0], let high = bounds[1] {
+                test = .range(low, high)
+            } else {
+                let items = list.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+                guard !items.isEmpty else { return nil }
+                test = .anyOf(items)
+            }
         } else {
             return nil
         }
         guard !binding.isEmpty else { return nil }
     }
+}
+
+/// A whole `when`: conditions joined by `&&` and `||` (`&&` binds tighter, no parentheses, ADR-028).
+public struct SpecExpression: Sendable, Equatable {
+    /// Any of these groups holds when all its conditions hold.
+    public let groups: [[SpecCondition]]
+
+    public init?(_ text: String) {
+        var groups: [[SpecCondition]] = []
+        for group in text.components(separatedBy: "||") {
+            let conditions = group.components(separatedBy: "&&").map { SpecCondition($0) }
+            guard !conditions.isEmpty, conditions.allSatisfy({ $0 != nil }) else { return nil }
+            groups.append(conditions.compactMap { $0 })
+        }
+        guard !groups.isEmpty else { return nil }
+        self.groups = groups
+    }
+
+    public var bindings: [String] { groups.flatMap { $0.map(\.binding) } }
 }

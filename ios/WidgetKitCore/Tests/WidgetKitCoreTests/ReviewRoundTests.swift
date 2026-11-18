@@ -25,14 +25,15 @@ struct ReviewRoundTests {
         WidgetGenerator(service: AIService(keyStore: AIKeyStore(storage: MemoryKeyStorage()), defaults: testDefaults(), provider: provider))
     }
 
-    // MARK: Prompt v3 (v2 + stacks, M6.1)
+    // MARK: Prompt v4 (v3 + text on shapes, corner rows, glass; ADR-023)
 
     @Test func promptAsksForInventoryFidelityAndStacks() {
-        #expect(WidgetPrompt.version == "generate_v3")
+        #expect(WidgetPrompt.version == "generate_v7")
+        #expect(WidgetPrompt.system.contains("\"glass\": true") && WidgetPrompt.system.contains("a shape listed later would hide the text"))
         #expect(WidgetPrompt.system.contains("Never give a text its own absolute frame"))
         #expect(WidgetPrompt.system.contains("`spacer`") && WidgetPrompt.system.contains("`alignItems`"))
         let system = WidgetPrompt.system
-        #expect(system.contains("Inventory first"))
+        #expect(system.contains("function first") && system.contains("**Wiring.**") && system.contains("**Inventory.**"))
         #expect(system.contains("Never replace visible text or numbers with dots"))
         #expect(system.contains("calendarMonth") && system.contains("progressBar") && system.contains("`list`"))
         #expect(system.contains("{{date.MMM}}"))

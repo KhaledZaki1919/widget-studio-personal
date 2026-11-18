@@ -1,0 +1,491 @@
+{
+  "name": {
+    "en": "Quick Contacts",
+    "ar": "جهات الاتصال السريعة"
+  },
+  "family": "small",
+  "theme": "dark",
+  "palette": {
+    "bg": "#121212",
+    "fg": "#FFFFFF",
+    "accent": "#22C55E"
+  },
+  "background": {
+    "type": "solid",
+    "color": "@bg",
+    "colors": null,
+    "angle": null,
+    "outerColor": null
+  },
+  "card": {
+    "shape": "roundedRect"
+  },
+  "fields": [
+    {
+      "key": "contact1_name",
+      "type": "text",
+      "label": {
+        "en": "Contact 1 Name",
+        "ar": "اسم جهة الاتصال ١"
+      },
+      "default": {
+        "en": "Contact 1",
+        "ar": "جهة اتصال ١"
+      }
+    },
+    {
+      "key": "contact1_phone",
+      "type": "text",
+      "label": {
+        "en": "Contact 1 Phone",
+        "ar": "هاتف جهة الاتصال ١"
+      },
+      "default": {
+        "en": "+1234567890",
+        "ar": "+1234567890"
+      }
+    },
+    {
+      "key": "contact2_name",
+      "type": "text",
+      "label": {
+        "en": "Contact 2 Name",
+        "ar": "اسم جهة الاتصال ٢"
+      },
+      "default": {
+        "en": "Contact 2",
+        "ar": "جهة اتصال ٢"
+      }
+    },
+    {
+      "key": "contact2_phone",
+      "type": "text",
+      "label": {
+        "en": "Contact 2 Phone",
+        "ar": "هاتف جهة الاتصال ٢"
+      },
+      "default": {
+        "en": "+1234567890",
+        "ar": "+1234567890"
+      }
+    },
+    {
+      "key": "contact3_name",
+      "type": "text",
+      "label": {
+        "en": "Contact 3 Name",
+        "ar": "اسم جهة الاتصال ٣"
+      },
+      "default": {
+        "en": "Contact 3",
+        "ar": "جهة اتصال ٣"
+      }
+    },
+    {
+      "key": "contact3_phone",
+      "type": "text",
+      "label": {
+        "en": "Contact 3 Phone",
+        "ar": "هاتف جهة الاتصال ٣"
+      },
+      "default": {
+        "en": "+1234567890",
+        "ar": "+1234567890"
+      }
+    },
+    {
+      "key": "contact4_name",
+      "type": "text",
+      "label": {
+        "en": "Contact 4 Name",
+        "ar": "اسم جهة الاتصال ٤"
+      },
+      "default": {
+        "en": "Contact 4",
+        "ar": "جهة اتصال ٤"
+      }
+    },
+    {
+      "key": "contact4_phone",
+      "type": "text",
+      "label": {
+        "en": "Contact 4 Phone",
+        "ar": "هاتف جهة الاتصال ٤"
+      },
+      "default": {
+        "en": "+1234567890",
+        "ar": "+1234567890"
+      }
+    }
+  ],
+  "inventory": [
+    "Top-left contact tile background circle at x 0.08-0.48, y 0.08-0.48, dark grey fill",
+    "Top-left contact phone icon, green",
+    "Top-left contact name text 'Mum', white, system-rounded",
+    "Top-right contact tile background circle at x 0.52-0.92, y 0.08-0.48, dark grey fill",
+    "Top-right contact phone icon, green",
+    "Top-right contact name text 'Dad', white, system-rounded",
+    "Bottom-left contact tile background circle at x 0.08-0.48, y 0.52-0.92, dark grey fill",
+    "Bottom-left contact phone icon, green",
+    "Bottom-left contact name text 'Ali', white, system-rounded",
+    "Bottom-right contact tile background circle at x 0.52-0.92, y 0.52-0.92, dark grey fill",
+    "Bottom-right contact phone icon, green",
+    "Bottom-right contact name text 'Work', white, system-rounded"
+  ],
+  "wiring": [
+    {
+      "element": "Top-left contact tile",
+      "shows": null,
+      "tap": "call.dial",
+      "decorative": null
+    },
+    {
+      "element": "Top-right contact tile",
+      "shows": null,
+      "tap": "call.dial",
+      "decorative": null
+    },
+    {
+      "element": "Bottom-left contact tile",
+      "shows": null,
+      "tap": "call.dial",
+      "decorative": null
+    },
+    {
+      "element": "Bottom-right contact tile",
+      "shows": null,
+      "tap": "call.dial",
+      "decorative": null
+    }
+  ],
+  "layers": [
+    {
+      "type": "shape",
+      "frame": {
+        "x": 16,
+        "y": 16,
+        "w": 66,
+        "h": 66
+      },
+      "kind": "circle",
+      "fill": "#262626",
+      "stroke": null,
+      "cornerRadius": null,
+      "glass": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    },
+    {
+      "type": "stack",
+      "frame": {
+        "x": 16,
+        "y": 24,
+        "w": 66,
+        "h": 50
+      },
+      "axis": "vertical",
+      "spacing": 4,
+      "padding": 0,
+      "alignItems": "center",
+      "justify": "center",
+      "columns": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": false,
+      "when": null,
+      "children": [
+        {
+          "type": "icon",
+          "symbol": "phone.fill",
+          "size": 20,
+          "color": "#22C55E",
+          "width": null,
+          "height": null,
+          "when": null
+        },
+        {
+          "type": "text",
+          "value": {
+            "en": "{{field.contact1_name}}",
+            "ar": "{{field.contact1_name}}"
+          },
+          "font": {
+            "family": "system-rounded",
+            "size": 13,
+            "weight": "regular"
+          },
+          "color": "#FFFFFF",
+          "align": "center",
+          "maxLines": 1,
+          "live": null,
+          "width": null,
+          "height": null,
+          "when": null
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "frame": {
+        "x": 16,
+        "y": 16,
+        "w": 66,
+        "h": 66
+      },
+      "action": "call.dial",
+      "arg": "{{field.contact1_phone}}",
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    },
+    {
+      "type": "shape",
+      "frame": {
+        "x": 88,
+        "y": 16,
+        "w": 66,
+        "h": 66
+      },
+      "kind": "circle",
+      "fill": "#262626",
+      "stroke": null,
+      "cornerRadius": null,
+      "glass": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    },
+    {
+      "type": "stack",
+      "frame": {
+        "x": 88,
+        "y": 24,
+        "w": 66,
+        "h": 50
+      },
+      "axis": "vertical",
+      "spacing": 4,
+      "padding": 0,
+      "alignItems": "center",
+      "justify": "center",
+      "columns": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": false,
+      "when": null,
+      "children": [
+        {
+          "type": "icon",
+          "symbol": "phone.fill",
+          "size": 20,
+          "color": "#22C55E",
+          "width": null,
+          "height": null,
+          "when": null
+        },
+        {
+          "type": "text",
+          "value": {
+            "en": "{{field.contact2_name}}",
+            "ar": "{{field.contact2_name}}"
+          },
+          "font": {
+            "family": "system-rounded",
+            "size": 13,
+            "weight": "regular"
+          },
+          "color": "#FFFFFF",
+          "align": "center",
+          "maxLines": 1,
+          "live": null,
+          "width": null,
+          "height": null,
+          "when": null
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "frame": {
+        "x": 88,
+        "y": 16,
+        "w": 66,
+        "h": 66
+      },
+      "action": "call.dial",
+      "arg": "{{field.contact2_phone}}",
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    },
+    {
+      "type": "shape",
+      "frame": {
+        "x": 16,
+        "y": 88,
+        "w": 66,
+        "h": 66
+      },
+      "kind": "circle",
+      "fill": "#262626",
+      "stroke": null,
+      "cornerRadius": null,
+      "glass": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    },
+    {
+      "type": "stack",
+      "frame": {
+        "x": 16,
+        "y": 96,
+        "w": 66,
+        "h": 50
+      },
+      "axis": "vertical",
+      "spacing": 4,
+      "padding": 0,
+      "alignItems": "center",
+      "justify": "center",
+      "columns": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": false,
+      "when": null,
+      "children": [
+        {
+          "type": "icon",
+          "symbol": "phone.fill",
+          "size": 20,
+          "color": "#22C55E",
+          "width": null,
+          "height": null,
+          "when": null
+        },
+        {
+          "type": "text",
+          "value": {
+            "en": "{{field.contact3_name}}",
+            "ar": "{{field.contact3_name}}"
+          },
+          "font": {
+            "family": "system-rounded",
+            "size": 13,
+            "weight": "regular"
+          },
+          "color": "#FFFFFF",
+          "align": "center",
+          "maxLines": 1,
+          "live": null,
+          "width": null,
+          "height": null,
+          "when": null
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "frame": {
+        "x": 16,
+        "y": 88,
+        "w": 66,
+        "h": 66
+      },
+      "action": "call.dial",
+      "arg": "{{field.contact3_phone}}",
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    },
+    {
+      "type": "shape",
+      "frame": {
+        "x": 88,
+        "y": 88,
+        "w": 66,
+        "h": 66
+      },
+      "kind": "circle",
+      "fill": "#262626",
+      "stroke": null,
+      "cornerRadius": null,
+      "glass": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    },
+    {
+      "type": "stack",
+      "frame": {
+        "x": 88,
+        "y": 96,
+        "w": 66,
+        "h": 50
+      },
+      "axis": "vertical",
+      "spacing": 4,
+      "padding": 0,
+      "alignItems": "center",
+      "justify": "center",
+      "columns": null,
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": false,
+      "when": null,
+      "children": [
+        {
+          "type": "icon",
+          "symbol": "phone.fill",
+          "size": 20,
+          "color": "#22C55E",
+          "width": null,
+          "height": null,
+          "when": null
+        },
+        {
+          "type": "text",
+          "value": {
+            "en": "{{field.contact4_name}}",
+            "ar": "{{field.contact4_name}}"
+          },
+          "font": {
+            "family": "system-rounded",
+            "size": 13,
+            "weight": "regular"
+          },
+          "color": "#FFFFFF",
+          "align": "center",
+          "maxLines": 1,
+          "live": null,
+          "width": null,
+          "height": null,
+          "when": null
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "frame": {
+        "x": 88,
+        "y": 88,
+        "w": 66,
+        "h": 66
+      },
+      "action": "call.dial",
+      "arg": "{{field.contact4_phone}}",
+      "opacity": 1.0,
+      "rotation": null,
+      "mirror": null,
+      "when": null
+    }
+  ]
+}

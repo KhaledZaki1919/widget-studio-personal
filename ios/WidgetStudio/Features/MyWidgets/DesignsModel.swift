@@ -10,6 +10,13 @@ import WidgetKitCore
 @Observable
 final class DesignsModel {
     private(set) var designs: [SavedDesign] = []
+    /// What the last delete removed, while Undo can still bring it back.
+    private(set) var undoable: Deleted?
+    /// Deleted designs with their photos' bytes (ADR-028).
+    struct Deleted {
+        let designs: [SavedDesign]
+        let images: [String: Data]
+    }
     let store: SharedStore
     /// Decoded photos by file name, for previews.
     @ObservationIgnored private var images: [String: CGImage] = [:]
@@ -59,7 +66,31 @@ final class DesignsModel {
     }
 
     func delete(_ design: SavedDesign) {
-        try? store.delete(id: design.id)
+        delete([design])
+    }
+
+    /// Removes designs; `undoDelete` brings them back for a few seconds.
+    func delete(_ list: [SavedDesign]) {
+        var images: [String: Data] = [:]
+        for design in list {
+            if let file = design.imageFile, let data = store.imageData(named: file) { images[file] = data }
+            try? store.delete(id: design.id)
+        }
+        let deleted = Deleted(designs: list, images: images)
+        undoable = deleted
+        changed()
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(8))
+            if self?.undoable?.designs == deleted.designs { self?.undoable = nil }
+        }
+    }
+
+    func undoDelete() {
+        guard let undoable else { return }
+        for design in undoable.designs {
+            try? store.restore(design, image: design.imageFile.flatMap { undoable.images[$0] })
+        }
+        self.undoable = nil
         changed()
     }
 
@@ -72,7 +103,7 @@ final class DesignsModel {
     private func changed() {
         reload()
         // My widget reads the store; it only sees it with an App Group (store mode, ADR-014).
-        WidgetCenter.shared.reloadAllTimelines()
+        AppReloads.all("designs changed")
     }
 }
 
@@ -80,10 +111,14 @@ final class DesignsModel {
 @MainActor
 @Observable
 final class AppState {
-    enum Tab: Hashable { case library, myWidgets, settings }
+    enum Tab: Hashable { case library, myWidgets, tasks, settings }
     var tab: Tab = .library
     /// Create from image (M5), opened from the Library and My widgets.
     var isCreatingFromImage = false
+    /// Files opened or shared to the app (Files, WhatsApp, Telegram…): bulk import in My widgets (ADR-027).
+    var pendingBulk: BulkRequest?
+    /// A widget's add button: the Tasks tab opens its editor.
+    var isAddingTask = false
     /// The introduction (M6): shown on first launch, reopenable from Settings.
     var isShowingOnboarding = !UserDefaults.standard.bool(forKey: AppState.onboardingDoneKey)
         || !UserDefaults.standard.bool(forKey: AppState.permissionsSeenKey)

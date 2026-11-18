@@ -510,3 +510,220 @@ Picked side-by-sides are in `docs/ai-eval/results/` (left: the drawn original, r
   - OpenRouter `nvidia/nemotron-3.5-super-vl:free` (alternative `openrouter/free`); the paid `google/gemini-3.8-flash` stays in the list.
 - **Results kept:** `docs/ai-eval/results/m61-*.png` (forecast local fix, reminders before and after the clamped-frame check, calendar/steps/quote per provider).
 - **Unverified on device:** the layer editor and the layout warning (UI test covers opening the editor and a layer); provider free-tier limits change often, so re-run the eval before changing presets.
+
+### ADR-023 — Device feedback: layout fix keeps every text, glass, Tinted home screens, Use another AI
+**Status:** Accepted (2026-11-02), after the owner's device test of M6.1.
+
+- **Layout fix bug:** on a frosted card the local fix grouped the four corner texts into one row wider than the widget. "hello" and the month ran off the edges, and the time stayed hidden under its pill, which the model had drawn after it. The fix (`AILayoutFix`, `LayerEditing.group`) now:
+  - draws stacks so they always fit their frame: `StackLayerView` steps the whole content down (100 → 40 %, `ViewThatFits` along the stack's axis) instead of letting it overflow. Texts still shrink on their own (minimum scale 0.5); nothing is clipped;
+  - groups into rows held apart by spacers inside a column. A spacer goes before a trailing-aligned text and into gaps over 16 units, so corner layouts keep their corners. Layers piled on one spot still become a column;
+  - moves a text that a shape drawn after it hides (`SpecLayout.coveredTexts`) to just above that shape. On the first answer this is a retry problem;
+  - groups only layers that share a container (`SpecLayout.container`: the smallest shape or ring under a layer holding ≥ 80 % of it, smaller than half the widget). A layer outside a pill that overlaps the text inside it is trimmed to the largest part that clears the pill;
+  - uses the fixed spec only if it keeps every text (`AILayoutFix.texts`); otherwise the answer opens in the editor with the warning.
+
+  Explicit line breaks always get their own lines. A package test rebuilds the device case and checks: every text kept, all frames inside the canvas, the time above and inside its pill.
+- **Glass:**
+  - background `{"type": "glass", "color": tint}`: a neutral base for the theme, a translucent tint (default white 18 %), a sheen and a thin light border;
+  - shapes take `"glass": true`: a translucent fill (default white 15 %), a sheen, and a light border when there's no stroke.
+
+  Both are in the validator, both schemas and prompt `generate_v4` (v3 + text on shapes comes after the shape + corner rows + glass). In the editor: Appearance → Glass background, and Frosted glass for shapes. Widgets can't blur the home screen, so glass reads best over a photo layer or as a panel of its own.
+- **Tinted and Clear home screens:** `SpecView` reads `widgetRenderingMode` and sets `specAccented` (tests set it directly). Every layer then draws an accented variant:
+  - fills drop to 20 % with a thin outline;
+  - the clock face is a faint disc with a rim;
+  - today's box or circle becomes a ring;
+  - unlit dots and tracks are faint;
+  - chromatic colors are `widgetAccentable`;
+  - photos use `widgetAccentedRenderingMode(.accentedDesaturated)` on iOS 18;
+  - text, ticks and hands stay opaque.
+
+  `RenderSnapshotTests` renders every template in accented mode on each push. It fails when more than 8 % of 8 pt cells are solid; before the change, 9 templates were at 9–60 %, now all are at 0 %. It uploads `package-renders` (before | after, tinted as iOS shows them).
+- **Use another AI:** Create from image → Use another AI.
+  - **Copy instructions:** one paste with the system prompt, the recreate task for the chosen size, the JSON Schema, an example and the reply rules.
+  - **Import:** from the clipboard, a text field, a `.json` file, or a `.json` file shared to the app (`CFBundleDocumentTypes` public.json, copied in, not opened in place). `ExternalAI` strips fences and extra text, rejects replies over 200 KB, validates in AI mode (recreate only) and applies the same layout fix. The editor opens without Regenerate.
+  - **Errors:** each failure (empty, not JSON, too large, invalid) has an ar/en message and a **Copy a fix request** button for the same chat.
+  - Only a widget spec is accepted, never code. Nothing is sent anywhere by the app.
+
+  A text shared from a chat app (not a file) goes through the clipboard: a share extension would need an App Group to hand it over, which the Fast Store install doesn't have (ADR-004).
+- **AI eval** (4 runs, `gemini-3.5-flash-lite`, drawn case `draw-glass.png`): before (prompt v3), the model's own layout was clean but had no glass. After (prompt v4), run 2 failed on an invented shape kind (`"line"`), and run 3 on a field `default` written inside its label; both are now repaired in the parser instead of failing. Run 4 used the glass background, kept every text in its corner and the time on its pill, though the model wrote the live time twice instead of hours over minutes. Reminders, forecast and quote still pass with v4 (2 of them fixed locally).
+- **Results kept:** `docs/ai-eval/results/adr23-*.png` (eval before/after, frosted-card local fix before/after); `docs/accented/` (accented before | after for Prayer Times, analog clock, stopwatch, Shortcut tiles, and the solid-share table).
+
+### ADR-024 — Crop to the widget; card shapes; Create all
+**Status:** Accepted (2026-11-02), after the owner reported that screenshots of widgets on a wallpaper made the AI design the wallpaper and corners too.
+
+- **Detection (`WidgetDetector`, Vision, package):**
+  - Contours in both polarities, classified by the corner radius implied by the missing area, r = √((1 − fill)·w·h / (4 − π)): r ≥ 0.4 × the short side is a circle (square box) or a capsule; otherwise a rounded rectangle (widget squircles are about 0.22).
+  - Rectangle detection adds cards the contours missed; their corners are then measured in the pixels (the diagonal from each corner to the card's color, r(√2 − 1)), so a pill found only as a rectangle is still a capsule.
+  - Duplicates merge (IoU > 0.7, or one box inside the other at ≥ 60 % of its size). Shapes inside another candidate, shapes touching the image edge (wallpaper, a tight crop) and shapes under 1.5 % of the image are dropped.
+  - No card: the union of Vision's text boxes and objectness saliency, padded 8 %, is a floating design (`none`).
+  - Results are in reading order; empty means the whole image.
+  - The package tests check all six drawn eval images (busy wallpaper, drop shadow, circle, capsule, floating, a gallery of four) and upload the outlines.
+- **Crop step:** after picking an image, a crop screen outlines every detection (the first selected). It has corner handles, size presets (small 1:1, medium 2.14:1, large 0.95:1, free) and Use whole image. Only the crop goes to the AI, together with the detected shape, the wallpaper color around it (the most common quantized color in a ring outside the box) and "cropped" in the task. Wide crops suggest medium; crops wider than 60 % of the image suggest large; otherwise small. Use another AI has the same step and shares the crop as a PNG (Save Image in the share sheet); its instructions carry the shape.
+- **Create all:** with several detections, one request per widget in order, each saved to My widgets as it finishes, with progress and Stop. Consent and the key are checked first.
+- **Card shapes:** the model reports `card.shape` (`roundedRect`, `circle`, `capsule`, `none`); the detection is a hint and the fallback.
+  - Widgets are always rounded rectangles, so a circle or capsule card is drawn inside the widget (`Background.cardShape`, with `outerColor: @outer`). The wallpaper color goes to the editable `outer` color (Editor → Outside the card).
+  - A floating design gets `background: @bg` with the wallpaper color as `bg`.
+- **Prompt v4 (updated in place, as the owner asked):** the image may show the widget on a home screen; design only the card's content; the background is the card's fill or glass, never the wallpaper; never draw the outer corners, border or shadow; report `card.shape`; keep content inside circle and capsule cards; recreate the main widget when several are shown.
+- **AI eval** (3 runs; the six drawn cases):
+  - **Run 1** (`gemini-3.5-flash`, crop off and on): crop off 6/6; the model already designed only the weather card on the busy wallpaper and reported `circle` and `capsule` correctly. Crop on 7/9: the gallery split into four (one hit the daily quota); the capsule request got a busy error.
+  - **Run 2** (`gemini-3.8-flash`, crop on): 0/7, every request busy or rate-limited at Google.
+  - **Run 3** (OpenRouter `nvidia/nemotron-3.5-super-vl:free`, both modes): crop off 5/6, crop on 9/10, with circle and capsule cards and four gallery widgets.
+  - Run 3 also found three detection problems: a phantom square around the circle, half a pill, and an icon column taken as a card. Fixed afterwards: the edge check, box refinement (rectangle and saliency boxes only), saliency boxes needing solid corners, and the crop preselecting the biggest detection. They are verified by the package tests at full, 1024 and 700 px, not by a further eval run.
+  - The models still call the floating design `card` instead of `none`; its background still comes out as the wallpaper color.
+- **Results kept:** `docs/ai-eval/results/adr24-detect-*.png` (detection outlines on all six drawings); `adr24-wallpaper-crop-off/on.png`, `adr24-circle-crop-on.png`, `adr24-gallery-4-crop-on.png`, `adr24-floating-crop-on.png`.
+
+### ADR-025 — Android (M7): one spec, two renderers
+**Status:** Accepted (2026-11-03). Phase A1 done; A2 (editor, My widgets), A3 (real data, tiles), A4 (AI) and A5 (onboarding, settings, icon) follow, each in its own conversation and ending with an APK.
+
+- **Stack:** `android/` with Kotlin, Jetpack Compose (app) and Jetpack Glance (widgets); minSdk 26, compile/target SDK 36 (Play requires 36 from 31 Aug 2026); AGP 8.11, Kotlin 2.2, Gradle 8.14 provided by `gradle/actions/setup-gradle`. There is no wrapper JAR in the repo, no local JDK, and builds run only on GitHub Actions (Ubuntu). Arabic is the default resources (`values/`), English is in `values-en/`; per-app language comes from `locales_config.xml`; RTL is supported.
+- **Single source of truth:** a Gradle `Sync` task copies the shared files from the iOS tree into generated assets at build time: templates, test specs, the spec schema, the prompts and the fonts from `ios/Fonts`. It also extracts the icon whitelist from `Icons.swift` and the catalog order from `TemplateLibrary.swift`. None of these are duplicated. **Any spec change must update both renderers** (Swift `Render/` and Kotlin `render/`).
+- **Renderer:** each spec is drawn into a bitmap with Android Canvas at the widget's exact pixel size (`SpecRenderer`, `TextDrawer`, `ChartDrawer`, `StackLayout`), a port of SpecView: uniform scale and centering, left-to-right canvas, `mirror` layers in Arabic, rotation, opacity, glass, card shapes, the shared fonts (Arabic fallback, the dot font's degree sign, shrink to 50 %, Latin runs isolated), and stacks with the same fit steps. Icons use Material Symbols Rounded (filled, Apache 2.0, Android-only asset), via the Material names already in the icon whitelist.
+- **Widget:** one resizable Glance widget (`SizeMode.Exact`, re-rendered on resize) shows the bitmap, with a transparent tap area over each button. A configuration screen lists every template when a widget is added or reconfigured. Before Android 12 the bitmap is clipped to rounded corners; on 12+ the system radius is used. Until A3, missing data shows "--", never sample numbers.
+- **Live time (deviation from the plan):** TextClock and Chronometer format digits with the phone's locale (Arabic-Indic on ar-EG phones), which the dot font can't draw and which iOS never shows. So in A1 clocks stay in the bitmap, and widgets re-render at the start of each minute through a windowed alarm (`MinuteTicker`, no exact-alarm permission). A3 may use TextClock and Chronometer when the phone's digits are Latin, and needs Chronometer for stopwatch seconds.
+- **Tests:** a JVM test checks that every shared template and test spec parses with known layer types and that bindings match the iOS sample data. A Robolectric test (native graphics, real fonts) renders all 28 templates in ar/en at the iOS snapshot date, zone (Cairo), data and scale. It saves iOS | Android side-by-sides and a similarity score (artifact `android-renders`). First run: 95–100 % on every template; the visible differences are the icon artwork (Material vs SF Symbols) and small text metrics.
+- **Signing:**
+  - The release keystore was generated once with OpenSSL: PKCS12, RSA 2048, alias `widgetstudio`, valid to 2054, SHA-256 `62:A0:D4:09:…:66:90`.
+  - It is stored base64-encoded in the repository secrets `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD`, with the owner's backup in `C:\Users\khale\Documents\WidgetStudio-signing\`. It is never committed (`*.p12`, `*.jks`, `*.keystore` are ignored).
+  - CI decodes it only in the release job and deletes it afterwards.
+- **CI (`android.yml`):** on pushes touching `android/**` or the shared files, it runs unit tests and builds a debug APK. With `[apk]` (or a manual run) it also builds the signed release APK and `.aab` (artifact `WidgetStudio-android`, 30 days). The Gradle cache is off, because the first run cached broken downloads.
+
+### ADR-026 — Android A2–A5: editor, real data, Gemini, polish
+**Status:** Accepted (2026-11-03). The owner asked for A2–A5 in one run, with one signed APK at the end (this overrides the one-milestone-per-conversation rule for that run). Progress note: `docs/android-progress.md`.
+
+- **Designs:** each design is saved as one JSON file in `filesDir/designs`, with its photo as a PNG in `filesDir/images`. The JSON keys are the same as in `SavedDesign.swift`. Android has no App Group: the app and the widget share one process and one data folder.
+  - A widget stores `design:<id>` or `template:<id>` per widget ID.
+  - Saving, renaming or deleting a design re-renders every placed widget at once.
+  - A deleted design shows "Tap to choose another"; nothing is ever picked automatically.
+- **Editor:** ports `DesignEditing` and `LayerEditing`, using the same `SpecValidator` (same messages) and the same `AILayoutFix`. `SpecWriter` is the inverse of the parser; a test round-trips every template.
+- **Real data:**
+  - Weather from Open-Meteo, with the coordinates rounded to 2 decimals.
+  - adhan-java (Egyptian method, Shafi): prayer times and the Qibla.
+  - Health Connect steps and sleep, read only.
+  - Battery.
+  - Refresh through WorkManager every 30 min and at app start.
+  - The tasbeeh and stopwatch update through Glance action callbacks.
+  - The torch toggles with `CameraManager.setTorchMode` (no permission). The other tiles open the matching settings panel, because apps can't toggle Wi-Fi, Bluetooth or dark mode.
+- **AI: Gemini only.**
+  - The key is AES-GCM encrypted with a key held in the Android Keystore.
+  - The default model is `gemini-3.5-flash-lite`, with a model field and suggestions.
+  - The system prompt, schemas and import example come from the Swift export (`Resources/Spec/ai/`). `AIExportTests` fails when they're stale. Only the task text is rebuilt in Kotlin, the same way as in Swift.
+  - The parser is ported: palette and contrast, card shapes, unknown icons and shape kinds, field labels, color tokens, mode and overlap rules. One retry, then the local layout fix, as in ADR-022.
+- **Detector:** Vision doesn't exist on Android, so `WidgetDetector` segments a 256 px copy into regions of near-equal color. Candidates must stay off the edge, cover at least 1.5 % of the image and have four matching corner radii, and must fill their box as their shape should. That gives the shape: circle, capsule or rounded rectangle. With no card, the floating content is boxed. The wallpaper color is taken from a ring around the box. It is tested on a synthetic image, not yet on the eval drawings.
+- **Use another AI:** copy the instructions; share or save the crop through FileProvider; import by pasting, opening a file, or sharing text or a `.json` to the app.
+- **Polish:** onboarding (three pages and the permissions page); settings; empty and error states; launcher icon and logo from the `LogoMark.swift` geometry (adaptive icon, with a monochrome layer for themed icons).
+- **Differences from iOS:** see the table in `docs/android-progress.md`.
+
+### ADR-027 — Every widget live and interactive: one capability catalog
+**Status:** Accepted (2026-11-04). The owner asked for all of it in one run, with one IPA and one signed APK at the end. Notes: `docs/progress.md`.
+
+**Context:** AI results looked right but were drawings: static song names, fixed progress values, `open.app` on every control. Bindings and actions were listed by hand in six places on two platforms, so what the AI could say, what the validator took and what the app could do drifted apart.
+
+**Decisions:**
+- **Catalog:** `Resources/Spec/capabilities.json`, in the shared folder Android already copies, instead of a new top-level `shared/` (SwiftPM can't reach resources outside the package, and a second copy could drift). Each entry has id, title, description, type, example, keywords, icons, layers, per-platform support (native, Shortcut, panel, unsupported) and permission. Validators, AI schema, prompt, instructions, editor pickers and auto-wire read it. Tests fail when a list drifts or a capability has no implementation.
+- **Actions are ids, not an enum:** `ButtonLayer.Action` is a string wrapper, so old designs decode and the validator rejects unknown ids.
+- **Live values are a map:** `DataSnapshot.live`, so a new capability needs a catalog entry and a provider, with no resolver case. Sample data comes from the catalog's examples. Media and timer stay typed, because they move along a timeline.
+- **Spec additions, both renderers:** `progressBar.vertical`, number bindings on `dotGrid` (lights that share of the dots), image source `{{media.artwork}}`, `decorative` notes on the spec. Buttons don't count toward the layer limits.
+- **Prompt v5:** function first. A `wiring` list after the inventory; anything that changes is a binding; every control gets an action; `decorative` with a reason when nothing fits; ids only from the catalog; ignore the platform.
+- **Auto-wire post-pass, after AI and import:** Swift and Kotlin ports of one behavior, pinned by shared vectors. A lone status icon on a plain card stays an icon; only tiles, or a row of three or more, become switches. Its result must still pass the AI validator, or the answer stands as written.
+- **iOS actions:** the extension runs counters, stopwatch, timer and Apple Music (AppIntents, which do run on the Fast Store install). Everything else is a link to the app, which follows the catalog: run the Shortcut, open the target, or show the hint.
+- **Android actions:** `ActionRouter`. In-place actions run a callback, panels and apps start an activity, a missing grant opens the screen that gives it, and what Android forbids shows a toast.
+- **Media on iOS is Apple Music only:** `MPMusicPlayerController`; iOS has no API for another app's now playing. Buttons with arg `shortcut` go through a Shortcut, which controls any player but shows no title.
+- **Three new fixed templates** (`mono.media.player`, `mono.control.center`, `mono.timer.focus`): without an App Group, saved designs can't reach the iPhone home screen (ADR-014), so these are the only way to test live controls on the owner's Fast Store install.
+- **Android sizes:** Small, Medium and Large receivers, each with a picker preview; the config screen lists that size only. The old receiver stays, hidden from the picker (`hide_from_picker`), so placed widgets keep working.
+- **Bulk import:** one pipeline for files, zips, folders and pasted arrays. The iOS zip reader uses Compression (no third-party code); it rejects path traversal and inflates into exactly the declared size, so a bomb can't grow. Identical designs are skipped; a taken name gets " (2)".
+- **Import bug (reproduced, then fixed):** tapping a file in Use another AI → Import did nothing, with no error. An A/B on the Simulator, same run and same test (`ImportPickerUITests`, workflow **Import UI tests**), with the old code on a throwaway branch:
+  - Old `.fileImporter`, `.json`: the cell is enabled, the tap lands, the picker stays open and nothing is imported. So this is not specific to Fast Store, and not a greyed-out file.
+  - Old `.fileImporter`, `.zip`: the cell is disabled, because the allowed types were `[.json, .plainText]`. A tap on it can't do anything.
+  - New `UIDocumentPickerViewController` (`DocumentPicker`): `.json` passes in all four combinations of single or multi selection, in the Create sheet or in My widgets; `.zip` passes too.
+  - Not isolated: why `fileImporter` drops the tap. It sat on the same Form as `.sheet(isPresented: $showCrop)`, the known suspect, but no test changed only that.
+  - The fix presents UIKit's picker over the top view controller with `.item` (every file can be tapped) and `asCopy` (a local copy needs no security scope). Errors no longer sit below the fold: a file that can't be read is a line in the import summary, with Copy a fix request.
+  - With multi-selection a tap only selects, then Open confirms it. Left unexplained that would feel like the same bug, so both import screens say so.
+  - Early test runs misled: the tests matched "Browse templates" behind the picker, and `#if DEBUG` hooks were compiled out because `project.yml` overrides the compilation conditions. Test hooks are gated at runtime on `-uiTesting`. Don't use `#if DEBUG` in this project.
+- **Eval:** 14 drawn interactive cases with expected ids; score = share of expected ids present. Replies of the best run are in `docs/ai-eval/recorded`; `WiringGateTests` and its Kotlin twin replay them on every push, so CI fails below `wiring-best.json` with no network.
+
+### ADR-028 — The four product rules, states, tasks, delete
+**Status:** Accepted (2026-11-05). The owner asked for all of it in one run, with one IPA and one signed APK at the end. The rules are in `CLAUDE.md` and apply to every design, now and later.
+
+**Context:** on Nov 5 the owner's year widget said "53 %": the battery's level. In `AutoWire`, `topics.best(of: […]) ?? "battery"` turned any percent nobody recognized into the battery, and a dot grid only took a binding on the five topics listed in `levelBinding`, so its drawn 15 of 48 dots stayed frozen. Faces and weather drawings were one frozen look.
+
+**The rules, enforced as a system:**
+- **Post-pass (`AutoWireRules.swift`, `.kt`):** a share takes what its nearest label names (own words, then neighbors by distance, then a topic the whole card is about). There is no default: unsure stays static. A label beats a wrong binding (`correctShares`). A row of three or more weather icons follows each day, with its labels and temperatures. A frozen emoji, a face drawn from shapes or a dot drawing on a card about something that changes becomes a state layer.
+- **Detectors (`DesignRules.swift`, `.kt`):** four rules counted from the shapes of problems, never widget by widget. Their findings go in the Interactive summary, and the same counts are the eval's four scores. Shared vectors in `Fixtures/DesignRules/vectors.json`.
+- **Audit:** `everyTemplatePasses` on both platforms, kept forever. The first run found the Music Card frozen, which now follows what plays (its link field is gone). The rest were detector errors, fixed in the detector: an icon on a big card has its own button; a sun beside a prayer time or a brightness bar isn't the weather; a Shortcut has no state to read, so its pill has one look.
+- **Gate:** `wiring-best.json` holds `metrics`; the recorded replies replay on every push on both platforms, and CI fails if any of the four means drops.
+
+**States:**
+- A new top-level layer `states`: `set` (a built-in set) or `variants` (each with `id`, `when`, `layers`, optional `title`, `sample`). The first whose `when` holds is drawn; one with no `when`, last, is the default. Coordinates are relative to `box`, fitted into the frame. Variants render through the normal layer views, so Tinted mode works unchanged.
+- `when` grew into `SpecExpression`: `!=`, `>=`, `<=`, `>`, `<`, `in 0.5..0.89`, `in rain,storm`, joined by `&&` and `||`. Numbers compare the raw value, not the display. A missing value is false for every test.
+- **Sets live in `capabilities.json`** (`stateSets`), generated by `scripts/state-art.mjs` from ASCII maps. Art is `dotGrid`, the one primitive both renderers draw identically at any size. `$color`, `$accent`, `$dim` and `$value` are replaced in the JSON when a layer expands the set, and the result is cached (60 entries per timeline). Prompt, schema and editor read the sets, so a new one needs no prompt edit.
+- `sample` on a variant holds binding values that select it: the editor's preview and the state renders use it through `RenderContext.overrides`, so the rest of the widget follows too, and a test proves each sample really selects its own variant. `forcedStates` picks a variant that has no sample.
+- Time shares (`year.progress` and so on) work like `battery.level`: value 0…1, whole percent in text. They and `time.isDay` are computed in the resolver from the entry's date, so they move along a timeline. `time.isDay` compares minutes of the day with the weather's sunrise and sunset, else 6:00 to 18:00.
+- `weather.kind` comes from the icon, so a condition never compares translated text. `forecast.N.*`: day 1 is tomorrow.
+- `list` rows take `done` (a condition): the row is a checkbox and fades while it holds.
+
+**Android, taps and volume (found by reading the code; no phone here):**
+- A Glance session stays alive 45 s after an update, and updating a live session recomposes only what reads state. `Content` read none, and the minute tick kept sessions alive, so taps changed the value and left the old picture for up to a minute. `Content` now reads `Widgets.revision` and `LocalState`.
+- Tap areas used `padding(start=…)` with pixels measured from the left, so on an RTL launcher they sat on the mirrored side: an Arabic phone tapped the wrong control or nothing. They are now absolute insets on all four sides (`TapZones`), right in either direction.
+- Glance keeps the first 10 children of a Box, so big grids lost their last buttons. Tap areas go in groups.
+- Android 13+ blocks notification access for an app installed from a file until "Allow restricted settings" is chosen in App info, which reads as a broken switch. Diagnostics explains it.
+- Raising the volume past the safe headphone level does nothing without the system's warning UI, so a raise that didn't move retries with `FLAG_SHOW_UI`.
+- Every tap is logged (`TapLog`), including opening taps, which pass through `TapActivity`. Diagnostics shows access, sessions, volume, the log, and buttons that run the same actions from the app: if those work and the widget doesn't, the tap never arrived.
+- A card mostly about music shows "Allow access" and opens the settings page.
+- **Not verified on a phone.** These causes are real in the code, but whether they are all of what the owner saw needs the Diagnostics report.
+
+**Tasks:**
+- iOS: Apple Reminders through EventKit, in a list called "Widget Studio" (`TaskStore`). It is the one store the app and the extension share with no App Group. Reminders delivers the notification (`EKAlarm`), so no notification permission is needed. EventKit has no category field, so a task's list travels in the reminder's `location`.
+- Android: a local SQLite database (`SQLiteOpenHelper`; Room would add an annotation processor for one table). Reminders use an inexact alarm, so no exact-alarm permission, and are set again after a reboot.
+- `TaskFormat` is pure and pinned on both platforms. Rows hold the open tasks, then today's done ones, so a ticked box stays ticked until the day ends.
+- `task.toggle` runs in the widget (`TaskToggleIntent`, `ActionRouter`) and its `arg` is the row's id binding; `task.add` opens the Tasks tab.
+- **Unverified:** whether the extension gets Reminders access on the Fast Store install (open since ADR-027). If not, the widget shows a message and the app still works.
+
+**Delete:** swipe, long-press menu, a Delete button in the editor and Select mode, with a confirmation. Undo keeps the design and its photo's bytes for a few seconds and restores them. On iOS without an App Group the home screen never showed saved designs, so "Design deleted, choose another" only appears with one.
+
+**Limits:** an iOS timeline is computed once, so a charging face changes at the next refresh, not when the cable goes in. The owner's two screenshots weren't in the folder, so the fixed designs are rebuilt from the description as `mono.year.dots`, `mono.battery.mood` and `mono.weather.art`.
+
+
+### ADR-029 — Image-to-widget fidelity: spec v2, drawing tools, live data, prompt v7 (2026-11-12)
+
+**Context:** the owner's report (`docs/feedback/image-to-widget-issues.pdf`, ~85 widgets from 7 image batches) found that results missed their source for a handful of reasons: prompt and schema contradicted each other, the renderer lacked drawing tools, data and actions were missing, the card had three fixed sizes, logos had no source, and the chat workflow had no preview. Everything below follows the report's own order and goes through the capability catalog and the four rules (ADR-028).
+
+**Prompt and schema (v7):**
+- `generate_v7.md`: every code limit is written out and mirrored in the schema (`minItems`/`maxItems`, `minimum`/`maximum`, `pattern`; stack children 1–12 was the import breaker). The "Do not use image layers" line is gone: images are allowed for `{{media.artwork}}`, `{{media.appIcon}}`, `{{app.<key>.icon}}` and `user_image` only. Text size is "font size ≈ 1.4 × cap height" and the renderer shrinks text (`minScale`, default 0.5) instead of the model guessing widths. The total layer limit is 100 (was 60) and a chart, list, calendar or dot grid counts as one. A visible text may be one string when both languages agree. Replies carry `specVersion: 2`; replies without it keep v1 meaning (circle and pill cards inside the family canvas).
+- Previously ambiguous points are documented: `analogClock.style: dot` draws 12 round markers instead of lines, `accentColor` is the center cap and the seconds; a number in `dotGrid.values` lights dots row by row from the top-left (top-right when mirrored in Arabic) or in `order`; state drawings fill their square box and take `color`, `accent`, `dim`; `rotation` takes a number or a binding.
+- Structured output everywhere: Gemini now gets the JSON Schema through `responseJsonSchema` on both platforms (the OpenAPI-subset `responseSchema` hung in the eval); a schema rejection or timeout falls back to the schema in the prompt, as for the other providers.
+- "Use another AI" copies a readable reference of the same schema (`AISchemaReference`, exported as `schema_reference.md`, ~10 KB) instead of the 30 000-character JSON Schema on one line, plus a current, valid v2 example. It stays model-neutral.
+
+**Preview and workflow:** the in-app render-and-review round (ADR-019) is unchanged and on by default for paid providers. The editor gained "Copy preview + fix request": the design drawn by the real renderer with sample data, put on the clipboard (iOS: PNG and text; Android: text copied and a share sheet with both) with a request to compare it with the original. Import accepts `{"widgets": [...]}` (`parseAll`, `importAll`, bulk import keeps `specVersion`), "All widgets in the image" asks for that shape, and every problem comes back at once, one per line, named by widget and path (up to 60).
+
+**Spec v2 (both renderers, both validators, both parsers and writers):**
+- `card {shape: roundedRect|circle|capsule|scallop|none, aspect, inset, cornerRadius, orientation, bumps, outerColor}`: the card is the largest rectangle of that aspect centered in the family canvas (or `inset`), and layer frames live in the card's own canvas (`WidgetSpec.canvas`).
+- `chart` (line, area, bars, steps, candles) with series bindings or literals, gradient fill, baseline (number, first, average), min/max, highlight, x/y labels, down color.
+- Shapes `line`, `triangle`, `polygon` (points or sides), `sector` (angles or `progress`), `star`, `scallop`; gradient fills (`fill` may be `{type, colors, angle}`).
+- Text `spans` (font, color, baseline offset, case, tracking per run), `case`, `minScale`, `path` (text on an arc); stack `axis: radial` with `radius`, `startAngle`, `sweep`, `rotateChildren`; children may rotate.
+- `dotGrid` digits 0–9 as levels, `levelColors`, `mask` (circle, cloud, sun, moon, drop, heart, bolt, weather), `sizeByLevel`, `order`, `fade`; up to 60 × 60 and 1600 dots.
+- `analogClock` hand widths, lengths, caps, ticks, seconds (hand or dot), center dot; `progressBar.knob`; `calendarMonth.rows` (month, week, 2weeks) and weekdays `two`; list `subtitle`, `detail2`, row `color` may be `{{calendar.N.color}}`; `forecastRow.mode` hourly/daily with font, icon style, lows, dividers, label color.
+- Icons: any SF Symbol name; unknown names draw their closest existing parent on iOS and map by their words on Android (`IconWords`); `style: fill|outline` (Android ships the unfilled Material Symbols font too); Bluetooth is drawn as a path on iOS. Thirty more whitelisted symbols with Material names.
+- Field types `app` and `ticker`; family `xlarge` (364 × 570, ADR-030). Test spec `14-xlarge-drawing.json` uses every new tool.
+- Android renderer fix found by the eval: a vertical stack inside a horizontal one measured its texts at full width, so the whole row shrank to 40 %.
+
+**Catalog (bindings, actions):** time in words, seconds (Android only: iOS redraws once a minute), two-letter weekday, the current week `week.dN.*`; `hourly.1–8.time|symbol|temp`, `hourly.temps`, rain chance, a rain sentence, UV, air quality (Open-Meteo air quality, no key); heart rate, resting rate, today's heart series, stress (from HRV, an estimate), energy (from sleep and activity, an estimate), active minutes and calories, sleep as h:mm, sleep stages, steps per hour (HealthKit / Health Connect; the new Health Connect types are optional, so old grants keep working); calendar end time, calendar name and color; `media.appIcon` and `app.<key>.icon` (Android only: iOS gives no other app's icon); `stock.<key>.price|change|changePct|series` from Yahoo Finance's public chart endpoint (only the ticker leaves the phone); `screenTime.today` (Android, usage access; iOS needs a Screen Time entitlement); `earbuds.level` (Android, one level per headset; per-earbud and case levels are unsupported on both). Actions: `assistant.open`, `system.toggle.hotspot`, `system.toggle.nfc` (panel; iPhone has no switch), `screen.record` (unsupported on both, with a hint), `captions.toggle`, `search.open` (Android), `alarm.open`, `clock.open`, `health.open`.
+
+**Eval:** six new drawn cases (`draw-p-*.png`, GDI+, `scripts/draw-pdf-cases.ps1`) cover the week strip, hourly rain, a heart candle chart, a scallop clock with arc text, a stock area chart and a tall assistant pill. The owner's own images stay in `private-eval/` (git-ignored); `PrivateEvalTest` runs them locally only.
+
+**Limits:** stress and energy are estimates, not medical values. Yahoo's endpoint is unofficial and may change. Text on an arc places characters by estimated advances on iOS (no text measuring in the widget).
+
+### ADR-030 — Fast widget updates on both platforms; the 4 × 6 size (2026-11-12)
+
+**iOS:**
+- **4 × 6:** `SpecFamily.xlarge` (364 × 570). iOS 27's `systemExtraLargePortrait` exists only in the iOS 27 SDK, so code that names it sits behind the condition `WS_XL27`. GitHub's `xcode-27` runner (public preview, Xcode 27.1 default, 27.2 available) builds the IPA with `WS_XL27`, and the job "Compile with Xcode 27" checks it (and developer mode) on every push; compile and tests stay on `macos-15` (Xcode 16.4), where the snapshot references were recorded. With `WS_XL27`, large templates also offer 4 × 6 (scaled and centered), xlarge templates use it, and a "My widget" 4 × 6 exists; on iOS before 27 that falls back to large.
+- **Ticking without reloads:** countdowns and "in 50 min" use `Text(timerInterval:)` and `.relative` (`live`), the time `Text(.time)`; clock digits come from per-minute timeline entries computed in advance. Seconds can't tick on iOS (`time.ss` is unsupported there).
+- **Timelines:** besides the refresh cadence, entries at midnight, each prayer time, upcoming event starts and ends, and the timer's end (`TimelineBoundaries`), so predictable changes show on time and spend no reload.
+- **Reloads:** after every App Intent action all widgets reload (another may show the same counter or task); the app reloads them when it goes to the background, when designs, settings, tasks or location access change. Every request and every timeline build is logged with its reason (`ReloadLog`), and Diagnostics → Widget reloads shows the latest per widget with a note that Settings → Developer → WidgetKit Developer Mode lifts the budget for testing. Background reloads stay within iOS's budget: data timelines ask again after 15–60 minutes.
+- **Push:** `WidgetPushHandler` on the large configurable widget, compiled only in developer mode with Xcode 27 (`docs/app-store/when-account.md`); not usable on Fast Store.
+
+**Android:**
+- **Event-driven:** `LiveUpdates` registers battery level and charging, volume and ringer, time tick and time changes, screen on, Wi-Fi, Bluetooth, airplane mode and Do Not Disturb, plus media session changes from `MediaHub`. Each event redraws only the placed widgets whose spec reads that data (`Source.affects`), at most once a second per widget. Android delivers these only to a running component: the notification listener when access is granted, else the optional "Live widgets" foreground service (special use, quiet notification, off by default, restarted after reboot). App open and close and every widget action redraw too. Without either, WorkManager refreshes every 15 minutes (was 30) and the minute ticker keeps clocks right.
+- **Battery:** Settings → Live widgets explains battery optimisation, asks for the exemption, and opens the maker's autostart page (Xiaomi, Redmi, POCO, Oppo, Realme, OnePlus, Vivo, Huawei, Honor, Samsung, Asus), else the app's settings page.
+- **4 × 6:** `ExtraLargeWidgetReceiver` (target 4 × 6 cells).
+- **Measured:** `UpdateLatency` keeps, per source, the time from the event to the next render of a widget that reads it (last 20). Diagnostics → Update speed and the copied report show the median and the last delay.
+
+**Limits:** iOS gives no event for battery, volume, Wi-Fi or media changes made outside the app, so those wait for the next timeline (15 minutes at best); only the app's own changes, App Intents and pushes are immediate. Android's dynamic receivers need a running component; a phone maker's battery manager can still stop it, which is what the settings section is for. Neither delay has been measured on a phone yet.

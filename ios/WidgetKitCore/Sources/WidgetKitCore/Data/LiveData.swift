@@ -24,6 +24,7 @@ public enum DataRequirements {
             switch layer.content {
             case .text(let text):
                 strings += text.value.allValues + [text.live?.target].compactMap { $0 }
+                strings += (text.spans ?? []).flatMap(\.text.allValues)
             case .icon(let icon): strings.append(icon.symbol)
             case .dotGrid(let grid): strings.append(grid.values)
             case .dotBars(let bars): strings += [bars.values] + (bars.labels?.allValues ?? [])
@@ -32,9 +33,19 @@ public enum DataRequirements {
             case .analogClock(let clock): strings += [clock.timezone].compactMap { $0 }
             case .button(let button): strings += [button.arg].compactMap { $0 }
             case .list(let list):
-                strings += list.items.flatMap { $0.title.allValues + ($0.detail?.allValues ?? []) }
+                for item in list.items {
+                    strings += item.title.allValues
+                    strings += item.detail?.allValues ?? []
+                    strings += item.subtitle?.allValues ?? []
+                    strings += item.detail2?.allValues ?? []
+                    if let done = item.done { strings.append(done) }
+                }
             case .progressBar(let bar): strings.append(bar.progress)
-            case .image, .shape, .calendarMonth, .stack, .spacer, .unknown: break
+            case .image(let image): strings.append(image.source)
+            case .states(let states): strings += states.expanded.compactMap(\.when) + [states.value].compactMap { $0 }
+            case .chart(let chart): strings.append(chart.values)
+            case .shape(let shape): strings += [shape.progress].compactMap { $0 }
+            case .calendarMonth, .stack, .spacer, .unknown: break
             }
         }
         return strings.flatMap(Bindings.names(in:))
@@ -50,6 +61,8 @@ public enum DataGap: String, Codable, Sendable {
     /// Steps and sleep can't be read here (`HealthIssue`).
     case noHealth
     case noBattery
+    /// Reminders access isn't granted, and tasks live there on iOS.
+    case noTasks
 }
 
 /// Everything real the renderer can use at one moment (ADR-016).
@@ -61,17 +74,21 @@ public struct LiveInputs: Sendable {
     public var battery: Double?
     public var counter: CounterState
     public var stopwatch: StopwatchState
+    public var timer: TimerState
     public var settings: AppSettings
+    /// Catalog bindings read from the device (`DeviceData`, ADR-027).
+    public var device = DeviceValues()
 
     public init(location: StoredLocation? = nil, weather: WeatherReport? = nil, health: Result<HealthSummary, HealthIssue>? = nil,
                 battery: Double? = nil, counter: CounterState = CounterState(), stopwatch: StopwatchState = StopwatchState(),
-                settings: AppSettings = AppSettings()) {
+                timer: TimerState = TimerState(), settings: AppSettings = AppSettings()) {
         self.location = location
         self.weather = weather
         self.health = health
         self.battery = battery
         self.counter = counter
         self.stopwatch = stopwatch
+        self.timer = timer
         self.settings = settings
     }
 }
@@ -88,9 +105,14 @@ public enum LiveData {
             data.prayer = PrayerCalculator.prayer(latitude: location.latitude, longitude: location.longitude, date: now,
                                                   timeZone: zone, method: inputs.settings.prayerMethod)
             data.qiblaBearing = PrayerCalculator.qibla(latitude: location.latitude, longitude: location.longitude)
+            data.place = location.city
         }
+        data.live = inputs.device.live
+        data.media = inputs.device.media
+        data.timer = inputs.timer
         if let weather = inputs.weather {
             data.weather = weather.snapshot(now: now, city: inputs.location?.city)
+            data.live.merge(weather.liveValues(now: now)) { _, new in new }
         }
         if case .success(let health)? = inputs.health {
             let goal = Double(inputs.settings.stepGoal)
@@ -100,6 +122,17 @@ public enum LiveData {
             data.stepsMonth = health.monthTotal(now: now, calendar: calendar)
             data.sleepLastNight = health.sleepLastNight(now: now, calendar: calendar).map(HealthSummary.duration(minutes:))
             data.sleepWeek = health.sleepWeek(now: now, calendar: calendar)
+            if goal > 0 {
+                let share = min(health.stepsToday(now: now, calendar: calendar) / goal, 1)
+                data.live["steps.progress"] = .number(share, display: String(Int((share * 100).rounded())))
+            }
+            if let window = health.sleepWindow(now: now, calendar: calendar) {
+                data.live["sleep.bedtime"] = .date(window.start)
+                data.live["sleep.wake"] = .date(window.end)
+            }
+            // ADR-029: heart, stress, energy, activity, stages and steps per hour.
+            let extras = health.extras ?? HealthExtras()
+            data.live.merge(extras.values(now: now, calendar: calendar, sleepMinutes: health.sleepLastNight(now: now, calendar: calendar))) { _, new in new }
         }
         data.batteryLevel = inputs.battery
         data.counter = Double(inputs.counter.count(in: inputs.settings.dhikrList))
@@ -119,6 +152,7 @@ public enum LiveData {
             guard case .success? = inputs.health else { return .noHealth }
         }
         if groups.contains(.device), inputs.battery == nil { return .noBattery }
+        if groups.contains(.tasks), inputs.device.noTasks { return .noTasks }
         return nil
     }
 }

@@ -1,0 +1,125 @@
+{
+  "background": {
+    "angle": null,
+    "color": "#000000",
+    "colors": null,
+    "outerColor": null,
+    "type": "solid"
+  },
+  "card": {
+    "shape": "roundedRect"
+  },
+  "family": "small",
+  "fields": [],
+  "inventory": [
+    "Analog clock face with dot markers around the circle, x 0.05-0.95, y 0.05-0.95, white and grey dots",
+    "Clock hands made of dots showing the current time, x 0.30-0.70, y 0.20-0.60, white",
+    "Date text showing weekday and day number (WED 4) in red, x 0.35-0.65, y 0.65-0.75, red"
+  ],
+  "wiring": [
+    {
+      "decorative": null,
+      "element": "Analog clock face",
+      "shows": null,
+      "tap": null
+    },
+    {
+      "decorative": null,
+      "element": "Clock hands",
+      "shows": null,
+      "tap": null
+    },
+    {
+      "decorative": null,
+      "element": "Date text",
+      "shows": "{{date.EEE}} {{date.d}}",
+      "tap": "calendar.open"
+    }
+  ],
+  "layers": [
+    {
+      "accentColor": "#FF3B30",
+      "faceColor": "#000000",
+      "frame": {
+        "h": 170,
+        "w": 170,
+        "x": 0,
+        "y": 0
+      },
+      "hourColor": "#FFFFFF",
+      "minuteColor": "#FFFFFF",
+      "mirror": false,
+      "opacity": 1,
+      "rotation": null,
+      "style": "dot",
+      "tickColor": "#8E8E93",
+      "type": "analogClock",
+      "when": null
+    },
+    {
+      "alignItems": "center",
+      "axis": "horizontal",
+      "children": [
+        {
+          "align": "center",
+          "color": "#FF3B30",
+          "font": {
+            "family": "dot",
+            "size": 13,
+            "weight": "bold"
+          },
+          "height": null,
+          "live": null,
+          "maxLines": 1,
+          "type": "text",
+          "value": {
+            "ar": "{{date.EEE}} {{date.d}}",
+            "en": "{{date.EEE}} {{date.d}}"
+          },
+          "when": null,
+          "width": null
+        }
+      ],
+      "columns": null,
+      "frame": {
+        "h": 20,
+        "w": 100,
+        "x": 35,
+        "y": 110
+      },
+      "justify": "center",
+      "mirror": false,
+      "opacity": 1,
+      "padding": 0,
+      "rotation": null,
+      "spacing": 4,
+      "type": "stack",
+      "when": null
+    },
+    {
+      "action": "calendar.open",
+      "arg": null,
+      "frame": {
+        "h": 170,
+        "w": 170,
+        "x": 0,
+        "y": 0
+      },
+      "mirror": false,
+      "opacity": 1,
+      "rotation": null,
+      "type": "button",
+      "when": null
+    }
+  ],
+  "name": {
+    "ar": "ساعة نقطية",
+    "en": "Dot Clock"
+  },
+  "palette": {
+    "accent": "#FF3B30",
+    "bg": "#000000",
+    "fg": "#FFFFFF"
+  },
+  "theme": "dark"
+}

@@ -104,3 +104,16 @@ Ask Claude to do these in one change (they're small):
 7. **Saved photos** appear in widgets (App Group images).
 8. **Arabic and English**, light and dark, small/medium/large.
 9. Then submit for review from App Store Connect.
+
+## WidgetKit push updates (ADR-030)
+
+Developer mode builds with Xcode 27 (`WS_EXTRA_CONDITIONS="WS_XL27 WS_DEVELOPER"`) give the large configurable widget a push handler (`LargePushPickWidget`, kind `WidgetStudio.pick.push`, `WidgetPushTokens` in `DeveloperWidgets.swift`, iOS 26+, listed next to the plain large one). A server that holds the token can then make that widget reload at once, outside the daily reload budget. It can't work on the Fast Store install: the store re-signs without the push entitlement.
+
+To turn it on with your own account:
+1. In the Apple Developer portal, enable Push Notifications for the app ID and the widget extension's ID, and create an APNs key (.p8).
+2. In `ios/project.yml`, add `aps-environment` (`development`, later `production`) to both targets' entitlements.
+3. Build developer mode with Xcode 27 and sign with your account (not the unsigned IPA job).
+4. Place the large configurable widget. Its token appears in Diagnostics → Widget reloads ("push") and in the app cache file `widgetPushToken`.
+5. Send an APNs request to that token with `apns-push-type: widgets` and topic `<app bundle id>.push-type.widgets`, body `{"aps": {"content-changed": true}}`. The widget reloads within seconds.
+
+Apple still rate-limits widget pushes per day; use them for changes the timeline can't predict (a price, a shared task), not for clocks.

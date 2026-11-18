@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Widget Studio</string>
+    <string name="widget_name">Widget Studio</string>
+    <string name="widget_description">Show one of your designs or any template</string>
+    <string name="widget_choose">Tap to choose a design</string>
+    <string name="library_title">Library</string>
+    <string name="library_add_hint">To add a widget: long-press the home screen → Widgets → Widget Studio, then choose a design. Resize it as you like.</string>
+    <string name="configure_title">Choose a design for the widget</string>
+    <string name="widget_missing">Design deleted, choose another</string>
+    <string name="widget_small">Small</string>
+    <string name="widget_medium">Medium</string>
+    <string name="widget_large">Large</string>
+    <string name="widget_small_description">2×2 square: your small designs and templates</string>
+    <string name="widget_medium_description">4×2 wide: your medium designs and templates</string>
+    <string name="widget_xlarge">Extra large</string>
+    <string name="widget_xlarge_description">4×6 extra large: tall designs</string>
+    <string name="widget_large_description">4×4 large: your large designs and the control center</string>
+</resources>

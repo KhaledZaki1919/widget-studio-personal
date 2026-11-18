@@ -77,10 +77,10 @@ struct SpecValidatorTests {
 
     // MARK: Top level
 
-    @Test func schemaVersionMustBe1() throws {
+    @Test func schemaVersionIsKnown() throws {
         var spec = exampleSpec()
-        spec["schemaVersion"] = 2
-        #expect(try specIssues(spec).contains { $0.path == "schemaVersion" })
+        spec["schemaVersion"] = 3
+        #expect(try specIssues(spec).contains { $0.path == "specVersion" })
     }
 
     @Test func idMustBeLowercaseSlug() throws {
@@ -180,7 +180,10 @@ struct SpecValidatorTests {
     }
 
     @Test func iconsFromTheWhitelistOrASymbolBinding() throws {
-        let unknown = layer("icon", ["symbol": "applelogo", "size": 20, "color": "#FFFFFF"])
+        // ADR-029: any SF Symbol name is allowed; anything that isn't one is not.
+        let any = layer("icon", ["symbol": "cart.badge.plus", "size": 20, "color": "#FFFFFF"])
+        #expect(try issues(layers: [any]).isEmpty)
+        let unknown = layer("icon", ["symbol": "Apple Logo!", "size": 20, "color": "#FFFFFF"])
         #expect(try issues(layers: [unknown]).contains { $0.path == "layers[0].symbol" })
         let bound = layer("icon", ["symbol": "{{weather.symbol}}", "size": 20, "color": "#FFFFFF"])
         #expect(try issues(layers: [bound]).isEmpty)
@@ -195,7 +198,7 @@ struct SpecValidatorTests {
     }
 
     @Test func dotGridAndBarsLimits() throws {
-        let grid = layer("dotGrid", ["rows": 50, "cols": 10, "dotSize": 3, "gap": 1, "onColor": "#FFFFFF",
+        let grid = layer("dotGrid", ["rows": 70, "cols": 10, "dotSize": 3, "gap": 1, "onColor": "#FFFFFF",
                                      "offColor": "#333333", "values": "{{steps.monthGrid}}"])
         #expect(try issues(layers: [grid]).contains { $0.path == "layers[0].rows" })
         let bars = layer("dotBars", ["bars": 7, "maxDots": 8, "values": "0.2,0.5,2", "color": "#FFFFFF"])
@@ -218,7 +221,7 @@ struct SpecValidatorTests {
     // MARK: Bindings
 
     @Test func unknownBindingFails() throws {
-        #expect(try issues(layers: [text("{{weather.uv}}")]) == [SpecIssue("layers[0].value", "unknown binding {{weather.uv}}")])
+        #expect(try issues(layers: [text("{{weather.pollen}}")]) == [SpecIssue("layers[0].value", "unknown binding {{weather.pollen}}")])
     }
 
     @Test func fieldBindingNeedsTheField() throws {
@@ -269,7 +272,7 @@ struct SpecValidatorTests {
     // MARK: Buttons and actions
 
     @Test func unknownActionFails() throws {
-        #expect(try issues(layers: [layer("button", ["action": "wifi.toggle"])]) == [SpecIssue("layers[0].action", "unknown value")])
+        #expect(try issues(layers: [layer("button", ["action": "wifi.toggle"])]) == [SpecIssue("layers[0].action", "unknown action \"wifi.toggle\"; use an id from the allowed list")])
     }
 
     @Test func openURLNeedsAURLField() throws {
@@ -292,15 +295,16 @@ struct SpecValidatorTests {
         #expect(try issues(layers: [layer("button", ["action": "open.app"]), text("{{time.hh}}:{{time.mm}} {{weather.temp}}")], fields: [], mode: .ai).isEmpty)
         // ADR-018: battery, prayer and steps too.
         #expect(try issues(layers: [text("{{battery.level}} {{prayer.next.name}} {{qibla.bearing}} {{steps.today}}")], fields: [], mode: .ai).isEmpty)
-        #expect(try issues(layers: [layer("button", ["action": "counter.increment"])], mode: .ai).contains { $0.path == "layers[0].action" })
-        for binding in ["sleep.lastNight", "location.lat", "counter.value", "focus.today"] {
+        #expect(try issues(layers: [layer("button", ["action": "wifi.toggle"])], mode: .ai).contains { $0.path == "layers[0].action" })
+        #expect(try issues(layers: [layer("button", ["action": "media.next"])], fields: [], mode: .ai).isEmpty)
+        for binding in ["prayer.next.key", "battery.devices"] {
             #expect(try issues(layers: [text("{{\(binding)}}")], fields: [], mode: .ai).contains { $0.message.contains("AI output") }, "\(binding)")
         }
     }
 
     @Test func aiModeAllowsOnlyTextAndImageFields() throws {
-        let shortcut: [[String: Any]] = [["key": "torch", "type": "shortcut", "label": ["en": "Shortcut", "ar": "اختصار"]]]
-        #expect(try issues(layers: [text("hi")], fields: shortcut, mode: .ai).contains { $0.path == "fields[0].type" })
+        let color: [[String: Any]] = [["key": "tint", "type": "color", "label": ["en": "Tint", "ar": "اللون"]]]
+        #expect(try issues(layers: [text("hi")], fields: color, mode: .ai).contains { $0.path == "fields[0].type" })
         let title: [[String: Any]] = [["key": "title", "type": "text", "label": ["en": "Title", "ar": "العنوان"]]]
         #expect(try issues(layers: [text("{{field.title}}")], fields: title, mode: .ai).isEmpty)
         // ADR-019: countdowns to a date field.

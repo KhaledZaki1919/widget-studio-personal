@@ -128,10 +128,71 @@ jobs:
           key: spm-${{ runner.os }}-${{ hashFiles('ios/WidgetKitCore/Package.swift') }}
 
       - name: WidgetKitCore tests
+        env:
+          # Renders written by the package tests (accented snapshots, layout fix before/after, ADR-023).
+          RENDER_OUT: ${{ github.workspace }}/renders
         run: swift test --package-path WidgetKitCore
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: package-renders
+          path: renders
+          if-no-files-found: ignore
+          retention-days: 14
 
   # Build rule (CLAUDE.md): Simulator tests only with [full] or [ipa] in the head commit
   # message, or a manual run.
+  xcode27:
+    name: Compile with Xcode 27 (4 x 6 widget)
+    # ADR-030: catches iOS 27 SDK errors on every push, before the IPA job builds with it.
+    runs-on: xcode-27
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate project
+        run: xcodegen generate --spec personal.yml
+
+      - name: Build for a device (unsigned)
+        run: |
+          mkdir -p build
+          status=0
+          xcodebuild build WS_EXTRA_CONDITIONS=WS_XL27 \
+            -project WidgetStudio.xcodeproj -scheme WidgetStudio \
+            -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            > build/xcodebuild-27.log 2>&1 || status=$?
+          grep -E '\*\* BUILD (SUCCEEDED|FAILED) \*\*' build/xcodebuild-27.log || tail -n 40 build/xcodebuild-27.log
+          if [ "$status" -ne 0 ]; then
+            grep -E "error:" build/xcodebuild-27.log | sort -u
+            exit "$status"
+          fi
+
+      - name: Build developer mode with push updates (unsigned)
+        run: |
+          status=0
+          xcodebuild build "WS_EXTRA_CONDITIONS=WS_XL27 WS_DEVELOPER" \
+            -project WidgetStudio.xcodeproj -scheme WidgetStudio \
+            -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
+            -derivedDataPath build/DerivedDataDev \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            > build/xcodebuild-27-dev.log 2>&1 || status=$?
+          grep -E '\*\* BUILD (SUCCEEDED|FAILED) \*\*' build/xcodebuild-27-dev.log || tail -n 40 build/xcodebuild-27-dev.log
+          if [ "$status" -ne 0 ]; then
+            grep -E "error:" build/xcodebuild-27-dev.log | sort -u
+            exit "$status"
+          fi
+
   test:
     name: App and UI tests (Simulator)
     needs: [build, unit]
@@ -196,14 +257,18 @@ jobs:
   # Build rule (CLAUDE.md): one IPA, only with [ipa] (or a manual run), after every test is green.
   ipa:
     name: Unsigned IPA
-    needs: [build, unit, test]
+    needs: [build, unit, test, xcode27]
     if: >-
       (github.event_name == 'workflow_dispatch' && inputs.mode != 'full') ||
       (github.event_name == 'push' && contains(github.event.head_commit.message, '[ipa]'))
-    runs-on: macos-15
-    timeout-minutes: 30
+    # ADR-030: the IPA is built with Xcode 27 (iOS 27 SDK), so the 4 x 6 widget (systemExtraLargePortrait) is compiled in.
+    runs-on: xcode-27
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: xcodebuild -version
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -213,7 +278,7 @@ jobs:
 
       - name: Build (unsigned, Release)
         run: |
-          xcodebuild build \
+          xcodebuild build WS_EXTRA_CONDITIONS=WS_XL27 \
             -project WidgetStudio.xcodeproj -scheme WidgetStudio \
             -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
             -derivedDataPath build/DerivedData \

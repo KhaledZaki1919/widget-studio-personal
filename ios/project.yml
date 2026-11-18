@@ -68,9 +68,24 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLName: com.khaled.widgetstudio
             CFBundleURLSchemes: [widgetstudio]
+        # .json and .zip files shared or opened to the app (Files, WhatsApp, Telegram): bulk import
+        # (ADR-023, ADR-027). iOS copies the file in; it is imported, never opened in place.
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Widget JSON
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [public.json]
+          - CFBundleTypeName: Widget archive
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [public.zip-archive, com.pkware.zip-archive]
+        LSSupportsOpeningDocumentsInPlace: false
         # Localized in Resources/InfoPlist.xcstrings.
         NSLocationWhenInUseUsageDescription: "يُستخدم موقعك لعرض الطقس ومواقيت الصلاة واتجاه القبلة في الويدجت."
-        NSHealthShareUsageDescription: "يقرأ التطبيق عدد خطواتك وساعات نومك لعرضها في الويدجت."
+        NSHealthShareUsageDescription: "يقرأ التطبيق خطواتك ونومك ونبض قلبك ونشاطك لعرضها في الويدجت."
+        NSAppleMusicUsageDescription: "يعرض الويدجت ما يُشغَّل في Apple Music ويتحكم في التشغيل."
+        NSCalendarsFullAccessUsageDescription: "يعرض الويدجت أحداث تقويمك القادمة."
+        NSRemindersFullAccessUsageDescription: "تُحفظ مهامك في قائمة «Widget Studio» في التذكيرات، ليعرضها الويدجت وينجزها."
         UIRequiredDeviceCapabilities: [arm64]
         WSAppGroup: group.com.khaled.widgetstudio
         UIAppFonts: [Doto-Regular.ttf, Doto-Bold.ttf, Doto-Black.ttf, IBMPlexSansArabic-Regular.ttf, IBMPlexSansArabic-Medium.ttf, IBMPlexSansArabic-SemiBold.ttf, IBMPlexSansArabic-Bold.ttf, PatrickHand-Regular.ttf, ArefRuqaa-Regular.ttf, ArefRuqaa-Bold.ttf, DMSerifDisplay-Regular.ttf, Amiri-Regular.ttf, Amiri-Bold.ttf, BebasNeue-Regular.ttf, Lalezar-Regular.ttf]
@@ -112,7 +127,10 @@ targets:
         # Location inside the widget (brief §2), probed in Diagnostics (ADR-005).
         NSWidgetWantsLocation: true
         NSLocationWhenInUseUsageDescription: "يُستخدم موقعك لعرض الطقس ومواقيت الصلاة واتجاه القبلة في الويدجت."
-        NSHealthShareUsageDescription: "يقرأ التطبيق عدد خطواتك وساعات نومك لعرضها في الويدجت."
+        NSHealthShareUsageDescription: "يقرأ التطبيق خطواتك ونومك ونبض قلبك ونشاطك لعرضها في الويدجت."
+        NSAppleMusicUsageDescription: "يعرض الويدجت ما يُشغَّل في Apple Music ويتحكم في التشغيل."
+        NSCalendarsFullAccessUsageDescription: "يعرض الويدجت أحداث تقويمك القادمة."
+        NSRemindersFullAccessUsageDescription: "تُحفظ مهامك في قائمة «Widget Studio» في التذكيرات، ليعرضها الويدجت وينجزها."
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:

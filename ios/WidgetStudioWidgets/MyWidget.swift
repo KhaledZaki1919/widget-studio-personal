@@ -25,11 +25,23 @@ struct LargeMyWidget: Widget {
     }
 }
 
+#if WS_XL27
+/// ADR-030: the 4 × 6 portrait size of iOS 27 (built with Xcode 27 only; on older iOS it falls back to large).
+struct ExtraLargeMyWidget: Widget {
+    var body: some WidgetConfiguration {
+        MyWidgetConfiguration.make(kind: "WidgetStudio.my.xlarge", size: .xlarge)
+    }
+}
+#endif
+
 struct MyWidgets: WidgetBundle {
     var body: some Widget {
         SmallMyWidget()
         MediumMyWidget()
         LargeMyWidget()
+        #if WS_XL27
+        ExtraLargeMyWidget()
+        #endif
     }
 }
 
@@ -49,7 +61,18 @@ extension WidgetFamily {
         case .small: self = .systemSmall
         case .medium: self = .systemMedium
         case .large: self = .systemLarge
+        case .xlarge: self = WidgetFamily.extraLargePortrait.first ?? .systemLarge
         }
+    }
+
+    /// iOS 27's 4 × 6 portrait widget (ADR-030), where the SDK and the system have it. Xcode 16 and 26
+    /// don't offer it on iOS, so older toolchains compile without it.
+    static var extraLargePortrait: [WidgetFamily] {
+        // Only builds with the iOS 27 SDK (Xcode 27, condition WS_XL27, set by the IPA job) compile it in.
+        #if WS_XL27
+        if #available(iOS 27.0, *) { return [.systemExtraLargePortrait] }
+        #endif
+        return []
     }
 }
 
@@ -60,6 +83,8 @@ struct MyWidgetEntry: TimelineEntry {
         case noAppGroup
         /// Shared, but no saved design fits this size yet.
         case noDesign
+        /// Designs were deleted and none fits this size now.
+        case deleted
     }
 
     let date: Date
@@ -90,9 +115,10 @@ struct MyWidgetProvider: TimelineProvider {
                 completion(Timeline(entries: [first], policy: .after(now.addingTimeInterval(3600))))
                 return
             }
-            let inputs = await WidgetData.inputs(for: DataRequirements.groups(for: design.spec), now: now)
+            let inputs = await WidgetData.inputs(for: DataRequirements.groups(for: design.spec), tickers: MarketData.tickers(in: design.spec, fieldValues: design.fieldValues), now: now)
             let gap = LiveData.gap(for: design.spec, inputs)
             let (dates, reload) = LiveSchedule.make(for: design.spec, inputs: inputs, now: now)
+            ReloadLog.record(kind: "my.\(size.rawValue)", reason: "timeline", entries: dates.count, next: reload, now: now)
             let entries = dates.map { MyWidgetEntry(date: $0, content: first.content, inputs: inputs, gap: gap) }
             WidgetLog.add("my \(size.rawValue): \(Self.describe(first.content)), \(entries.count) entries")
             completion(Timeline(entries: entries, policy: .after(min(reload, now.addingTimeInterval(3600)))))
@@ -102,7 +128,9 @@ struct MyWidgetProvider: TimelineProvider {
     static func entry(size: SpecFamily, date: Date) -> MyWidgetEntry {
         let store = SharedStore()
         guard store.isShared else { return MyWidgetEntry(date: date, content: .noAppGroup) }
-        guard let design = store.designs(fitting: size).first else { return MyWidgetEntry(date: date, content: .noDesign) }
+        guard let design = store.designs(fitting: size).first else {
+            return MyWidgetEntry(date: date, content: store.hasDeletedDesign ? .deleted : .noDesign)
+        }
         let image = design.imageFile.flatMap(store.image(named:))
         return MyWidgetEntry(date: date, content: .design(design, image))
     }
@@ -112,6 +140,7 @@ struct MyWidgetProvider: TimelineProvider {
         case .design(let design, _): "design \(design.templateID)"
         case .noAppGroup: "no App Group"
         case .noDesign: "no design"
+        case .deleted: "design deleted"
         }
     }
 }
@@ -129,13 +158,15 @@ struct MyWidgetView: View {
                     date: entry.date, language: RenderContext.preferredLanguage,
                     data: LiveData.snapshot(entry.inputs, now: entry.date), image: image,
                     defaultClock: entry.inputs.settings.clockFormat
-                ))
+                ).with(artwork: entry.inputs.device.artwork))
                 .environment(\.specActionButton, WidgetActionButtons.make)
             }
         case .noAppGroup:
             MyWidgetMessage(text: "widget.mywidget.noAppGroup")
         case .noDesign:
             MyWidgetMessage(text: "widget.mywidget.empty")
+        case .deleted:
+            MyWidgetMessage(text: "widget.mywidget.deleted")
         }
     }
 }

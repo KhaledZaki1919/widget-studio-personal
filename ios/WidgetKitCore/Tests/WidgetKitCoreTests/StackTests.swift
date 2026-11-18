@@ -120,7 +120,9 @@ struct StackTests {
             return list.compactMap { typeOf($0) }
         }
         let top = AIWidgetSchema.schema(mode: .recreate)["properties"]?["layers"]?["items"]?["anyOf"]
-        #expect(types(top).contains("stack") && !types(top).contains("text"))
+        // ADR-029: a top-level text exists only for text on an arc (the prompt says so).
+        #expect(types(top).contains("stack") && types(top).contains("text"))
+        #expect(WidgetPrompt.system.contains("A text on an arc may stand outside a stack"))
         guard case .array(let list)? = top, let stack = list.first(where: { typeOf($0) == "stack" }) else {
             Issue.record("no stack shape")
             return
@@ -152,7 +154,8 @@ struct StackTests {
              {"type": "shape", "width": null, "height": 1, "kind": "rect", "fill": "@line", "stroke": null, "cornerRadius": null}]}]}
         """
         let (spec, _) = try AIWidgetParser.parse(reply, options: GenerationOptions(), id: "gen.stack")
-        #expect(spec.allLayers.count == 7)
+        // Seven drawn layers, plus the tap the post-pass gives a weather card (ADR-027).
+        #expect(spec.allLayers.count == 8)
         #expect(spec.refresh == .hourly)
     }
 }

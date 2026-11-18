@@ -31,11 +31,16 @@ public enum SpecLiterals {
         return parts.compactMap { $0 }
     }
 
-    /// A dot pattern of `0`/`1` digits, row by row; spaces are ignored. `"0110 1001"`.
+    /// A dot pattern of digits, row by row; spaces are ignored. `"0110 1001"` (0 off, 1 on), or levels
+    /// `0`…`9` (ADR-029: 9 full, 5 about half) when any digit is above 1.
     public static func dotPattern(_ value: String) -> [Double]? {
         let digits = value.filter { $0 != " " }
-        guard !digits.isEmpty, digits.count <= 600, digits.allSatisfy({ $0 == "0" || $0 == "1" }) else { return nil }
-        return digits.map { $0 == "1" ? 1 : 0 }
+        guard !digits.isEmpty, digits.count <= SpecValidator.maxDots, digits.allSatisfy(\.isASCII), digits.allSatisfy(\.isNumber) else { return nil }
+        let binary = digits.allSatisfy { $0 == "0" || $0 == "1" }
+        return digits.map { digit in
+            let level = Double(digit.wholeNumberValue ?? 0)
+            return binary ? level : level / 9
+        }
     }
 }
 

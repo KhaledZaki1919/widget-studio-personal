@@ -8,10 +8,19 @@ struct TextLayerView: View {
     let mirrored: Bool
     /// The axes the text fills (its frame); inside a stack it keeps its natural size (M6.1).
     var fill: Axis.Set = [.horizontal, .vertical]
+    @Environment(\.specAccented) private var accented
 
     var body: some View {
         let raw = layer.value.resolved(language: resolver.context.language)
-        let value = BidiText.isolatingNumbers(resolver.render(raw))
+        let value = BidiText.isolatingNumbers(SpecText.cased(resolver.render(raw), layer.textCase, language: resolver.context.language))
+        if let path = layer.path, layer.live == nil {
+            ArcTextView(layer: layer, path: path, value: value, scale: scale)
+        } else {
+            plain(value)
+        }
+    }
+
+    @ViewBuilder private func plain(_ value: String) -> some View {
         let arabic = FontRegistry.containsArabic(value)
         content(value)
             // Arabic text set in a Latin family falls back to `arabic` one point larger (TEMPLATES.md).
@@ -21,10 +30,13 @@ struct TextLayerView: View {
             .tracking(arabic ? 0 : (layer.tracking ?? 0) * scale)
             .foregroundStyle(Color(hex: layer.color))
             .multilineTextAlignment(textAlignment)
-            .lineLimit(layer.maxLines ?? 1)
-            .minimumScaleFactor(0.5)
+            // Explicit line breaks ("09⏎41" in a pill) always get their lines; long lines shrink instead.
+            .lineLimit(max(layer.maxLines ?? 1, value.components(separatedBy: "\n").count))
+            // ADR-029: the renderer shrinks text to fit (to `minScale`, default half) instead of the model guessing widths.
+            .minimumScaleFactor(min(max(layer.minScale ?? 0.5, 0.3), 1))
             .frame(maxWidth: fill.contains(.horizontal) ? .infinity : nil,
                    maxHeight: fill.contains(.vertical) ? .infinity : nil, alignment: frameAlignment)
+            .accentable(layer.color, accented: accented)
     }
 
     @ViewBuilder private func content(_ value: String) -> some View {
@@ -56,7 +68,11 @@ struct TextLayerView: View {
                 Text(verbatim: BindingResolver.missing)
             }
         case nil:
-            styled(value)
+            if layer.spans?.isEmpty == false {
+                SpecText.spans(layer, resolver: resolver, scale: scale)
+            } else {
+                styled(value)
+            }
         }
     }
 
@@ -117,6 +133,7 @@ struct ImageLayerView: View {
     let layer: ImageLayer
     let image: CGImage?
     let scale: CGFloat
+    @Environment(\.specAccented) private var accented
 
     var body: some View {
         picture
@@ -125,9 +142,10 @@ struct ImageLayerView: View {
     }
 
     @ViewBuilder private var picture: some View {
-        if layer.source == "user_image", let image {
+        if let image, layer.source == "user_image" || Bindings.soleBinding(layer.source) != nil {
             Image(decorative: image, scale: 1)
                 .resizable()
+                .accentedPhoto(accented)
                 .aspectRatio(contentMode: layer.fit == .fit ? .fit : .fill)
         } else {
             // No photo yet (or an asset that arrives with the template library): a neutral placeholder.
@@ -152,17 +170,44 @@ struct ImageLayerView: View {
 struct ShapeLayerView: View {
     let layer: ShapeLayer
     let scale: CGFloat
+    /// The resolved `sector` share (ADR-029).
+    var progress: Double?
+    @Environment(\.specAccented) private var accented
 
     var body: some View {
+        let glass = layer.glass == true
+        let fill = layer.fill ?? (glass ? "#FFFFFF26" : nil)
         ZStack {
-            if let fill = layer.fill {
-                shape.fill(Color(hex: fill))
+            if layer.kind == .line {
+                // A line is drawn with its stroke, else with its fill color as a stroke.
+                let color = layer.stroke?.color ?? fill ?? "#FFFFFF"
+                shape.stroke(Color(hex: color), style: StrokeStyle(lineWidth: CGFloat(layer.stroke?.width ?? 2) * scale, lineCap: .round,
+                                                                   dash: (layer.stroke?.dash ?? []).map { $0 * scale }))
+                    .accentable(color, accented: accented)
+            } else if let gradient = layer.gradient {
+                shape.fill(gradient.style(accented: accented))
+            } else if let fill {
+                // Accented mode: a faint panel in the accent tint, never a solid block (ADR-023).
+                shape.fill(Accented.fill(fill, accented: accented))
+                    .accentable(fill, accented: accented)
             }
-            if let stroke = layer.stroke {
+            if glass && !accented {
+                shape.fill(LinearGradient(colors: [Color.white.opacity(0.2), Color.white.opacity(0)],
+                                          startPoint: .topLeading, endPoint: .center))
+            }
+            if layer.kind == .line {
+                EmptyView()
+            } else if let stroke = layer.stroke {
                 shape.stroke(Color(hex: stroke.color), style: StrokeStyle(
                     lineWidth: stroke.width * scale,
                     dash: (stroke.dash ?? []).map { $0 * scale }
                 ))
+                .accentable(stroke.color, accented: accented)
+            } else if glass {
+                shape.stroke(Color.white.opacity(0.3), lineWidth: max(0.5, scale))
+            } else if accented, let fill {
+                shape.stroke(Color(hex: fill).opacity(Accented.outlineOpacity), lineWidth: max(0.5, scale))
+                    .accentable(fill, accented: accented)
             }
         }
     }
@@ -173,6 +218,7 @@ struct ShapeLayerView: View {
         case .roundedRect: AnyShape(RoundedRectangle(cornerRadius: (layer.cornerRadius ?? 16) * scale, style: .continuous))
         case .circle: AnyShape(Circle())
         case .capsule: AnyShape(Capsule())
+        default: AnyShape(SpecShape(layer: layer, scale: scale, progress: progress))
         }
     }
 }
@@ -181,13 +227,67 @@ struct IconLayerView: View {
     let layer: IconLayer
     let resolver: BindingResolver
     let scale: CGFloat
+    @Environment(\.specAccented) private var accented
 
     var body: some View {
-        let symbol = resolver.soleValue(layer.symbol)?.display ?? layer.symbol
-        Image(systemName: Icons.isAllowed(symbol) ? symbol : "questionmark")
-            .font(.system(size: layer.size * scale))
-            .foregroundStyle(Color(hex: layer.color))
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        let raw = resolver.soleValue(layer.symbol)?.display ?? layer.symbol
+        let symbol = IconRendering.symbol(Icons.styled(raw, layer.style))
+        Group {
+            if symbol == "bluetooth" {
+                // SF Symbols has no Bluetooth mark (ADR-029): drawn as a path.
+                BluetoothGlyph().stroke(Color(hex: layer.color), style: StrokeStyle(lineWidth: layer.size * scale * 0.09, lineCap: .round,
+                                                                                   lineJoin: .round))
+                    .frame(width: layer.size * scale * 0.55, height: layer.size * scale)
+            } else {
+                Image(systemName: symbol)
+                    .font(.system(size: layer.size * scale))
+                    .foregroundStyle(Color(hex: layer.color))
+            }
+        }
+        .accentable(layer.color, accented: accented)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+/// Which symbol to draw for a spec's name (ADR-029): a known one as is; an unknown one by its
+/// closest existing parent (`cloud.sun.rain.fill` → `cloud.sun.rain` → `cloud.sun` …), else a question mark.
+enum IconRendering {
+    static func symbol(_ name: String) -> String {
+        if Icons.isAllowed(name) || name == "bluetooth" { return name }
+        guard Icons.isSymbolName(name) else { return "questionmark" }
+        var parts = name.split(separator: ".").map(String.init)
+        while !parts.isEmpty {
+            let candidate = parts.joined(separator: ".")
+            if exists(candidate) { return candidate }
+            parts.removeLast()
+        }
+        return "questionmark"
+    }
+
+    static func exists(_ name: String) -> Bool {
+        if Icons.isAllowed(name) { return true }
+        #if canImport(UIKit)
+        return UIImage(systemName: name) != nil
+        #elseif canImport(AppKit)
+        return NSImage(systemSymbolName: name, accessibilityDescription: nil) != nil
+        #else
+        return false
+        #endif
+    }
+}
+
+/// The Bluetooth rune, in a 0.55 : 1 box.
+struct BluetoothGlyph: Shape {
+    func path(in rect: CGRect) -> Path {
+        func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: rect.minX + x * rect.width, y: rect.minY + y * rect.height) }
+        var path = Path()
+        path.move(to: p(0, 0.27))
+        path.addLine(to: p(1, 0.73))
+        path.addLine(to: p(0.5, 1))
+        path.addLine(to: p(0.5, 0))
+        path.addLine(to: p(1, 0.27))
+        path.addLine(to: p(0, 0.73))
+        return path
     }
 }
 
@@ -195,16 +295,18 @@ struct RingView: View {
     let layer: RingLayer
     let progress: Double
     let scale: CGFloat
+    @Environment(\.specAccented) private var accented
 
     var body: some View {
         let width = layer.lineWidth * scale
         ZStack {
             Circle()
-                .stroke(Color(hex: layer.trackColor ?? "#FFFFFF33"), lineWidth: width)
+                .stroke(Accented.fill(layer.trackColor ?? "#FFFFFF33", accented: accented), lineWidth: width)
             Circle()
                 .trim(from: 0, to: min(max(progress, 0), 1))
                 .stroke(Color(hex: layer.color), style: StrokeStyle(lineWidth: width, lineCap: .round))
                 .rotationEffect(.degrees(-90))
+                .widgetAccentableIf(accented)
         }
         .padding(width / 2)
         .aspectRatio(1, contentMode: .fit)

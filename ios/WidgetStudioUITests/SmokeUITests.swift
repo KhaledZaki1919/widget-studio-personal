@@ -20,7 +20,7 @@ final class SmokeUITests: XCTestCase {
     func openDiagnostics(_ app: XCUIApplication) {
         let tabs = app.tabBars.firstMatch
         XCTAssertTrue(tabs.waitForExistence(timeout: 15), "tab bar not found")
-        tabs.buttons.element(boundBy: 2).tap()
+        tabs.buttons.element(boundBy: 3).tap()
         let version = app.descendants(matching: .any)["ax.settings.version"]
         for _ in 0..<12 where !(version.exists && version.isHittable) {
             app.swipeUp()
@@ -98,7 +98,7 @@ final class SmokeUITests: XCTestCase {
         let app = launch(language: "ar")
         let tabs = app.tabBars.firstMatch
         XCTAssertTrue(tabs.waitForExistence(timeout: 15), "tab bar not found")
-        tabs.buttons.element(boundBy: 2).tap()
+        tabs.buttons.element(boundBy: 3).tap()
         XCTAssertTrue(app.descendants(matching: .any)["ax.settings.units"].waitForExistence(timeout: 10), "units picker missing")
         XCTAssertTrue(app.descendants(matching: .any)["ax.settings.method"].exists, "prayer method missing")
         XCTAssertTrue(app.descendants(matching: .any)["ax.settings.stepGoal"].exists, "step goal missing")

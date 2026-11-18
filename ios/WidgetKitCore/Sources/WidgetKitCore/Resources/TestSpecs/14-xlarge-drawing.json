@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 2,
+  "id": "test.xlarge.drawing",
+  "name": { "en": "Drawing tools", "ar": "أدوات الرسم" },
+  "family": "xlarge",
+  "theme": "dark",
+  "refresh": "minute",
+  "background": { "type": "solid", "color": "#121212", "outerColor": "#000000" },
+  "card": { "shape": "roundedRect", "aspect": 0.66, "cornerRadius": 28 },
+  "fields": [
+    { "key": "ticker", "type": "ticker", "label": { "en": "Ticker", "ar": "الرمز" }, "default": "TSLA" }
+  ],
+  "layers": [
+    { "type": "text", "frame": { "x": 20, "y": 14, "w": 200, "h": 30 }, "font": { "family": "system", "size": 22, "weight": "semibold" }, "color": "#FFFFFF", "mirror": true,
+      "spans": [
+        { "text": { "en": "{{time.hh}}:{{time.mm}}", "ar": "{{time.hh}}:{{time.mm}}" } },
+        { "text": "{{time.ampm}}", "font": { "family": "system", "size": 11, "weight": "bold" }, "baselineOffset": 8, "color": "#FF5A36" }
+      ] },
+    { "type": "text", "value": "{{time.words}}", "case": "upper", "minScale": 0.4, "font": { "family": "system-mono", "size": 14 }, "color": "#FFFFFFB3", "frame": { "x": 20, "y": 46, "w": 200, "h": 20 }, "mirror": true },
+    { "type": "shape", "kind": "scallop", "sides": 12, "fill": "#2A2F36", "frame": { "x": 210, "y": 14, "w": 140, "h": 140 } },
+    { "type": "analogClock", "frame": { "x": 230, "y": 34, "w": 100, "h": 100 }, "faceColor": "#2A2F36", "hourColor": "#E8EAED", "minuteColor": "#9AA0A6", "accentColor": "#8AB4F8",
+      "hourWidth": 0.16, "minuteWidth": 0.12, "handCap": "round", "hourLength": 0.45, "minuteLength": 0.7, "ticks": "none", "seconds": "dot" },
+    { "type": "text", "value": "{{date.EEE}} {{date.d}}", "path": { "arc": 62, "start": 0 }, "font": { "family": "system", "size": 13, "weight": "medium" }, "color": "#E8EAED", "frame": { "x": 210, "y": 14, "w": 140, "h": 140 } },
+    { "type": "stack", "axis": "radial", "radius": 46, "rotateChildren": true, "frame": { "x": 20, "y": 80, "w": 120, "h": 120 },
+      "children": [
+        { "type": "text", "value": "N", "font": { "family": "system", "size": 12, "weight": "bold" }, "color": "#FF5A36" },
+        { "type": "text", "value": { "en": "E", "ar": "ش" }, "font": { "family": "system", "size": 12 }, "color": "#FFFFFF" },
+        { "type": "text", "value": { "en": "S", "ar": "ج" }, "font": { "family": "system", "size": 12 }, "color": "#FFFFFF" },
+        { "type": "text", "value": { "en": "W", "ar": "غ" }, "font": { "family": "system", "size": 12 }, "color": "#FFFFFF" }
+      ] },
+    { "type": "shape", "kind": "triangle", "direction": "up", "fill": { "type": "linear", "colors": ["#FF5A36", "#FFB199"], "angle": 90 }, "frame": { "x": 70, "y": 120, "w": 20, "h": 40 }, "rotation": "{{compass.north}}" },
+    { "type": "shape", "kind": "sector", "startAngle": 0, "progress": "{{day.progress}}", "fill": "#8AB4F8", "frame": { "x": 160, "y": 170, "w": 40, "h": 40 } },
+    { "type": "shape", "kind": "star", "sides": 5, "innerRatio": 0.45, "fill": "#FDD663", "frame": { "x": 210, "y": 170, "w": 40, "h": 40 } },
+    { "type": "shape", "kind": "polygon", "points": [[0, 1], [1, 1], [0, 0]], "fill": "#E8EAED", "frame": { "x": 260, "y": 170, "w": 40, "h": 40 } },
+    { "type": "shape", "kind": "line", "direction": "horizontal", "stroke": { "color": "#FFFFFF33", "width": 1, "dash": [3, 3] }, "frame": { "x": 20, "y": 222, "w": 320, "h": 4 } },
+    { "type": "forecastRow", "mode": "hourly", "days": 6, "color": "#FFFFFF", "iconStyle": "outline", "dividerColor": "#FFFFFF26", "labelColor": "#FFFFFF80",
+      "font": { "family": "system-mono", "size": 13 }, "frame": { "x": 14, "y": 232, "w": 332, "h": 70 } },
+    { "type": "dotGrid", "rows": 14, "cols": 24, "dotSize": 5, "gap": 1.5, "onColor": "#FFFFFF", "offColor": "#FFFFFF00", "values": "{{day.progress}}", "mask": "weather", "fade": "left", "order": "columns",
+      "frame": { "x": 20, "y": 310, "w": 160, "h": 92 } },
+    { "type": "chart", "kind": "area", "values": "{{hourly.temps}}", "color": "#34C759", "fill": { "type": "linear", "colors": ["#34C75966", "#34C75900"], "angle": 90 },
+      "baseline": "average", "highlight": "last", "xLabels": { "en": "Now,+12h,+24h", "ar": "الآن,+12س,+24س" }, "frame": { "x": 190, "y": 310, "w": 150, "h": 92 } },
+    { "type": "chart", "kind": "candles", "values": "50:62,55:70,60:88,70:95,64:82,58:75,52:64,49:58", "color": "#FFFFFF", "min": 40, "max": 130, "yLabels": "130,90,50",
+      "frame": { "x": 20, "y": 410, "w": 160, "h": 70 } },
+    { "type": "chart", "kind": "bars", "values": "{{steps.hourly}}", "color": "#FFFFFF59", "highlight": "max", "highlightColor": "#34C759", "cornerRadius": 2, "frame": { "x": 190, "y": 410, "w": 150, "h": 70 } },
+    { "type": "list", "frame": { "x": 20, "y": 486, "w": 230, "h": 60 }, "font": { "family": "system", "size": 13, "weight": "medium" }, "color": "#FFFFFF", "detailColor": "#FFFFFF99", "marker": "bar", "mirror": true,
+      "items": [
+        { "title": "{{calendar.1.title}}", "subtitle": "{{calendar.1.calendar}}", "detail": "{{calendar.1.time}}", "detail2": "{{calendar.1.end}}", "color": "{{calendar.1.color}}" }
+      ] },
+    { "type": "progressBar", "progress": "{{media.progress}}", "color": "#FFFFFF", "trackColor": "#FFFFFF33", "knob": { "size": 10, "color": "#FFFFFF" }, "frame": { "x": 260, "y": 512, "w": 80, "h": 4 } },
+    { "type": "icon", "symbol": "cart.fill", "size": 16, "color": "#34C759", "frame": { "x": 260, "y": 486, "w": 20, "h": 20 } },
+    { "type": "icon", "symbol": "{{weather.symbol}}", "style": "outline", "size": 16, "color": "#FFFFFF", "frame": { "x": 290, "y": 486, "w": 20, "h": 20 } }
+  ]
+}

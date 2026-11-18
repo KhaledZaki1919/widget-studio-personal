@@ -10,7 +10,7 @@ public enum GenerationMode: String, Codable, CaseIterable, Sendable {
 
 /// The widget size the user asked for; `auto` follows the image's aspect ratio.
 public enum SizeChoice: String, CaseIterable, Sendable {
-    case auto, small, medium, large
+    case auto, small, medium, large, xlarge
 
     public var family: SpecFamily? {
         switch self {
@@ -18,6 +18,7 @@ public enum SizeChoice: String, CaseIterable, Sendable {
         case .small: .small
         case .medium: .medium
         case .large: .large
+        case .xlarge: .xlarge
         }
     }
 }
@@ -27,13 +28,27 @@ public struct GenerationOptions: Sendable, Equatable {
     public var size: SizeChoice
     /// Optional extra instructions (Arabic or English), at most `maxInstructions` characters.
     public var instructions: String
+    /// The card shape the app detected in the image (ADR-024), a hint for the model and the
+    /// fallback when it reports none.
+    public var detectedCard: WidgetCardShape?
+    /// The wallpaper's main color around the widget (ADR-024): the area outside a circle or capsule
+    /// card, and the background of a floating design.
+    public var wallpaperColor: String?
+    /// The image was cropped to the widget (ADR-024).
+    public var cropped = false
+    /// ADR-029: recreate every widget in the image, as `{"widgets": [...]}`.
+    public var allWidgets = false
 
     public static let maxInstructions = 300
 
-    public init(mode: GenerationMode = .recreate, size: SizeChoice = .auto, instructions: String = "") {
+    public init(mode: GenerationMode = .recreate, size: SizeChoice = .auto, instructions: String = "",
+                detectedCard: WidgetCardShape? = nil, wallpaperColor: String? = nil, cropped: Bool = false) {
         self.mode = mode
         self.size = size
         self.instructions = instructions
+        self.detectedCard = detectedCard
+        self.wallpaperColor = wallpaperColor
+        self.cropped = cropped
     }
 }
 
@@ -51,9 +66,15 @@ public struct GeneratedWidget: Sendable, Equatable {
     public let differences: [String]
     /// Whether the layout was repaired locally, or still needs the layer editor (ADR-022).
     public let layout: LayoutRepair
+    /// What the post-pass wired (ADR-027).
+    public let autoWired: [String]
+    /// The model's reply as received (the eval records it).
+    public let reply: String
 
     public init(spec: WidgetSpec, colors: [String: String], model: String, attempts: Int, reviewed: Bool = false,
-                differences: [String] = [], layout: LayoutRepair = .clean) {
+                differences: [String] = [], layout: LayoutRepair = .clean, autoWired: [String] = [], reply: String = "") {
+        self.autoWired = autoWired
+        self.reply = reply
         self.spec = spec
         self.colors = colors
         self.model = model
@@ -78,21 +99,21 @@ public struct GeneratedWidget: Sendable, Equatable {
 
 // MARK: - Prompt
 
-/// Builds the request: the versioned system prompt (`Prompts/generate_v3.md`, ADR-019, M6.1), the user
+/// Builds the request: the versioned system prompt (`Prompts/generate_v6.md`, ADR-019, ADR-023, ADR-027, ADR-028), the user
 /// text with mode, size and the user's instructions, the image, and the AI schema. Also the one
 /// self-review request (`Prompts/review_v1.md`).
 public enum WidgetPrompt {
-    public static let version = "generate_v3"
+    public static let version = "generate_v7"
     public static let reviewVersion = "review_v1"
     /// Room for 30 layers with their nulls; thinking providers get extra on top.
     public static let maxOutputTokens = 16000
     /// Per HTTP request: two attempts (structured, then prompt-only) fit the 240 s deadline.
     public static let requestTimeout: TimeInterval = 110
 
-    /// The system prompt with the allowed bindings and icons filled in. Static per app version,
+    /// The system prompt with the capability catalog and icons filled in. Static per app version,
     /// so providers can cache it.
     public static let system: String = prompt(version)
-        .replacingOccurrences(of: "$BINDINGS$", with: bindingList)
+        .replacingOccurrences(of: "$CAPABILITIES$", with: capabilityList)
         .replacingOccurrences(of: "$ICONS$", with: Icons.whitelist.keys.sorted().joined(separator: ", "))
 
     /// The review instructions (sent as user text with the original and the render).
@@ -103,27 +124,37 @@ public enum WidgetPrompt {
         return url.flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? ""
     }
 
-    /// One line per allowed binding, with what it shows.
-    static var bindingList: String {
-        aiBindings.map { "- `{{\($0.name)}}`: \($0.meaning)" }.joined(separator: "\n")
+    /// The catalog as the model reads it (ADR-027), built from `capabilities.json`: live values
+    /// and tap actions by group, with what each looks like. Never edited by hand.
+    public static var capabilityList: String {
+        var sections: [String] = []
+        for group in Capabilities.groups {
+            let bindings = Capabilities.bindings.filter { $0.group == group.id && $0.ai }
+            let lines = bindings.map { binding -> String in
+                let type = binding.type.map { " (\($0))" } ?? ""
+                return "- `{{\(binding.id)}}`\(type): \(binding.description)"
+            }
+            if !lines.isEmpty { sections.append("Live values, \(group.title.resolved(language: "en")):\n" + lines.joined(separator: "\n")) }
+        }
+        var actions: [String] = []
+        for group in Capabilities.groups {
+            for action in Capabilities.actions where action.group == group.id && action.ai {
+                let looks = action.icons.prefix(3).joined(separator: ", ")
+                actions.append("- `\(action.id)`: \(action.description)" + (looks.isEmpty ? "" : " (icons: \(looks))"))
+            }
+        }
+        sections.append("Tap actions:\n" + actions.joined(separator: "\n"))
+        // ADR-028: a new set in the catalog reaches the model with no prompt edit.
+        let sets = Capabilities.stateSets.map { set -> String in
+            let looks = set.variants.map(\.id).joined(separator: ", ")
+            return "- `\(set.id)`: \(set.description) (states: \(looks))" + (set.value.map { "; takes `value`, like \($0)" } ?? "")
+        }
+        sections.append("State sets, for `states` layers:\n" + sets.joined(separator: "\n"))
+        return sections.joined(separator: "\n\n")
     }
 
-    /// The bindings AI output may use (brief §5.1 as extended for M5): time, date, weather,
-    /// battery, prayer, steps. Kept in sync with `SpecValidator` by a test.
-    static let aiBindings: [(name: String, meaning: String)] = [
-        ("time.h", "hour without leading zero"), ("time.hh", "hour, two digits"), ("time.mm", "minutes, two digits"),
-        ("time.ampm", "AM/PM marker"), ("date.d", "day of the month"), ("date.EEEE", "weekday name"),
-        ("date.MMM", "short month name"), ("tz.offset", "time zone offset like GMT+3"),
-        ("weather.temp", "current temperature (number; add °)"), ("weather.hi", "today's high"), ("weather.lo", "today's low"),
-        ("weather.cond", "condition text"), ("weather.symbol", "condition icon (for icon.symbol)"), ("weather.city", "city name"),
-        ("battery.level", "battery 0…1 (ring progress; shows a percentage in text)"),
-        ("prayer.next.name", "name of the next prayer"), ("prayer.next.time", "time of the next prayer (date; use in live.target)"),
-        ("prayer.fajr", "Fajr time"), ("prayer.dhuhr", "Dhuhr time"), ("prayer.asr", "Asr time"),
-        ("prayer.maghrib", "Maghrib time"), ("prayer.isha", "Isha time"), ("qibla.bearing", "Qibla direction in degrees"),
-        ("steps.today", "steps today"), ("steps.streak", "days in a row the step goal was met"),
-        ("steps.month", "steps this month"), ("steps.monthGrid", "month calendar levels (for dotGrid values, 5×7)"),
-        ("days.<dateField>", "whole days left until a date field, e.g. {{days.event}}"),
-    ]
+    /// The bindings AI output may use, from the catalog.
+    static var aiBindings: [Capability] { Capabilities.bindings.filter(\.ai) }
 
     /// small for square images, medium for wide ones, large for tall ones.
     public static func suggestedFamily(width: Int, height: Int) -> SpecFamily {
@@ -138,14 +169,27 @@ public enum WidgetPrompt {
         var lines: [String] = []
         switch options.mode {
         case .recreate:
-            lines.append("Task: the image shows a widget design or a screenshot of widgets. Recreate the main widget as closely as "
-                + "possible with the layer types, fonts and bindings above: start with the inventory, then map every element. "
-                + "Do not use image layers: draw everything with text, calendars, lists, shapes, icons and the other layers. "
-                + "Replace sample values (times, dates, temperatures, step counts) with the matching live bindings.")
+            lines.append("Task: the image shows a widget design or a screenshot of widgets. Recreate "
+                + (options.allWidgets ? "every widget in it, each in its own object inside \"widgets\"," : "the main widget")
+                + " as closely as possible with the layer types, fonts and bindings above: start with the inventory, then map every "
+                + "element. Draw with text, calendars, lists, charts, shapes, icons and the other layers; use image layers only for "
+                + "album art, app logos and the user's own photo (see Pictures). Replace sample values (times, dates, temperatures, step "
+                + "counts, song names, levels, states) with the matching live bindings, and give every control its action: fill "
+                + "`wiring` first.")
         case .photo:
             lines.append("Task: the image is the user's photo. Design a widget around it: use exactly one image layer with "
                 + "\"source\": \"user_image\" for the photo (add a field of type image with key \"photo\"), and add text "
                 + "and other layers that suit it. Take the palette from the photo. Describe nothing about who is in it.")
+        }
+        if options.mode == .recreate {
+            if options.cropped {
+                lines.append("The image was cropped to the widget; a little wallpaper may still show at the edges. Ignore it.")
+            }
+            if let card = options.detectedCard {
+                let names: [WidgetCardShape: String] = [.roundedRect: "a rounded rectangle", .circle: "a circle",
+                                                         .capsule: "a capsule (pill)", .none: "no card: the content floats on the wallpaper"]
+                lines.append("The app's detection says the widget card is \(names[card] ?? "a rounded rectangle"); check it in the image and report it in card.shape.")
+            }
         }
         let suggested = suggestedFamily(width: imageWidth, height: imageHeight)
         if let family = options.size.family {
@@ -179,7 +223,7 @@ public enum WidgetPrompt {
             system: system,
             userText: userText(options: options, imageWidth: image.width, imageHeight: image.height),
             images: [image.jpeg],
-            schema: AIWidgetSchema.schema(mode: options.mode),
+            schema: options.allWidgets ? AIWidgetSchema.many(mode: options.mode) : AIWidgetSchema.schema(mode: options.mode),
             schemaName: "widget_spec",
             maxOutputTokens: maxOutputTokens,
             timeout: requestTimeout
@@ -223,13 +267,27 @@ public enum AIWidgetSchema {
     /// models write the element list before the layers. `review` adds `differences`.
     public static func schema(mode: GenerationMode, review: Bool = false) -> JSONValue {
         var properties: [String: JSONValue] = [
+            "specVersion": JSONSchema.integer,
             "inventory": JSONSchema.array(JSONSchema.string),
-            "name": localized,
+            // Prompt v5 (ADR-027): what each element shows and does; ids come from the catalog.
+            "wiring": JSONSchema.array(JSONSchema.object([
+                "element": JSONSchema.string, "shows": nullableString, "tap": nullableEnum(aiActions),
+                "states": nullableEnum(Capabilities.stateSets.map(\.id)), "decorative": nullableString,
+            ])),
+            "name": JSONSchema.object(["en": JSONSchema.string, "ar": JSONSchema.string]),
             "family": JSONSchema.enumeration(SpecFamily.allCases.map(\.rawValue)),
             "theme": JSONSchema.enumeration(SpecTheme.allCases.map(\.rawValue)),
             "palette": JSONSchema.object(["bg": JSONSchema.string, "fg": JSONSchema.string, "accent": JSONSchema.string]),
+            // ADR-029: the card's own shape, ratio and corners; layer frames are in its canvas.
+            "card": JSONSchema.object([
+                "shape": JSONSchema.enumeration(CardSpec.Shape.allCases.map(\.rawValue)),
+                "aspect": JSONSchema.nullable(JSONSchema.number(minimum: 0.15, maximum: 7)),
+                "cornerRadius": JSONSchema.nullable(JSONSchema.number(minimum: 0, maximum: 200)),
+                "orientation": nullableEnum(CardSpec.Orientation.allCases.map(\.rawValue)),
+                "bumps": JSONSchema.nullable(JSONSchema.integer(minimum: 5, maximum: 24)),
+            ]),
             "background": JSONSchema.object([
-                "type": JSONSchema.enumeration(["solid", "gradient"]),
+                "type": JSONSchema.enumeration(["solid", "gradient", "glass"]),
                 "color": nullableString,
                 "colors": JSONSchema.nullable(JSONSchema.array(JSONSchema.string)),
                 "angle": nullableNumber,
@@ -237,24 +295,45 @@ public enum AIWidgetSchema {
             ]),
             "fields": JSONSchema.array(JSONSchema.object([
                 "key": JSONSchema.string,
-                "type": JSONSchema.enumeration(mode == .photo ? ["text", "date", "image"] : ["text", "date"]),
+                "type": JSONSchema.enumeration(["text", "date", "url", "shortcut", "timezone", "app", "ticker", "image"]),
                 "label": localized,
                 "default": JSONSchema.nullable(localized),
             ])),
-            "layers": JSONSchema.array(JSONSchema.anyOf(layerShapes(mode: mode))),
+            "layers": JSONSchema.array(JSONSchema.anyOf(layerShapes(mode: mode)), minItems: 1, maxItems: SpecValidator.maxLayers + 24),
         ]
         if review { properties["differences"] = JSONSchema.array(JSONSchema.string) }
         return JSONSchema.object(properties)
     }
 
-    static let localized = JSONSchema.object(["en": JSONSchema.string, "ar": JSONSchema.string])
+    /// ADR-029: every widget of an image in one reply.
+    public static func many(mode: GenerationMode) -> JSONValue {
+        JSONSchema.object(["specVersion": JSONSchema.integer, "widgets": JSONSchema.array(schema(mode: mode), minItems: 1, maxItems: 40)])
+    }
+
+    /// Catalog action ids AI output may use.
+    static var aiActions: [String] { Capabilities.actions.filter(\.ai).map(\.id) }
+    /// Whitelisted symbols plus the live icon bindings.
+    static var symbols: [String] {
+        Icons.whitelist.keys.sorted() + Capabilities.bindings.filter { $0.ai && $0.type == "symbol" }.map { "{{\($0.id)}}" }
+    }
+
+    /// A visible text: one string when both languages are the same, else `{en, ar}` (ADR-029).
+    static let localized = JSONSchema.anyOf([JSONSchema.string, JSONSchema.object(["en": JSONSchema.string, "ar": JSONSchema.string])])
+    static let gradient = JSONSchema.object([
+        "type": JSONSchema.enumeration(SpecGradient.Kind.allCases.map(\.rawValue)),
+        "colors": JSONSchema.array(JSONSchema.string, minItems: 2, maxItems: 4),
+        "angle": nullableNumber,
+    ])
+    /// A color or a gradient.
+    static let paint = JSONSchema.nullable(JSONSchema.anyOf([JSONSchema.string, gradient]))
+    static let nullableInt = JSONSchema.nullable(JSONSchema.integer)
     static let nullableString = JSONSchema.nullable(JSONSchema.string)
     static let nullableNumber = JSONSchema.nullable(JSONSchema.number)
     static let frame = JSONSchema.object(["x": JSONSchema.number, "y": JSONSchema.number, "w": JSONSchema.number, "h": JSONSchema.number])
 
     static let font = JSONSchema.object([
         "family": JSONSchema.enumeration(FontRegistry.families),
-        "size": JSONSchema.number,
+        "size": JSONSchema.number(minimum: SpecValidator.minAIFontSize, maximum: SpecValidator.fontSizes.upperBound),
         "weight": nullableEnum(FontWeightName.allCases.map(\.rawValue)),
     ])
 
@@ -269,6 +348,8 @@ public enum AIWidgetSchema {
         all["frame"] = frame
         all["opacity"] = nullableNumber
         all["mirror"] = JSONSchema.nullable(JSONSchema.boolean)
+        all["when"] = nullableString
+        all["rotation"] = JSONSchema.nullable(JSONSchema.anyOf([JSONSchema.number, JSONSchema.string]))
         return JSONSchema.object(all)
     }
 
@@ -278,30 +359,52 @@ public enum AIWidgetSchema {
         all["type"] = JSONSchema.enumeration([type])
         all["width"] = nullableNumber
         all["height"] = nullableNumber
+        all["when"] = nullableString
+        all["rotation"] = JSONSchema.nullable(JSONSchema.anyOf([JSONSchema.number, JSONSchema.string]))
         return JSONSchema.object(all)
     }
 
     static let textProperties: [String: JSONValue] = [
-        "value": localized,
+        "value": JSONSchema.nullable(localized),
         "font": font,
         "color": JSONSchema.string,
         "align": nullableEnum(TextAlign.allCases.map(\.rawValue)),
-        "maxLines": JSONSchema.nullable(JSONSchema.integer),
+        "maxLines": JSONSchema.nullable(JSONSchema.integer(minimum: 1, maximum: 10)),
         "live": JSONSchema.nullable(JSONSchema.object([
             "kind": JSONSchema.enumeration(["timer", "relative", "time"]),
             "target": nullableString,
         ])),
+        // ADR-029
+        "case": nullableEnum(TextCase.allCases.map(\.rawValue)),
+        "minScale": JSONSchema.nullable(JSONSchema.number(minimum: 0.3, maximum: 1)),
+        "tracking": nullableNumber,
+        "spans": JSONSchema.nullable(JSONSchema.array(JSONSchema.object([
+            "text": localized, "font": JSONSchema.nullable(font), "color": nullableString,
+            "baselineOffset": nullableNumber, "case": nullableEnum(TextCase.allCases.map(\.rawValue)), "tracking": nullableNumber,
+        ]), minItems: 1, maxItems: SpecValidator.maxSpans)),
+        "path": JSONSchema.nullable(JSONSchema.object(["arc": nullableNumber, "start": nullableNumber, "inside": JSONSchema.nullable(JSONSchema.boolean)])),
     ]
     static let shapeProperties: [String: JSONValue] = [
         "kind": JSONSchema.enumeration(ShapeLayer.Kind.allCases.map(\.rawValue)),
-        "fill": nullableString,
-        "stroke": JSONSchema.nullable(JSONSchema.object(["color": JSONSchema.string, "width": JSONSchema.number])),
+        "fill": paint,
+        "stroke": JSONSchema.nullable(JSONSchema.object([
+            "color": JSONSchema.string, "width": JSONSchema.number, "dash": JSONSchema.nullable(JSONSchema.array(JSONSchema.number, maxItems: 8)),
+        ])),
         "cornerRadius": nullableNumber,
+        "glass": JSONSchema.nullable(JSONSchema.boolean),
+        // ADR-029
+        "points": JSONSchema.nullable(JSONSchema.array(JSONSchema.array(JSONSchema.number, minItems: 2, maxItems: 2), minItems: 3, maxItems: 16)),
+        "sides": JSONSchema.nullable(JSONSchema.integer(minimum: 3, maximum: 24)),
+        "innerRatio": JSONSchema.nullable(JSONSchema.number(minimum: 0, maximum: 0.95)),
+        "startAngle": nullableNumber, "endAngle": nullableNumber, "progress": nullableString,
+        "direction": nullableEnum(ShapeLayer.Direction.allCases.map(\.rawValue)),
     ]
     static let iconProperties: [String: JSONValue] = [
-        "symbol": JSONSchema.enumeration(Icons.whitelist.keys.sorted() + ["{{weather.symbol}}"]),
-        "size": JSONSchema.number,
+        // ADR-029: any SF Symbol name (the common ones are listed in the prompt) or a symbol binding.
+        "symbol": JSONSchema.string(pattern: "^([a-z0-9]+(\\.[a-z0-9]+)*|\\{\\{[a-zA-Z0-9_.<>]+\\}\\})$"),
+        "size": JSONSchema.number(minimum: 4, maximum: 200),
         "color": JSONSchema.string,
+        "style": nullableEnum(IconStyle.allCases.map(\.rawValue)),
     ]
     static let ringProperties: [String: JSONValue] = [
         "progress": JSONSchema.string, "color": JSONSchema.string, "trackColor": nullableString,
@@ -309,18 +412,25 @@ public enum AIWidgetSchema {
     ]
     static let progressBarProperties: [String: JSONValue] = [
         "progress": JSONSchema.string, "color": JSONSchema.string, "trackColor": nullableString,
-        "segments": JSONSchema.nullable(JSONSchema.integer), "cornerRadius": nullableNumber,
+        "segments": JSONSchema.nullable(JSONSchema.integer(minimum: 1, maximum: 20)), "cornerRadius": nullableNumber,
+        "vertical": JSONSchema.nullable(JSONSchema.boolean),
+        "knob": JSONSchema.nullable(JSONSchema.object(["size": nullableNumber, "color": nullableString])),
     ]
 
     static func stackProperties(children: [JSONValue]) -> [String: JSONValue] {
         [
             "axis": JSONSchema.enumeration(StackLayer.Axis.allCases.map(\.rawValue)),
-            "spacing": nullableNumber,
-            "padding": nullableNumber,
+            "spacing": JSONSchema.nullable(JSONSchema.number(minimum: 0, maximum: 100)),
+            "padding": JSONSchema.nullable(JSONSchema.number(minimum: 0, maximum: 100)),
             "alignItems": nullableEnum(StackLayer.Align.allCases.map(\.rawValue)),
             "justify": nullableEnum(StackLayer.Align.allCases.map(\.rawValue)),
-            "columns": JSONSchema.nullable(JSONSchema.integer),
-            "children": JSONSchema.array(JSONSchema.anyOf(children)),
+            "columns": JSONSchema.nullable(JSONSchema.integer(minimum: 1, maximum: 8)),
+            // ADR-029: radial stacks.
+            "radius": nullableNumber, "startAngle": nullableNumber,
+            "sweep": JSONSchema.nullable(JSONSchema.number(minimum: 0, maximum: 360)),
+            "rotateChildren": JSONSchema.nullable(JSONSchema.boolean),
+            // The validator's limit, mirrored (PDF: "layers[2].children: must be between 1 and 12").
+            "children": JSONSchema.array(JSONSchema.anyOf(children), minItems: 1, maxItems: SpecValidator.maxChildren),
         ]
     }
 
@@ -341,24 +451,59 @@ public enum AIWidgetSchema {
             layer("stack", stackProperties(children: childShapes(nested: true))),
             layer("shape", shapeProperties),
             layer("icon", iconProperties),
+            // Only for text on an arc (ADR-029); every other text sits in a stack.
+            layer("text", textProperties),
             layer("analogClock", [
                 "style": nullableEnum(AnalogClockLayer.Style.allCases.map(\.rawValue)),
                 "faceColor": nullableString, "tickColor": nullableString, "hourColor": nullableString,
                 "minuteColor": nullableString, "accentColor": nullableString,
+                "hourWidth": nullableNumber, "minuteWidth": nullableNumber, "hourLength": nullableNumber, "minuteLength": nullableNumber,
+                "handCap": nullableEnum(AnalogClockLayer.HandCap.allCases.map(\.rawValue)),
+                "ticks": nullableEnum(AnalogClockLayer.Ticks.allCases.map(\.rawValue)),
+                "seconds": nullableEnum(AnalogClockLayer.Seconds.allCases.map(\.rawValue)),
+                "centerDot": JSONSchema.nullable(JSONSchema.boolean),
             ]),
             layer("dotGrid", [
-                "rows": JSONSchema.integer, "cols": JSONSchema.integer, "dotSize": JSONSchema.number, "gap": JSONSchema.number,
+                "rows": JSONSchema.integer(minimum: 1, maximum: SpecValidator.maxGridSide),
+                "cols": JSONSchema.integer(minimum: 1, maximum: SpecValidator.maxGridSide),
+                "dotSize": JSONSchema.number(minimum: 0.5, maximum: 60), "gap": JSONSchema.number(minimum: 0, maximum: 60),
                 "onColor": JSONSchema.string, "offColor": JSONSchema.string, "values": JSONSchema.string,
                 "highlightColor": nullableString,
+                "levelColors": JSONSchema.nullable(JSONSchema.array(JSONSchema.string, minItems: 1, maxItems: 10)),
+                "mask": nullableEnum(DotGridLayer.DotMask.allCases.map(\.rawValue)),
+                "sizeByLevel": JSONSchema.nullable(JSONSchema.boolean),
+                "order": nullableEnum(DotGridLayer.DotOrder.allCases.map(\.rawValue)),
+                "fade": nullableEnum(DotGridLayer.DotFade.allCases.map(\.rawValue)),
             ]),
             layer("dotBars", [
-                "bars": JSONSchema.integer, "maxDots": JSONSchema.integer, "values": JSONSchema.string,
+                "bars": JSONSchema.integer(minimum: 1, maximum: 31), "maxDots": JSONSchema.integer(minimum: 1, maximum: 24),
+                "values": JSONSchema.string,
                 "color": JSONSchema.string, "offColor": nullableString, "labels": JSONSchema.nullable(localized),
                 "highlightColor": nullableString,
             ]),
             layer("ring", ringProperties),
-            layer("forecastRow", ["days": JSONSchema.integer, "color": JSONSchema.string]),
-            layer("button", ["action": JSONSchema.enumeration([ButtonLayer.Action.openApp.rawValue])]),
+            layer("forecastRow", [
+                "days": JSONSchema.integer(minimum: 1, maximum: 8), "color": JSONSchema.string,
+                "mode": nullableEnum(ForecastRowLayer.Mode.allCases.map(\.rawValue)), "font": JSONSchema.nullable(font),
+                "iconStyle": nullableEnum(IconStyle.allCases.map(\.rawValue)), "showLow": JSONSchema.nullable(JSONSchema.boolean),
+                "dividerColor": nullableString, "labelColor": nullableString, "showIcons": JSONSchema.nullable(JSONSchema.boolean),
+            ]),
+            // ADR-029.
+            layer("chart", [
+                "kind": JSONSchema.enumeration(ChartLayer.Kind.allCases.map(\.rawValue)), "values": JSONSchema.string,
+                "color": JSONSchema.string, "fill": paint, "lineWidth": nullableNumber,
+                "barWidth": JSONSchema.nullable(JSONSchema.number(minimum: 0.05, maximum: 1)), "cornerRadius": nullableNumber,
+                "baseline": nullableString, "baselineColor": nullableString, "min": nullableNumber, "max": nullableNumber,
+                "highlight": nullableEnum(ChartLayer.Highlight.allCases.map(\.rawValue)), "highlightColor": nullableString,
+                "xLabels": JSONSchema.nullable(localized), "yLabels": JSONSchema.nullable(localized), "labelFont": JSONSchema.nullable(font),
+                "labelColor": nullableString, "downColor": nullableString,
+            ]),
+            layer("button", ["action": JSONSchema.enumeration(aiActions), "arg": nullableString]),
+            // ADR-028: built from the catalog, so a new set needs no schema edit.
+            layer("states", [
+                "set": JSONSchema.enumeration(Capabilities.stateSets.map(\.id)), "value": nullableString,
+                "color": nullableString, "accent": nullableString, "dim": nullableString,
+            ]),
             // ADR-019.
             layer("calendarMonth", [
                 "font": font, "color": JSONSchema.string,
@@ -374,28 +519,29 @@ public enum AIWidgetSchema {
                 "todayStyle": nullableEnum(CalendarMonthLayer.TodayStyle.allCases.map(\.rawValue)),
                 "todayColor": nullableString, "todayTextColor": nullableString,
                 "otherDays": nullableEnum(CalendarMonthLayer.OtherDays.allCases.map(\.rawValue)),
+                "rows": nullableEnum(CalendarMonthLayer.Rows.allCases.map(\.rawValue)),
             ]),
             layer("list", [
                 "items": JSONSchema.array(JSONSchema.object([
                     "title": localized, "detail": JSONSchema.nullable(localized),
-                    "icon": JSONSchema.nullable(JSONSchema.enumeration(Icons.whitelist.keys.sorted())),
-                    "color": nullableString,
-                ])),
+                    "subtitle": JSONSchema.nullable(localized), "detail2": JSONSchema.nullable(localized),
+                    "icon": nullableString,
+                    "color": nullableString, "done": nullableString,
+                ]), minItems: 1, maxItems: ListLayer.maxItems),
                 "font": font, "color": JSONSchema.string, "detailColor": nullableString,
                 "marker": nullableEnum(ListLayer.Marker.allCases.map(\.rawValue)),
                 "markerColor": nullableString, "dividerColor": nullableString,
             ]),
             layer("progressBar", progressBarProperties),
         ]
-        if mode == .photo {
-            shapes.append(layer("image", [
-                "source": JSONSchema.enumeration(["user_image"]),
-                "fit": nullableEnum(ImageLayer.Fit.allCases.map(\.rawValue)),
-                "mask": nullableEnum(ImageLayer.Mask.allCases.map(\.rawValue)),
-                "cornerRadius": nullableNumber,
-                "filter": nullableEnum(ImageLayer.Filter.allCases.map(\.rawValue)),
-            ]))
-        }
+        // Album art, app logos (from the device) and the user's own photo (ADR-027, ADR-029).
+        shapes.append(layer("image", [
+            "source": JSONSchema.string(pattern: "^(user_image|\\{\\{(media\\.artwork|media\\.appIcon|app\\.[A-Za-z][A-Za-z0-9_]*\\.icon)\\}\\})$"),
+            "fit": nullableEnum(ImageLayer.Fit.allCases.map(\.rawValue)),
+            "mask": nullableEnum(ImageLayer.Mask.allCases.map(\.rawValue)),
+            "cornerRadius": nullableNumber,
+            "filter": nullableEnum(ImageLayer.Filter.allCases.map(\.rawValue)),
+        ]))
         return shapes
     }
 }
@@ -422,6 +568,51 @@ public enum AIWidgetParser {
         public let spec: WidgetSpec
         public let colors: [String: String]
         public let layout: LayoutRepair
+        /// What the post-pass wired (ADR-027).
+        public var autoWired: [String] = []
+        /// The model's reply as received (the eval records it).
+        public var reply = ""
+    }
+
+    /// Prompt v5's `decorative` entries, and the `inventory` for the post-pass.
+    static func decorativeNotes(_ wiring: JSONValue?) -> [DecorativeNote] {
+        guard case .array(let items)? = wiring else { return [] }
+        return items.prefix(30).compactMap { item in
+            guard let reason = item["decorative"]?.stringValue, !reason.isEmpty, let element = item["element"]?.stringValue else { return nil }
+            return DecorativeNote(element: String(element.prefix(80)), reason: String(reason.prefix(120)))
+        }
+    }
+
+    /// Prompt v5's wiring list, for the post-pass.
+    static func wiringEntries(_ wiring: JSONValue?) -> [AutoWire.WiringEntry] {
+        guard case .array(let items)? = wiring else { return [] }
+        return items.compactMap { item in
+            item["element"]?.stringValue.map { AutoWire.WiringEntry(element: $0, shows: item["shows"]?.stringValue, tap: item["tap"]?.stringValue) }
+        }
+    }
+
+    /// Words models write for "no color", which would otherwise fail the whole widget.
+    static func withKnownColors(_ value: JSONValue) -> JSONValue {
+        switch value {
+        case .object(let fields):
+            return .object(fields.reduce(into: [:]) { result, field in
+                if field.key.lowercased().hasSuffix("color") || field.key == "fill", let word = field.value.stringValue?.lowercased(),
+                   ["transparent", "clear", "none"].contains(word) {
+                    result[field.key] = .string("#00000000")
+                } else {
+                    result[field.key] = withKnownColors(field.value)
+                }
+            })
+        case .array(let items):
+            return .array(items.map(withKnownColors))
+        default:
+            return value
+        }
+    }
+
+    static func inventory(_ value: JSONValue?) -> [String] {
+        guard case .array(let items)? = value else { return [] }
+        return items.compactMap(\.stringValue)
     }
 
     /// `enforceLayout`: overlapping frames and oversized icons are problems (they send the retry).
@@ -433,8 +624,9 @@ public enum AIWidgetParser {
         return (parsed.spec, parsed.colors)
     }
 
+    /// `autoWire` false shows what the model wired by itself (the eval's before column).
     public static func parseWidget(_ text: String, options: GenerationOptions, id: String,
-                                   enforceLayout: Bool = true) throws -> Parsed {
+                                   enforceLayout: Bool = true, autoWire: Bool = true) throws -> Parsed {
         guard let data = StructuredAI.extractJSON(text),
               case .object(var object)? = try? JSONDecoder().decode(JSONValue.self, from: data) else {
             throw AIValidationError("no JSON object found")
@@ -458,12 +650,34 @@ public enum AIWidgetParser {
             object["theme"] = .string(luminance(bg) < 0.4 ? "dark" : "light")
         }
 
+        // ADR-029: a v2 reply describes its card (shape, aspect…) and places layers in the card's canvas;
+        // older replies keep the v1 meaning (a circle or pill drawn inside the family canvas).
+        let version = Self.version(of: object)
+        let rawShape = object["card"]?["shape"]?.stringValue
+        let card = rawShape.flatMap(WidgetCardShape.init(rawValue:)) ?? options.detectedCard
+        var cardSpec: JSONValue?
+        if options.mode == .recreate {
+            if version >= 2, let made = Self.cardSpec(object["card"], family: options.size.family ?? Self.family(of: object), wallpaper: options.wallpaperColor,
+                                                       colors: &colors) {
+                cardSpec = made
+            } else if rawShape != "scallop" {
+                applyCard(card, to: &object, colors: &colors, wallpaper: options.wallpaperColor)
+            }
+        }
+        let notes = decorativeNotes(object["wiring"])
+        let listed = Self.inventory(object["inventory"])
+        let wiring = wiringEntries(object["wiring"])
+        object["card"] = nil
         object["palette"] = nil
         object["category"] = nil
         object["inventory"] = nil
+        object["wiring"] = nil
         object["differences"] = nil
-        object["layers"] = object["layers"].map(withoutUnknownIcons)
-        object["schemaVersion"] = 1
+        object["layers"] = object["layers"].map(withoutUnknownIcons).map(withKnownShapeKinds).map(withKnownColors)
+        object["fields"] = object["fields"].map(withCleanFieldLabels)
+        object["specVersion"] = nil
+        object["schemaVersion"] = .int(version >= 2 ? WidgetSpec.currentVersion : 1)
+        object["card"] = cardSpec
         object["id"] = .string(id)
         if let family = options.size.family { object["family"] = .string(family.rawValue) }
         // Palette hex values become tokens, so the editor's color pickers reach them (M6.1).
@@ -471,7 +685,7 @@ public enum AIWidgetParser {
 
         switch SpecValidator(mode: .ai, checksTextOverlaps: enforceLayout).validate(data: cleaned.jsonData()) {
         case .failure(let failure):
-            problems += failure.issues.prefix(20).map(\.description)
+            problems += failure.issues.prefix(60).map(\.description)
             throw AIValidationError(problems.joined(separator: "; "))
         case .success(var spec):
             problems += modeProblems(spec, mode: options.mode)
@@ -479,9 +693,97 @@ public enum AIWidgetParser {
             guard problems.isEmpty else { throw AIValidationError(problems.joined(separator: "; ")) }
             var layout = LayoutRepair.clean
             if !enforceLayout { (spec, layout) = repaired(spec) }
+            if !notes.isEmpty { spec.decorative = notes }
+            // The post-pass may only add wiring: its result must still pass the AI rules (ADR-027).
+            var autoWired: [String] = []
+            if autoWire {
+                let wired = AutoWire.apply(spec, inventory: listed, wiring: wiring)
+                if case .success(let checked) = SpecValidator(mode: .ai, checksTextOverlaps: false).validate(wired.spec) {
+                    spec = checked
+                    autoWired = wired.changes
+                }
+            }
             spec.refresh = refresh(for: spec)
-            return Parsed(spec: spec, colors: colors, layout: layout)
+            return Parsed(spec: spec, colors: colors, layout: layout, autoWired: autoWired, reply: text)
         }
+    }
+
+    /// `specVersion` (or `schemaVersion`) of a reply; 1 when it has none (ADR-029).
+    static func version(of object: [String: JSONValue]) -> Int {
+        for key in ["specVersion", "schemaVersion"] {
+            switch object[key] {
+            case .int(let value)?: return value
+            case .number(let value)?: return Int(value)
+            case .string(let text)?: if let value = Int(text) { return value }
+            default: continue
+            }
+        }
+        return 1
+    }
+
+    static func family(of object: [String: JSONValue]) -> SpecFamily {
+        object["family"]?.stringValue.flatMap(SpecFamily.init(rawValue:)) ?? .small
+    }
+
+    /// A v2 reply's `card` as a spec card, or nil when the card is the family's own rounded rectangle
+    /// (or none: the floating case keeps its v1 handling).
+    static func cardSpec(_ value: JSONValue?, family: SpecFamily, wallpaper: String?, colors: inout [String: String]) -> JSONValue? {
+        guard case .object(let raw)? = value else { return nil }
+        let shape = raw["shape"]?.stringValue.flatMap(CardSpec.Shape.init(rawValue:)) ?? .roundedRect
+        if shape == .none { return nil }
+        var aspect: Double?
+        switch raw["aspect"] {
+        case .number(let number)?: aspect = number
+        case .int(let number)?: aspect = Double(number)
+        default: aspect = nil
+        }
+        let canvas = family.canvas
+        let own = Double(canvas.width / canvas.height)
+        // A rounded rectangle with (about) the family's own shape needs no card.
+        if shape == .roundedRect, aspect.map({ abs($0 - own) / own < 0.08 }) ?? true { return nil }
+        var card: [String: JSONValue] = ["shape": .string(shape.rawValue), "outerColor": "@outer"]
+        if let aspect, aspect.isFinite, (0.15...7).contains(aspect) { card["aspect"] = .number((aspect * 100).rounded() / 100) }
+        for key in ["cornerRadius", "orientation", "bumps"] where raw[key] != nil && raw[key] != .null { card[key] = raw[key] }
+        let sampled = wallpaper.flatMap { HexColor.parse($0) != nil ? $0.uppercased() : nil }
+        colors["outer"] = sampled ?? "#000000"
+        return .object(card)
+    }
+
+    /// Every widget of a reply: one object, or `{"widgets": [...]}` (ADR-029). Each widget is parsed on its own;
+    /// the failures are collected and named ("Widget 2 «Weather»: layers[3]…") so one fix request covers them all.
+    public static func parseAll(_ text: String, options: GenerationOptions, idPrefix: String, enforceLayout: Bool = true) throws -> [Parsed] {
+        let items = Self.widgets(in: text)
+        guard items.count > 1 || items.first.map({ $0 != text }) == true else {
+            return [try parseWidget(text, options: options, id: idPrefix, enforceLayout: enforceLayout)]
+        }
+        var results: [Parsed] = []
+        var problems: [String] = []
+        for (index, item) in items.enumerated() {
+            do {
+                results.append(try parseWidget(item, options: options, id: "\(idPrefix).\(index + 1)", enforceLayout: enforceLayout))
+            } catch let error as AIValidationError {
+                problems.append("Widget \(index + 1) «\(Self.name(of: item))»: \(error.description)")
+            }
+        }
+        guard problems.isEmpty else { throw AIValidationError(problems.joined(separator: "\n")) }
+        return results
+    }
+
+    /// The widget objects of a `{"widgets": [...]}` reply (each with the reply's `specVersion`), else the text itself.
+    public static func widgets(in text: String) -> [String] {
+        guard let data = StructuredAI.extractJSON(text), case .object(let root)? = try? JSONDecoder().decode(JSONValue.self, from: data),
+              case .array(let items)? = root["widgets"] else { return [text] }
+        let version = root["specVersion"]
+        return items.compactMap { item in
+            guard case .object(var widget) = item else { return nil }
+            if widget["specVersion"] == nil, let version { widget["specVersion"] = version }
+            return JSONValue.object(widget).jsonString()
+        }
+    }
+
+    static func name(of text: String) -> String {
+        guard let data = StructuredAI.extractJSON(text), case .object(let root)? = try? JSONDecoder().decode(JSONValue.self, from: data) else { return "?" }
+        return root["name"]?["en"]?.stringValue ?? root["name"]?.stringValue ?? "?"
     }
 
     /// The last answer's layout problems, fixed locally where possible (ADR-022). The fixed spec is
@@ -493,7 +795,9 @@ public enum AIWidgetParser {
         }
         let before = problems(spec)
         guard !before.isEmpty else { return (spec, .clean) }
-        if case .success(let fixed) = SpecValidator(mode: .ai, checksTextOverlaps: false).validate(AILayoutFix.fix(spec)) {
+        // The fix must keep every text (eval 2026-11-02: "hello" vanished off the canvas).
+        if case .success(let fixed) = SpecValidator(mode: .ai, checksTextOverlaps: false).validate(AILayoutFix.fix(spec)),
+           AILayoutFix.texts(in: fixed) == AILayoutFix.texts(in: spec) {
             let left = problems(fixed)
             return left.isEmpty ? (fixed, .fixed(before: spec)) : (fixed, .needsEditing(left))
         }
@@ -523,15 +827,71 @@ public enum AIWidgetParser {
         })
     }
 
+    /// The card shape (ADR-024). iOS widgets are rounded rectangles, so a circle or capsule card is
+    /// drawn inside the widget with the wallpaper color (`@outer`, editable) around it; a floating
+    /// design gets the wallpaper's color as its background (`@bg`, editable). The wallpaper color
+    /// is the app's sample when there is one, else black.
+    static func applyCard(_ card: WidgetCardShape?, to object: inout [String: JSONValue], colors: inout [String: String], wallpaper: String?) {
+        let sampled = wallpaper.flatMap { HexColor.parse($0) != nil ? $0.uppercased() : nil }
+        guard case .object(var background)? = object["background"] else { return }
+        switch card {
+        case .circle?, .capsule?:
+            background["outerColor"] = "@outer"
+            background["cardShape"] = .string(card == .circle ? "circle" : "capsule")
+            colors["outer"] = sampled ?? "#000000"
+        case .none?:
+            background = ["type": "solid", "color": "@bg"]
+            if let sampled { colors["bg"] = sampled }
+        case .roundedRect?, nil:
+            return
+        }
+        object["background"] = .object(background)
+    }
+
+    /// Shape kinds models invent, mapped to ours (eval 2026-11-02: a divider as `"kind": "line"`
+    /// failed both answers). Anything else unknown is left for the validator to report.
+    static let shapeKindAliases: [String: String] = [
+        "line": "rect", "divider": "rect", "rectangle": "rect", "square": "rect", "bar": "rect",
+        "rounded": "roundedRect", "roundedRectangle": "roundedRect", "roundRect": "roundedRect", "card": "roundedRect",
+        "pill": "capsule", "stadium": "capsule", "oval": "circle", "ellipse": "circle", "dot": "circle",
+    ]
+
+    /// Field labels hold only `en`/`ar`; a `default` written inside the label (eval 2026-11-02)
+    /// moves out to the field, and other keys there are dropped.
+    static func withCleanFieldLabels(_ fields: JSONValue) -> JSONValue {
+        guard case .array(let items) = fields else { return fields }
+        return .array(items.map { field in
+            guard case .object(var entry) = field, case .object(var label)? = entry["label"] else { return field }
+            if let misplaced = label["default"], entry["default"] == nil || entry["default"] == .null { entry["default"] = misplaced }
+            label = label.filter { ["en", "ar"].contains($0.key) }
+            entry["label"] = .object(label)
+            return .object(entry)
+        })
+    }
+
+    static func withKnownShapeKinds(_ layers: JSONValue) -> JSONValue {
+        guard case .array(let items) = layers else { return layers }
+        return .array(items.map { layer in
+            guard case .object(var fields) = layer else { return layer }
+            if fields["type"] == "shape", let kind = fields["kind"]?.stringValue, ShapeLayer.Kind(rawValue: kind) == nil,
+               let known = shapeKindAliases[kind] {
+                fields["kind"] = .string(known)
+            }
+            if let children = fields["children"] { fields["children"] = withKnownShapeKinds(children) }
+            return .object(fields)
+        })
+    }
+
     /// Recreate: no image layers (the screenshot is never embedded). Photo: the photo is shown.
     static func modeProblems(_ spec: WidgetSpec, mode: GenerationMode) -> [String] {
         let images = spec.layers.indices.filter {
-            if case .image = spec.layers[$0].content { return true }
+            if case .image(let image) = spec.layers[$0].content { return Bindings.soleBinding(image.source) == nil }
             return false
         }
         switch mode {
         case .recreate:
-            return images.map { "layers[\($0)]: image layers are not allowed when recreating a design; draw it with shapes, text and icons" }
+            // ADR-029: a photo, map or scene in the design is the user's own picture (`user_image`).
+            return []
         case .photo:
             return images.isEmpty ? ["layers: add one image layer with \"source\": \"user_image\" for the user's photo"] : []
         }
@@ -552,6 +912,9 @@ public enum AIWidgetParser {
         for (icon, text) in SpecLayout.iconOverlaps(in: spec.layers) {
             problems.append("layers[\(icon)] and layers[\(text)]: the icon covers the text; move it or put both in one stack")
         }
+        for (cover, text) in SpecLayout.coveredTexts(in: spec.layers) {
+            problems.append("layers[\(cover)] is drawn on top of the text in layers[\(text)] and hides it; list the shape before the text")
+        }
         return problems
     }
 
@@ -566,7 +929,8 @@ public enum AIWidgetParser {
             }
         }
         let hasCalendar = spec.layers.contains { if case .calendarMonth = $0.content { true } else { false } }
-        if hasClock || names.contains(where: { $0.hasPrefix("time.") }) { return .minute }
+        let moving = ["time.", "media.", "timer.", "stopwatch."]
+        if hasClock || names.contains(where: { name in moving.contains { name.hasPrefix($0) } }) { return .minute }
         if names.contains(where: { !$0.hasPrefix("date.") && !$0.hasPrefix("field.") }) { return .hourly }
         if hasCalendar || names.contains(where: { $0.hasPrefix("date.") }) { return .daily }
         return .none
@@ -623,7 +987,7 @@ public struct WidgetGenerator: Sendable {
             try AIWidgetParser.parseWidget(text, options: options, id: id, enforceLayout: firstRound.next() == 1)
         }
         let first = GeneratedWidget(spec: result.value.spec, colors: result.value.colors, model: result.model, attempts: result.attempts,
-                                    layout: result.value.layout)
+                                    layout: result.value.layout, autoWired: result.value.autoWired, reply: result.value.reply)
         guard let review, let render = await review(first.spec, first.colors) else { return first }
         if Task.isCancelled { throw AIError.cancelled }
 
@@ -639,7 +1003,7 @@ public struct WidgetGenerator: Sendable {
             if case .needsEditing = reviewed.value.0.layout, !first.needsEditing { return first }
             return GeneratedWidget(spec: reviewed.value.0.spec, colors: reviewed.value.0.colors, model: reviewed.model,
                                    attempts: first.attempts + reviewed.attempts, reviewed: true, differences: reviewed.value.1,
-                                   layout: reviewed.value.0.layout)
+                                   layout: reviewed.value.0.layout, autoWired: reviewed.value.0.autoWired, reply: reviewed.value.0.reply)
         } catch AIError.cancelled {
             throw AIError.cancelled
         } catch {

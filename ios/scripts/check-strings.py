@@ -10,8 +10,11 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 LANGS = ("ar", "en")
-KEY_PREFIXES = "common|home|diag|widget|specs|library|detail|editor|mywidgets|tab|settings|guide|compass|tasbeeh|tiles|ai|create|onboarding|keyguide|notice|permissions"
+KEY_PREFIXES = "common|home|diag|widget|specs|library|detail|editor|mywidgets|tab|settings|guide|compass|tasbeeh|tiles|ai|create|onboarding|keyguide|notice|permissions|crop|action|interactive|bulk|tasks"
 # SF Symbol names (systemImage:/systemName:) look like keys but are icons, not text.
+# Capability ids (compass.open…) look like keys but come from capabilities.json (ADR-027).
+CATALOG = json.loads((pathlib.Path(__file__).parent.parent / "WidgetKitCore/Sources/WidgetKitCore/Resources/Spec/capabilities.json").read_text(encoding="utf-8"))
+CATALOG_IDS = {item["id"] for item in CATALOG["bindings"] + CATALOG["actions"]}
 KEY_RE = re.compile(r'(?<!systemImage: )(?<!systemName: )"((?:' + KEY_PREFIXES + r')\.[A-Za-z0-9_.]+)"')
 SKIP_DIRS = {"build", ".build", "DerivedData", "WidgetStudio.xcodeproj"}
 
@@ -53,6 +56,8 @@ for swift in sorted(ROOT.rglob("*.swift")):
     if skipped(swift):
         continue
     for match in KEY_RE.finditer(swift.read_text(encoding="utf-8")):
+        if match.group(1) in CATALOG_IDS:
+            continue
         if match.group(1) not in keys:
             errors.append(f"{swift.relative_to(ROOT)}: key '{match.group(1)}' is missing from the String Catalogs")
 

@@ -13,10 +13,12 @@ public enum TemplateIDs {
     public enum ClockDigital: TemplateIdentity { public static let id = "mono.clock.digital" }
     public enum DateBig: TemplateIdentity { public static let id = "mono.date.big" }
     public enum DateDayZone: TemplateIdentity { public static let id = "mono.date.dayZone" }
+    public enum YearDots: TemplateIdentity { public static let id = "mono.year.dots" }
     // Weather
     public enum WeatherHiLo: TemplateIdentity { public static let id = "mono.weather.hiLo" }
     public enum WeatherTemp: TemplateIdentity { public static let id = "mono.weather.temp" }
     public enum WeatherForecast: TemplateIdentity { public static let id = "mono.weather.forecast" }
+    public enum WeatherArt: TemplateIdentity { public static let id = "mono.weather.art" }
     public enum LocationCoords: TemplateIdentity { public static let id = "mono.location.coords" }
     // Health
     public enum StepsStreak: TemplateIdentity { public static let id = "mono.steps.streak" }
@@ -41,18 +43,28 @@ public enum TemplateIDs {
     public enum TilesPills4: TemplateIdentity { public static let id = "mono.tiles.pills4" }
     public enum TilesRound: TemplateIdentity { public static let id = "mono.tiles.round" }
     public enum TilesHero: TemplateIdentity { public static let id = "mono.tiles.hero" }
+    // Live controls (ADR-027): fixed widgets, so they also reach the home screen without an App Group.
+    public enum MediaPlayer: TemplateIdentity { public static let id = "mono.media.player" }
+    public enum ControlCenter: TemplateIdentity { public static let id = "mono.control.center" }
+    public enum BatteryMood: TemplateIdentity { public static let id = "mono.battery.mood" }
     // Counters
     public enum CounterTasbeeh: TemplateIdentity { public static let id = "mono.counter.tasbeeh" }
+    public enum TimerFocus: TemplateIdentity { public static let id = "mono.timer.focus" }
+    // Tasks (ADR-028)
+    public enum TasksSmall: TemplateIdentity { public static let id = "mono.tasks.small" }
+    public enum TasksMedium: TemplateIdentity { public static let id = "mono.tasks.medium" }
+    public enum TasksLarge: TemplateIdentity { public static let id = "mono.tasks.large" }
 
     /// Every identity, in library order. The extension's widget bundles use the same order.
     public static let all: [any TemplateIdentity.Type] = [
-        ClockAnalog.self, ClockDotAnalog.self, ClockDigital.self, DateBig.self, DateDayZone.self,
-        WeatherHiLo.self, WeatherTemp.self, WeatherForecast.self, LocationCoords.self,
+        ClockAnalog.self, ClockDotAnalog.self, ClockDigital.self, DateBig.self, DateDayZone.self, YearDots.self,
+        WeatherHiLo.self, WeatherTemp.self, WeatherForecast.self, WeatherArt.self, LocationCoords.self,
         StepsStreak.self, StepsMonth.self, SleepWeek.self,
         PrayerNext.self, PrayerDay.self, Qibla.self,
         FocusToday.self, CountdownRed.self, CountdownTrip.self, Stopwatch.self,
         PhotoSquare.self, PhotoCircle.self, PhotoHalftone.self, MusicCard.self,
-        TilesPills2.self, TilesPills4.self, TilesRound.self, TilesHero.self,
-        CounterTasbeeh.self,
+        TilesPills2.self, TilesPills4.self, TilesRound.self, TilesHero.self, MediaPlayer.self, ControlCenter.self, BatteryMood.self,
+        CounterTasbeeh.self, TimerFocus.self,
+        TasksSmall.self, TasksMedium.self, TasksLarge.self,
     ]
 }

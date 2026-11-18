@@ -155,3 +155,106 @@ public struct StopwatchState: Codable, Sendable, Equatable {
         try cache.write(self, Self.cacheName)
     }
 }
+
+/// The in-widget timer (ADR-027): running until `end`, or paused with `left` seconds to go. Kept
+/// by whoever runs the button, like the stopwatch.
+public struct TimerState: Codable, Sendable, Equatable {
+    public var end: Date?
+    /// Seconds left while paused; 0 = idle.
+    public var left: TimeInterval = 0
+    /// The length it started with, for the progress.
+    public var total: TimeInterval = 0
+
+    public static let cacheName = "timer"
+    public static let defaultMinutes = 25
+
+    public init(end: Date? = nil, left: TimeInterval = 0, total: TimeInterval = 0) {
+        self.end = end
+        self.left = left
+        self.total = total
+    }
+
+    public func isRunning(at date: Date) -> Bool {
+        end.map { $0 > date } ?? false
+    }
+
+    public func remaining(at date: Date) -> TimeInterval {
+        if let end { return max(end.timeIntervalSince(date), 0) }
+        return left
+    }
+
+    /// The share that has passed, 0…1.
+    public func progress(at date: Date) -> Double {
+        guard total > 0 else { return 0 }
+        return min(max(1 - remaining(at: date) / total, 0), 1)
+    }
+
+    /// Starts (`minutes` when idle or finished), pauses, or resumes.
+    public mutating func toggle(minutes: Int? = nil, now: Date = .now) {
+        if isRunning(at: now) {
+            left = remaining(at: now)
+            end = nil
+        } else if left > 0 {
+            end = now.addingTimeInterval(left)
+            left = 0
+        } else {
+            total = TimeInterval(max(minutes ?? Self.defaultMinutes, 1)) * 60
+            end = now.addingTimeInterval(total)
+        }
+    }
+
+    public mutating func add(minutes: Int, now: Date = .now) {
+        let extra = TimeInterval(minutes) * 60
+        total += extra
+        if isRunning(at: now), let current = end {
+            end = current.addingTimeInterval(extra)
+        } else if left > 0 {
+            left += extra
+        } else {
+            total = extra
+            end = now.addingTimeInterval(extra)
+        }
+    }
+
+    public mutating func reset() {
+        end = nil
+        left = 0
+        total = 0
+    }
+
+    public static func load(_ cache: DataCache = DataCache()) -> TimerState {
+        cache.read(TimerState.self, cacheName) ?? TimerState()
+    }
+
+    public func save(_ cache: DataCache = DataCache()) throws {
+        try cache.write(self, Self.cacheName)
+    }
+}
+
+/// What is playing and where (ADR-027).
+public struct MediaPlayback: Sendable, Equatable {
+    public var elapsed: TimeInterval
+    public var duration: TimeInterval
+    public var playing: Bool
+    /// When `elapsed` was read.
+    public var at: Date
+
+    public init(elapsed: TimeInterval, duration: TimeInterval, playing: Bool, at: Date) {
+        self.elapsed = elapsed
+        self.duration = duration
+        self.playing = playing
+        self.at = at
+    }
+
+    public func position(at date: Date) -> TimeInterval {
+        let moved = playing ? max(date.timeIntervalSince(at), 0) : 0
+        return duration > 0 ? min(elapsed + moved, duration) : elapsed + moved
+    }
+
+    /// "4:23" or "1:02:03".
+    public static func clock(_ seconds: TimeInterval) -> String {
+        let total = Int(max(seconds, 0).rounded())
+        let (hours, minutes, rest) = (total / 3600, total % 3600 / 60, total % 60)
+        return hours > 0 ? String(format: "%d:%02d:%02d", hours, minutes, rest) : String(format: "%d:%02d", minutes, rest)
+    }
+}
