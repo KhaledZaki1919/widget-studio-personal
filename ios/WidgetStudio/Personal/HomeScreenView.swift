@@ -137,7 +137,8 @@ struct HomeScreenView: View {
         } message: {
             Text(personal: "home.remove.body")
         }
-        .alert(Text(personal: "home.remove.failed"), isPresented: Binding(get: { removeError != nil }, set: { if !$0 { removeError = nil } })) {
+        .alert(Text(personal: "home.remove.failed"),
+               isPresented: Binding(get: { removeError != nil }, set: { if !$0 { removeError = nil } })) {
             Button("common.ok", role: .cancel) {}
         } message: {
             Text(verbatim: removeError ?? "")

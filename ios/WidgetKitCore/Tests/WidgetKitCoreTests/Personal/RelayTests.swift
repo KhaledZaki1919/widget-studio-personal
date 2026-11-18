@@ -127,7 +127,6 @@ private func noisyImage(side: Int) -> CGImage? {
     }
 }
 
-
 struct RelayCodeTests {
     @Test func generatedCodesUseTheAlphabet() {
         for _ in 0..<50 {

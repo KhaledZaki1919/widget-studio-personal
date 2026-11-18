@@ -316,7 +316,8 @@ struct M3FieldModifier: ViewModifier {
                 .background(M3Shape.rounded(M3Shape.extraSmall).fill(M3.surfaceContainerLowest))
                 .overlay {
                     M3Shape.rounded(M3Shape.extraSmall)
-                        .strokeBorder(error != nil ? M3.error : (focused ? M3.primary : M3.outline), lineWidth: focused || error != nil ? 2 : 1)
+                        .strokeBorder(error != nil ? M3.error : (focused ? M3.primary : M3.outline),
+                                      lineWidth: focused || error != nil ? 2 : 1)
                 }
             if let error {
                 Label { error } icon: { Image(systemName: "exclamationmark.circle") }
@@ -448,8 +449,10 @@ enum M3Appearance {
         let segmented = UISegmentedControl.appearance()
         segmented.selectedSegmentTintColor = M3.ui(M3.secondaryContainer)
         segmented.backgroundColor = M3.ui(M3.surfaceContainerHigh)
-        segmented.setTitleTextAttributes([.foregroundColor: M3.ui(M3.onSurfaceVariant), .font: scaled(.subheadline, weight: .medium)], for: .normal)
-        segmented.setTitleTextAttributes([.foregroundColor: M3.ui(M3.onSecondaryContainer), .font: scaled(.subheadline, weight: .semibold)], for: .selected)
+        segmented.setTitleTextAttributes([.foregroundColor: M3.ui(M3.onSurfaceVariant),
+                                          .font: scaled(.subheadline, weight: .medium)], for: .normal)
+        segmented.setTitleTextAttributes([.foregroundColor: M3.ui(M3.onSecondaryContainer),
+                                          .font: scaled(.subheadline, weight: .semibold)], for: .selected)
 
         UISwitch.appearance().onTintColor = M3.ui(M3.primary)
         UIPageControl.appearance().currentPageIndicatorTintColor = M3.ui(M3.primary)

@@ -129,7 +129,7 @@ public enum SlotSync {
             case .item(let data, let etag):
                 let payload = try RelayPayload.decode(keys.open(data))
                 if payload.kind == .design, let design = payload.design {
-                    try store(design, image: payload.image, sent: payload.sent, in: &state, id: id, cache: cache)
+                    try store(payload, design: design, in: &state, id: id, cache: cache)
                     state.lastDownload = now
                     outcome.newDesign = true
                 }
@@ -157,17 +157,17 @@ public enum SlotSync {
         return outcome
     }
 
-    private static func store(_ design: SavedDesign, image: Data?, sent: Date, in state: inout SlotState, id: SlotID,
+    private static func store(_ payload: RelayPayload, design: SavedDesign, in state: inout SlotState, id: SlotID,
                               cache: DataCache) throws {
         removeImage(state, cache: cache)
         state.imageFile = nil
-        if let image {
+        if let image = payload.image {
             let name = "\(id.key)-\(UUID().uuidString.prefix(8)).img"
             try FileProtection.write(image, to: SlotState.imagesFolder(cache).appendingPathComponent(name))
             state.imageFile = name
         }
         state.design = design
-        state.sent = sent
+        state.sent = payload.sent
     }
 
     private static func removeImage(_ state: SlotState, cache: DataCache) {

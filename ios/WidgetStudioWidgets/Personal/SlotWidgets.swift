@@ -84,20 +84,21 @@ struct SlotPickIntent: WidgetConfigurationIntent {
     static var title = LocalizedStringResource("widget.slot.pick.intent", table: "Personal")
     static var description = IntentDescription(LocalizedStringResource("widget.slot.pick.description", table: "Personal"))
 
-    @Parameter(title: LocalizedStringResource("widget.slot.pick.param", table: "Personal"), default: .a)
+    @Parameter(title: LocalizedStringResource("widget.slot.pick.param", table: "Personal"), default: .slotA)
     var slot: SlotLetter
 }
 
 enum SlotLetter: String, AppEnum {
-    case a = "A", b = "B", c = "C", d = "D", e = "E"
+    case slotA = "A", slotB = "B", slotC = "C", slotD = "D", slotE = "E"
 
-    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: LocalizedStringResource("widget.slot.pick.param", table: "Personal"))
+    static var typeDisplayRepresentation = TypeDisplayRepresentation(
+        name: LocalizedStringResource("widget.slot.pick.param", table: "Personal"))
     static var caseDisplayRepresentations: [SlotLetter: DisplayRepresentation] = [
-        .a: DisplayRepresentation(title: LocalizedStringResource("widget.slot.pick.a", table: "Personal")),
-        .b: DisplayRepresentation(title: LocalizedStringResource("widget.slot.pick.b", table: "Personal")),
-        .c: DisplayRepresentation(title: LocalizedStringResource("widget.slot.pick.c", table: "Personal")),
-        .d: DisplayRepresentation(title: LocalizedStringResource("widget.slot.pick.d", table: "Personal")),
-        .e: DisplayRepresentation(title: LocalizedStringResource("widget.slot.pick.e", table: "Personal")),
+        .slotA: DisplayRepresentation(title: LocalizedStringResource("widget.slot.pick.a", table: "Personal")),
+        .slotB: DisplayRepresentation(title: LocalizedStringResource("widget.slot.pick.b", table: "Personal")),
+        .slotC: DisplayRepresentation(title: LocalizedStringResource("widget.slot.pick.c", table: "Personal")),
+        .slotD: DisplayRepresentation(title: LocalizedStringResource("widget.slot.pick.d", table: "Personal")),
+        .slotE: DisplayRepresentation(title: LocalizedStringResource("widget.slot.pick.e", table: "Personal")),
     ]
 }
 
