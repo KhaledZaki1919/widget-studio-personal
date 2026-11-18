@@ -36,21 +36,21 @@ struct NoticeRow: View {
         VStack(alignment: .leading, spacing: 8) {
             Label {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(title).font(.subheadline.weight(.semibold))
-                    Text(message).font(.footnote).foregroundStyle(.secondary)
+                    Text(title).font(M3Type.titleSmall)
+                    Text(message).font(M3Type.bodySmall).foregroundStyle(M3.onSurfaceVariant)
                 }
             } icon: {
-                Image(systemName: symbol).foregroundStyle(.orange).accessibilityHidden(true)
+                Image(systemName: symbol).foregroundStyle(M3.warning).accessibilityHidden(true)
             }
             if let actionTitle, let action {
                 Button(actionTitle, action: action)
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.m3Outlined)
                     .controlSize(.small)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color(uiColor: .secondarySystemBackground)))
+        .background(RoundedRectangle(cornerRadius: M3Shape.medium, style: .continuous).fill(M3.surfaceContainerHigh))
         .accessibilityElement(children: .combine)
     }
 }

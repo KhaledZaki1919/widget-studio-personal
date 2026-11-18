@@ -29,8 +29,8 @@ struct LayersView: View {
             if parent.isEmpty, !overlapping.isEmpty {
                 Section {
                     Label("editor.layers.overlaps", systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange)
-                        .font(.footnote)
+                        .foregroundStyle(M3.warning)
+                        .font(M3Type.bodySmall)
                     Button {
                         model.arrangeOverlaps()
                         selection = []
@@ -60,7 +60,7 @@ struct LayersView: View {
                         } label: {
                             Label("editor.layer.duplicate", systemImage: "plus.square.on.square")
                         }
-                        .tint(.blue)
+                        .tint(M3.inverseSurface)
                     }
                     .accessibilityIdentifier("ax.editor.layers.row.\(index)")
                 }
@@ -121,21 +121,21 @@ struct LayerRow: View {
         HStack(spacing: 12) {
             Image(systemName: Self.symbol(layer.content))
                 .frame(width: 24)
-                .foregroundStyle(Color.accentColor)
+                .foregroundStyle(M3.primary)
             VStack(alignment: .leading, spacing: 2) {
                 Text(Self.kind(layer.content))
-                    .font(.subheadline.weight(.medium))
+                    .font(M3Type.labelLarge)
                 if let summary = Self.summary(layer, language: language), !summary.isEmpty {
                     Text(verbatim: summary)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(M3Type.labelMedium)
+                        .foregroundStyle(M3.onSurfaceVariant)
                         .lineLimit(1)
                 }
             }
             Spacer(minLength: 0)
             if overlaps {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(M3.warning)
                     .accessibilityLabel(Text("editor.layers.overlapMark"))
             }
         }

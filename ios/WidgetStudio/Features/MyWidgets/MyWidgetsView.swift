@@ -35,27 +35,28 @@ struct MyWidgetsView: View {
             if !designs.isShared {
                 Section {
                     Label("mywidgets.storeMode", systemImage: "info.circle")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .font(M3Type.bodySmall)
+                        .foregroundStyle(M3.onSurfaceVariant)
                         .accessibilityIdentifier("ax.mywidgets.storeMode")
                 }
             }
             if designs.designs.isEmpty {
                 Section {
-                    VStack(spacing: 12) {
+                    VStack(spacing: M3Space.m) {
                         LogoMark(onDark: true)
                             .frame(width: 72, height: 72)
-                            .background(RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                .fill(Color(red: 0.055, green: 0.055, blue: 0.055)))
+                            .background(M3Shape.rounded(M3Shape.large).fill(Color(red: 0.055, green: 0.055, blue: 0.055)))
                             .accessibilityHidden(true)
-                        Text("mywidgets.empty.title").font(.headline).multilineTextAlignment(.center)
-                        Text("mywidgets.empty.body").font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                        Text("mywidgets.empty.title").font(M3Type.titleLarge).foregroundStyle(M3.onSurface)
+                            .multilineTextAlignment(.center)
+                        Text("mywidgets.empty.body").font(M3Type.bodyMedium).foregroundStyle(M3.onSurfaceVariant)
+                            .multilineTextAlignment(.center)
                         Button {
                             appState.tab = .library
                         } label: {
                             Label("mywidgets.empty.browse", systemImage: "square.grid.2x2")
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.m3Filled)
                         .accessibilityIdentifier("ax.mywidgets.empty.browse")
                     }
                     .frame(maxWidth: .infinity)
@@ -65,37 +66,50 @@ struct MyWidgetsView: View {
                 }
             }
             Section {
-                Button {
-                    appState.isCreatingFromImage = true
-                } label: {
-                    Label("create.button", systemImage: "sparkles")
+                // M3: one filled tonal action to make a design, then assist chips for the imports.
+                VStack(alignment: .leading, spacing: M3Space.s) {
+                    Button {
+                        appState.isCreatingFromImage = true
+                    } label: {
+                        Label("create.button", systemImage: "sparkles")
+                    }
+                    .buttonStyle(.m3TonalWide)
+                    .accessibilityIdentifier("ax.mywidgets.create")
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: M3Space.s) {
+                            Button {
+                                DocumentPicker.present { bulk = BulkRequest(urls: $0) }
+                            } label: {
+                                Label("mywidgets.import", systemImage: "square.and.arrow.down")
+                            }
+                            .accessibilityIdentifier("ax.mywidgets.import")
+                            Button {
+                                DocumentPicker.present(folder: true) { bulk = BulkRequest(urls: $0) }
+                            } label: {
+                                Label("mywidgets.importFolder", systemImage: "folder")
+                            }
+                            .accessibilityIdentifier("ax.mywidgets.importFolder")
+                            Button {
+                                importClipboard()
+                            } label: {
+                                Label("mywidgets.importClipboard", systemImage: "doc.on.clipboard")
+                            }
+                            .accessibilityIdentifier("ax.mywidgets.importClipboard")
+                        }
+                        .buttonStyle(.m3Assist)
+                    }
                 }
-                .accessibilityIdentifier("ax.mywidgets.create")
-                Button {
-                    DocumentPicker.present { bulk = BulkRequest(urls: $0) }
-                } label: {
-                    Label("mywidgets.import", systemImage: "square.and.arrow.down")
-                }
-                .accessibilityIdentifier("ax.mywidgets.import")
-                Button {
-                    DocumentPicker.present(folder: true) { bulk = BulkRequest(urls: $0) }
-                } label: {
-                    Label("mywidgets.importFolder", systemImage: "folder")
-                }
-                .accessibilityIdentifier("ax.mywidgets.importFolder")
-                Button {
-                    importClipboard()
-                } label: {
-                    Label("mywidgets.importClipboard", systemImage: "doc.on.clipboard")
-                }
-                .accessibilityIdentifier("ax.mywidgets.importClipboard")
+                .listRowInsets(EdgeInsets(top: M3Space.s, leading: M3Space.l, bottom: M3Space.s, trailing: M3Space.l))
+                .listRowBackground(Color.clear)
             } footer: {
-                Text("bulk.pick.hint")
+                Text("bulk.pick.hint").font(M3Type.bodySmall).foregroundStyle(M3.onSurfaceVariant)
             }
+
             ForEach(designs.designs) { design in
                 row(design)
             }
         }
+        .m3List()
         .accessibilityIdentifier("ax.mywidgets.list")
         .navigationTitle("mywidgets.title")
         .toolbar {
@@ -152,22 +166,28 @@ struct MyWidgetsView: View {
                 confirmingMany = true
             } label: {
                 Label("mywidgets.delete", systemImage: "trash")
-                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(M3ButtonStyle(kind: .destructive, fullWidth: true))
             .disabled(selected.isEmpty)
-            .padding(12)
-            .background(.bar)
+            .padding(.horizontal, M3Space.l)
+            .padding(.vertical, M3Space.s)
+            .background(M3.surfaceContainer)
             .accessibilityIdentifier("ax.mywidgets.deleteMany")
         } else if designs.undoable != nil {
+            // M3 snackbar: inverse surface, one action.
             HStack {
-                Text("mywidgets.deleted").font(.footnote)
+                Text("mywidgets.deleted").font(M3Type.bodyMedium).foregroundStyle(M3.inverseOnSurface)
                 Spacer()
                 Button("mywidgets.undo") { designs.undoDelete() }
+                    .font(M3Type.labelLarge)
+                    .foregroundStyle(M3.inversePrimary)
+                    .frame(minHeight: M3Space.target)
                     .accessibilityIdentifier("ax.mywidgets.undo")
             }
-            .padding(12)
-            .background(.bar)
+            .padding(.horizontal, M3Space.l)
+            .background(M3Shape.rounded(M3Shape.extraSmall).fill(M3.inverseSurface))
+            .padding(.horizontal, M3Space.s)
+            .padding(.bottom, M3Space.s)
         }
     }
 
@@ -179,21 +199,22 @@ struct MyWidgetsView: View {
         Button {
             if selecting { toggleSelection(design) } else { editing = design }
         } label: {
-            HStack(spacing: 14) {
+            HStack(spacing: M3Space.l) {
                 if selecting {
                     Image(systemName: selected.contains(design.id) ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(selected.contains(design.id) ? Color.accentColor : .secondary)
+                        .font(.title3)
+                        .foregroundStyle(selected.contains(design.id) ? M3.primary : M3.onSurfaceVariant)
                         .accessibilityHidden(true)
                 }
                 DesignPreview(design: design, image: designs.image(for: design), language: language)
                     .frame(width: design.spec.family == .small ? 76 : 150)
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: M3Space.xs) {
                     Text(verbatim: design.name)
-                        .font(.body.weight(.medium))
-                        .foregroundStyle(.primary)
+                        .font(M3Type.titleMedium)
+                        .foregroundStyle(M3.onSurface)
                     Text(verbatim: subtitle(design))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(M3Type.bodySmall)
+                        .foregroundStyle(M3.onSurfaceVariant)
                 }
                 Spacer(minLength: 0)
             }
@@ -209,9 +230,9 @@ struct MyWidgetsView: View {
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) { deleting = design } label: { Label("mywidgets.delete", systemImage: "trash") }
             Button { startRename(design) } label: { Label("mywidgets.rename", systemImage: "pencil") }
-                .tint(.orange)
+                .tint(M3.outline)
         }
-        .swipeActions(edge: .leading) { UseOnHomeScreenButton { sendingHome = design }.tint(.blue) }
+        .swipeActions(edge: .leading) { UseOnHomeScreenButton { sendingHome = design }.tint(M3.inverseSurface) }
         .contextMenu {
             UseOnHomeScreenButton { sendingHome = design }
             Button { editing = design } label: { Label("mywidgets.edit", systemImage: "slider.horizontal.3") }

@@ -57,6 +57,7 @@ struct WidgetStudioApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .personalTheme() // Personal build: Material 3 theme (docs/personal.md)
                 .environment(designs)
                 .environment(appState)
                 .environment(live)

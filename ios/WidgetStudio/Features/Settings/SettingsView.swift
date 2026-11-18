@@ -18,8 +18,8 @@ struct SettingsView: View {
             if !designs.isShared {
                 Section {
                     Label("settings.storeMode", systemImage: "info.circle")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .font(M3Type.bodySmall)
+                        .foregroundStyle(M3.onSurfaceVariant)
                         .accessibilityIdentifier("ax.settings.storeMode")
                 }
             }
@@ -110,6 +110,7 @@ struct SettingsView: View {
                     .accessibilityIdentifier("ax.settings.version")
             }
         }
+        .m3List()
         .navigationTitle("settings.title")
         .navigationDestination(isPresented: $showDiagnostics) { DiagnosticsView() }
         .task { await live.refresh() }
@@ -119,7 +120,7 @@ struct SettingsView: View {
     private var permissionsSection: some View {
         Section {
             LabeledContent("settings.location") {
-                Text(locationStatus).foregroundStyle(live.isLocationAllowed ? .green : .secondary)
+                Text(locationStatus).foregroundStyle(live.isLocationAllowed ? M3.success : M3.onSurfaceVariant)
             }
             if live.authorization == .notDetermined {
                 Button("settings.location.allow", action: live.requestLocation)
@@ -128,7 +129,7 @@ struct SettingsView: View {
                 Button("settings.openSystemSettings", action: openSystemSettings)
             }
             LabeledContent("settings.healthAccess") {
-                Text(healthStatus).foregroundStyle(healthOK ? .green : .secondary)
+                Text(healthStatus).foregroundStyle(healthOK ? M3.success : M3.onSurfaceVariant)
             }
             Button("settings.health.allow") { Task { await live.requestHealth() } }
                 .accessibilityIdentifier("ax.settings.health.allow")
@@ -196,7 +197,7 @@ struct ShortcutGuideView: View {
     var body: some View {
         List {
             Section {
-                Text("guide.intro").font(.callout)
+                Text("guide.intro").font(M3Type.bodyMedium)
             }
             Section("guide.steps") {
                 ForEach(1...5, id: \.self) { step in
@@ -206,14 +207,15 @@ struct ShortcutGuideView: View {
                         Text(verbatim: "\(step)")
                             .font(.caption.weight(.bold))
                             .frame(width: 22, height: 22)
-                            .background(Circle().fill(Color.accentColor.opacity(0.2)))
+                            .background(Circle().fill(M3.primary.opacity(0.2)))
                     }
                 }
             }
             Section("guide.examples") {
-                Text("guide.examples.body").font(.footnote).foregroundStyle(.secondary)
+                Text("guide.examples.body").font(M3Type.bodySmall).foregroundStyle(M3.onSurfaceVariant)
             }
         }
+        .m3List()
         .navigationTitle("settings.shortcuts.guide")
     }
 }

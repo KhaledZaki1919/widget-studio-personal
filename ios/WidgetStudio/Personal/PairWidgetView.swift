@@ -252,10 +252,3 @@ struct PairWidgetView: View {
         statuses = found
     }
 }
-
-extension Text {
-    /// A string from the personal build's own table (`Personal.xcstrings`).
-    init(personal key: LocalizedStringKey) {
-        self.init(key, tableName: "Personal")
-    }
-}

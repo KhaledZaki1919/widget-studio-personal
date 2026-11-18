@@ -50,6 +50,7 @@ struct DiagnosticsView: View {
                 Text("diag.share.footer")
             }
         }
+        .m3List()
         .accessibilityIdentifier("ax.diag.list")
         .navigationTitle("diag.title")
         .onAppear(perform: model.refresh)
@@ -63,7 +64,7 @@ struct DiagnosticsView: View {
         Section {
             let latest = ReloadLog.latest()
             if latest.isEmpty {
-                Text("diag.reloads.none").foregroundStyle(.secondary)
+                Text("diag.reloads.none").foregroundStyle(M3.onSurfaceVariant)
             }
             ForEach(Array(latest.prefix(12))) { entry in
                 ReloadRow(entry: entry)
@@ -94,7 +95,7 @@ struct DiagnosticsView: View {
         return Section {
             ForEach(SourceStatus.Source.allCases, id: \.self) { source in
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(verbatim: source.rawValue).font(.subheadline.weight(.medium))
+                    Text(verbatim: source.rawValue).font(M3Type.labelLarge)
                     sourceLine(label: "diag.data.app", entry: live.status.entries[source])
                     if let widget {
                         sourceLine(label: "diag.data.widget", entry: widget.entries[source])
@@ -114,15 +115,15 @@ struct DiagnosticsView: View {
     private func sourceLine(label: LocalizedStringKey, entry: SourceStatus.Entry?) -> some View {
         HStack(spacing: 6) {
             Image(systemName: entry == nil ? "circle.dotted" : entry?.ok == true ? "checkmark.circle.fill" : "xmark.circle.fill")
-                .foregroundStyle(entry == nil ? .gray : entry?.ok == true ? .green : .red)
+                .foregroundStyle(entry == nil ? M3.outline : entry?.ok == true ? M3.success : M3.error)
             Text(label)
             Spacer(minLength: 4)
             Text(verbatim: [entry?.detail, entry?.updated.map { $0.formatted(date: .omitted, time: .shortened) }]
                 .compactMap { $0 }.joined(separator: " · "))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(M3.onSurfaceVariant)
                 .lineLimit(1)
         }
-        .font(.footnote)
+        .font(M3Type.bodySmall)
     }
 
     /// Plain English data-source lines for the shared report.
@@ -191,7 +192,7 @@ struct DiagnosticsView: View {
                 outcomeRow("diag.widget.battery", report.battery)
             } else {
                 Text(model.store.isShared ? LocalizedStringKey("diag.widget.none") : "diag.widget.notShared")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(M3.onSurfaceVariant)
             }
             if let reloaded = model.widgetReloadedAt {
                 valueRow("diag.widget.reloadRequested", reloaded.formatted(date: .omitted, time: .standard))
@@ -253,9 +254,9 @@ struct DiagnosticsView: View {
     private func statusRow(_ title: LocalizedStringKey, ok: Bool, detail: String? = nil) -> some View {
         LabeledContent {
             HStack(spacing: 6) {
-                if let detail { Text(verbatim: detail).foregroundStyle(.secondary) }
+                if let detail { Text(verbatim: detail).foregroundStyle(M3.onSurfaceVariant) }
                 Image(systemName: ok ? "checkmark.circle.fill" : "xmark.circle.fill")
-                    .foregroundStyle(ok ? .green : .red)
+                    .foregroundStyle(ok ? M3.success : M3.error)
                     .accessibilityLabel(Text(ok ? LocalizedStringKey("common.yes") : "common.no"))
             }
         } label: {
@@ -269,16 +270,16 @@ struct DiagnosticsView: View {
                 Text(title)
                 Spacer()
                 switch outcome {
-                case .ok: Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-                case .failed: Image(systemName: "xmark.circle.fill").foregroundStyle(.red)
-                case .notRun: Text("diag.notRun").foregroundStyle(.secondary)
+                case .ok: Image(systemName: "checkmark.circle.fill").foregroundStyle(M3.success)
+                case .failed: Image(systemName: "xmark.circle.fill").foregroundStyle(M3.error)
+                case .notRun: Text("diag.notRun").foregroundStyle(M3.onSurfaceVariant)
                 }
             }
             switch outcome {
             case .ok(let detail), .failed(let detail):
                 Text(verbatim: detail)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(M3Type.bodySmall)
+                    .foregroundStyle(M3.onSurfaceVariant)
                     .textSelection(.enabled)
             case .notRun:
                 EmptyView()
@@ -301,7 +302,7 @@ private struct ReloadRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(verbatim: entry.kind).font(.footnote.monospaced())
-            Text(verbatim: detail).font(.caption).foregroundStyle(.secondary)
+            Text(verbatim: detail).font(M3Type.labelMedium).foregroundStyle(M3.onSurfaceVariant)
         }
         .environment(\.layoutDirection, .leftToRight)
     }

@@ -80,7 +80,7 @@ struct BulkImportView: View {
             } else {
                 VStack(spacing: 12) {
                     ProgressView(value: Double(done), total: Double(max(total, 1)))
-                    Text("bulk.progress \(done) \(total)").font(.footnote).foregroundStyle(.secondary)
+                    Text("bulk.progress \(done) \(total)").font(M3Type.bodySmall).foregroundStyle(M3.onSurfaceVariant)
                 }
                 .padding(32)
                 .accessibilityIdentifier("ax.bulk.progress")
@@ -133,7 +133,7 @@ struct BulkImportView: View {
                 if summary.fixedCount > 0 { Label("bulk.fixed \(summary.fixedCount)", systemImage: "wand.and.stars") }
                 if !summary.duplicates.isEmpty { Label("bulk.duplicates \(summary.duplicates.count)", systemImage: "equal.circle") }
                 if !failed.isEmpty {
-                    Label("bulk.failed \(failed.count)", systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                    Label("bulk.failed \(failed.count)", systemImage: "exclamationmark.triangle.fill").foregroundStyle(M3.warning)
                 }
             }
             if !summary.added.isEmpty {
@@ -143,7 +143,7 @@ struct BulkImportView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(verbatim: item.design.name)
                                 if item.needsEditing {
-                                    Text("editor.layout.needsEditing").font(.caption).foregroundStyle(.orange)
+                                    Text("editor.layout.needsEditing").font(M3Type.labelMedium).foregroundStyle(M3.warning)
                                 }
                             }
                             Spacer()
@@ -158,12 +158,12 @@ struct BulkImportView: View {
                 Section("bulk.failedList") {
                     ForEach(failed) { failure in
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(verbatim: failure.name).font(.subheadline)
-                            Text(ExternalAIView.message(failure.error)).font(.caption).foregroundStyle(.secondary)
+                            Text(verbatim: failure.name).font(M3Type.bodyMedium)
+                            Text(ExternalAIView.message(failure.error)).font(M3Type.labelMedium).foregroundStyle(M3.onSurfaceVariant)
                             if case .invalid(let problems) = failure.error {
                                 Text(verbatim: problems)
                                     .font(.caption2.monospaced())
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(M3.onSurfaceVariant)
                                     .environment(\.layoutDirection, .leftToRight)
                             }
                         }
@@ -179,5 +179,6 @@ struct BulkImportView: View {
                 }
             }
         }
+        .m3List()
     }
 }

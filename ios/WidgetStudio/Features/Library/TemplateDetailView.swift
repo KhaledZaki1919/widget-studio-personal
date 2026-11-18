@@ -17,15 +17,13 @@ struct TemplateDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: M3Space.xl) {
                 Button {
                     customizing = SavedDesign.new(from: spec, language: language)
                 } label: {
                     Label("detail.customize", systemImage: "slider.horizontal.3")
-                        .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
+                .buttonStyle(.m3FilledWide)
                 .accessibilityIdentifier("ax.detail.customize")
 
                 PermissionNotices(spec: spec)
@@ -40,8 +38,8 @@ struct TemplateDetailView: View {
                 ForEach(spec.family.supportedFamilies, id: \.self) { family in
                     VStack(alignment: .leading, spacing: 8) {
                         Text(Self.sizeName(family))
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .font(M3Type.titleSmall)
+                            .foregroundStyle(M3.onSurfaceVariant)
                         SpecPreview(spec: spec, language: language, family: family, theme: theme)
                             .frame(maxWidth: family == .small ? 180 : .infinity)
                             .id("\(family.rawValue).\(theme.rawValue)")
@@ -54,29 +52,41 @@ struct TemplateDetailView: View {
                 if !spec.fields.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("detail.fields")
-                            .font(.subheadline.weight(.semibold))
+                            .font(M3Type.titleSmall)
+                            .foregroundStyle(M3.onSurface)
                         Text(verbatim: spec.fields.map { $0.label.resolved(language: language) }.joined(separator: " · "))
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .font(M3Type.bodyMedium)
+                            .foregroundStyle(M3.onSurfaceVariant)
                         Text("detail.fields.footer")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .font(M3Type.bodySmall)
+                            .foregroundStyle(M3.onSurfaceVariant)
                     }
+                    .padding(M3Space.l)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .m3Card(.outlined)
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("detail.howTo.title")
-                        .font(.subheadline.weight(.semibold))
+                        .font(M3Type.titleSmall)
+                        .foregroundStyle(M3.onSurface)
                     Text("detail.howTo.body")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .font(M3Type.bodyMedium)
+                        .foregroundStyle(M3.onSurfaceVariant)
                 }
+                .padding(M3Space.l)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .m3Card(.outlined)
                 Text("detail.sampleData")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(M3Type.bodySmall)
+                    .foregroundStyle(M3.onSurfaceVariant)
             }
-            .padding(16)
+            .padding(M3Space.l)
+            // Readable width on iPad / wide windows.
+            .frame(maxWidth: 720)
+            .frame(maxWidth: .infinity)
         }
+        .m3Screen()
         .navigationTitle(Text(verbatim: spec.name.resolved(language: language)))
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $customizing) { design in

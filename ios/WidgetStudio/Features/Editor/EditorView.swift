@@ -74,8 +74,8 @@ struct EditorView: View {
                     Section {
                         ForEach(Array(model.issues.enumerated()), id: \.offset) { _, issue in
                             Label(issue.description, systemImage: "exclamationmark.triangle.fill")
-                                .font(.footnote)
-                                .foregroundStyle(.red)
+                                .font(M3Type.bodySmall)
+                                .foregroundStyle(M3.error)
                         }
                     } header: {
                         Text("editor.issues")
@@ -83,6 +83,7 @@ struct EditorView: View {
                     .accessibilityIdentifier("ax.editor.issues")
                 }
             }
+            .m3List()
             .navigationTitle(model.isNew ? Text("editor.title.new") : Text("editor.title.edit"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -148,14 +149,14 @@ struct EditorView: View {
         case .fixed:
             Section {
                 Label("editor.layout.fixed", systemImage: "wand.and.stars")
-                    .font(.footnote)
+                    .font(M3Type.bodySmall)
             }
             .accessibilityIdentifier("ax.editor.layout.fixed")
         case .needsEditing:
             Section {
                 Label("editor.layout.needsEditing", systemImage: "exclamationmark.triangle.fill")
-                    .font(.subheadline)
-                    .foregroundStyle(.orange)
+                    .font(M3Type.bodyMedium)
+                    .foregroundStyle(M3.warning)
                 if !model.overlapping.isEmpty {
                     NavigationLink {
                         LayersView(model: model, parent: [])
@@ -165,8 +166,8 @@ struct EditorView: View {
                     .accessibilityIdentifier("ax.editor.layout.openLayers")
                 } else {
                     Label("editor.layout.resolved", systemImage: "checkmark.circle")
-                        .font(.footnote)
-                        .foregroundStyle(.green)
+                        .font(M3Type.bodySmall)
+                        .foregroundStyle(M3.success)
                 }
             }
             .accessibilityIdentifier("ax.editor.layout.warning")
@@ -181,7 +182,7 @@ struct EditorView: View {
                 LabeledContent {
                     if !model.overlapping.isEmpty {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(M3.warning)
                     }
                     Text(verbatim: "(model.design.spec.layers.count)")
                 } label: {

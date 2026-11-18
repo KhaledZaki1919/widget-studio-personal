@@ -76,21 +76,21 @@ struct QiblaView: View {
                 } else {
                     dial(qibla: qibla, heading: 0).opacity(0.35)
                     Text(compass.isAvailable ? "compass.waiting" : "compass.noCompass")
-                        .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                        .font(M3Type.bodyMedium).foregroundStyle(M3.onSurfaceVariant).multilineTextAlignment(.center)
                 }
                 Text(verbatim: "\(Int(qibla.rounded()))°")
                     .font(.system(size: degreesSize, weight: .bold, design: .rounded)).monospacedDigit()
                     .accessibilityIdentifier("ax.qibla.degrees")
-                Text("compass.fromNorth").font(.footnote).foregroundStyle(.secondary)
+                Text("compass.fromNorth").font(M3Type.bodySmall).foregroundStyle(M3.onSurfaceVariant)
                 if aligned {
                     Label("compass.aligned", systemImage: "checkmark.circle.fill")
-                        .font(.headline).foregroundStyle(.green)
+                        .font(M3Type.titleMedium).foregroundStyle(M3.success)
                 }
                 if compass.heading != nil, QiblaCompass.needsCalibration(accuracy: compass.accuracy) {
                     Label("compass.calibrate", systemImage: "figure.wave")
-                        .font(.footnote).foregroundStyle(.orange).multilineTextAlignment(.center)
+                        .font(M3Type.bodySmall).foregroundStyle(M3.warning).multilineTextAlignment(.center)
                         .padding(12)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.orange.opacity(0.12)))
+                        .background(RoundedRectangle(cornerRadius: M3Shape.medium, style: .continuous).fill(M3.surfaceContainerHigh))
                 }
             } else {
                 ContentUnavailableView {
@@ -131,7 +131,7 @@ struct QiblaView: View {
                     .rotationEffect(.degrees(Double(tick) * 5))
             }
             Text(verbatim: "N")
-                .font(.headline).foregroundStyle(.red)
+                .font(M3Type.titleMedium).foregroundStyle(M3.error)
                 .offset(y: -104)
         }
         .rotationEffect(.degrees(-heading))
@@ -139,15 +139,15 @@ struct QiblaView: View {
             VStack(spacing: 0) {
                 Image(systemName: "location.north.fill")
                     .font(.system(size: 34))
-                    .foregroundStyle(aligned ? Color.green : Color.accentColor)
-                Capsule().fill(aligned ? Color.green : Color.accentColor).frame(width: 4, height: 70)
+                    .foregroundStyle(aligned ? Color.green : M3.primary)
+                Capsule().fill(aligned ? M3.success : M3.primary).frame(width: 4, height: 70)
                 Spacer()
             }
             .frame(height: 220)
             .rotationEffect(.degrees(needle))
             Image(systemName: "building.columns.fill")
                 .font(.title2)
-                .foregroundStyle(aligned ? Color.green : Color.primary)
+                .foregroundStyle(aligned ? M3.success : M3.onSurface)
                 .offset(y: -150)
                 .rotationEffect(.degrees(needle))
         }

@@ -13,7 +13,7 @@ struct FieldEditor: View {
         switch field.type {
         case .text, .city:
             VStack(alignment: .leading, spacing: 6) {
-                Text(verbatim: title).font(.subheadline.weight(.medium))
+                Text(verbatim: title).font(M3Type.labelLarge)
                 TextField(text: model.text(field, language: "ar")) { Text("editor.arabic") }
                     .environment(\.layoutDirection, .rightToLeft)
                     .multilineTextAlignment(.trailing)
@@ -93,7 +93,7 @@ struct FieldEditor: View {
 
     private func labeled<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(verbatim: title).font(.subheadline.weight(.medium))
+            Text(verbatim: title).font(M3Type.labelLarge)
             content()
         }
         .accessibilityIdentifier("ax.editor.field.\(field.key)")
@@ -113,6 +113,7 @@ struct TimeZonePicker: View {
                 Button { pick(zone) } label: { row(title: Text(verbatim: zone.replacingOccurrences(of: "_", with: " ")), id: zone) }
             }
         }
+        .m3List()
         .searchable(text: $query)
         .navigationTitle("editor.timezone")
     }
@@ -154,8 +155,11 @@ struct IconPicker: View {
                         Image(systemName: icon)
                             .font(.title2)
                             .frame(width: 56, height: 56)
-                            .background(RoundedRectangle(cornerRadius: 12)
-                                .fill(selection == icon ? Color.accentColor.opacity(0.25) : Color(uiColor: .secondarySystemBackground)))
+                            .background(RoundedRectangle(cornerRadius: M3Shape.medium, style: .continuous)
+                                .fill(selection == icon ? M3.primaryContainer : M3.surfaceContainerHigh))
+                            .overlay(RoundedRectangle(cornerRadius: M3Shape.medium, style: .continuous)
+                                .strokeBorder(selection == icon ? M3.primary : .clear, lineWidth: 2))
+                            .foregroundStyle(selection == icon ? M3.onPrimaryContainer : M3.onSurface)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(Text(verbatim: Self.spokenName(icon)))

@@ -33,7 +33,7 @@ struct TestSpecsView: View {
                             .listRowBackground(Color.clear)
                     case .failure(let failure):
                         Label("specs.invalid", systemImage: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.red)
+                            .foregroundStyle(M3.error)
                         Text(verbatim: failure.description)
                             .font(.footnote.monospaced())
                     }
@@ -42,6 +42,7 @@ struct TestSpecsView: View {
                 }
             }
         }
+        .m3List()
         .accessibilityIdentifier("ax.specs.list")
         .navigationTitle("specs.title")
         // No layoutDirection override here: forcing RTL on a List inside an LTR app flips its

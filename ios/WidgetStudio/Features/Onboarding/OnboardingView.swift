@@ -42,17 +42,15 @@ struct OnboardingView: View {
                 }
             } label: {
                 Text(page < pages - 1 ? LocalizedStringKey("onboarding.next") : "onboarding.start")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, minHeight: 50)
+                    .frame(minHeight: 40)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(.primary)
-            .foregroundStyle(Color(uiColor: .systemBackground))
-            .padding(.horizontal, 24)
-            .padding(.bottom, 16)
+            // The one filled button: Next / Start.
+            .buttonStyle(.m3FilledWide)
+            .padding(.horizontal, M3Space.xl)
+            .padding(.bottom, M3Space.l)
             .accessibilityIdentifier(page < pages - 1 ? "ax.onboarding.next" : "ax.onboarding.start")
         }
-        .background(Color(uiColor: .systemBackground))
+        .background(M3.surface.ignoresSafeArea())
         // A container element, so this identifier doesn't replace the buttons' own.
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("ax.onboarding")
@@ -68,17 +66,18 @@ private struct OnboardingPage<Visual: View, Rows: View>: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: M3Space.xl) {
                 visual
                     .frame(maxHeight: 260)
-                    .padding(.top, 8)
+                    .padding(.top, M3Space.s)
                 Text(title)
-                    .font(.title.weight(.bold))
+                    .font(M3Type.headlineMedium)
+                    .foregroundStyle(M3.onSurface)
                     .multilineTextAlignment(.center)
                     .accessibilityAddTraits(.isHeader)
                 Text(message)
-                    .font(.body)
-                    .foregroundStyle(.secondary)
+                    .font(M3Type.bodyLarge)
+                    .foregroundStyle(M3.onSurfaceVariant)
                     .multilineTextAlignment(.center)
                 VStack(alignment: .leading, spacing: 14) { rows }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -95,7 +94,7 @@ private struct Row: View {
 
     var body: some View {
         Label {
-            Text(text).font(.callout)
+            Text(text).font(M3Type.bodyMedium)
         } icon: {
             Image(systemName: symbol)
                 .font(.body.weight(.semibold))
@@ -169,7 +168,7 @@ private struct HomeScreenDemo: View {
     private func screen(phase: Int) -> some View {
         ZStack(alignment: .top) {
             RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .fill(Color(uiColor: .secondarySystemBackground))
+                .fill(M3.surfaceContainerHigh)
             RoundedRectangle(cornerRadius: 26, style: .continuous)
                 .stroke(Color.primary.opacity(0.25), lineWidth: 3)
             VStack(spacing: 10) {

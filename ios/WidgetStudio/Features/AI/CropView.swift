@@ -69,16 +69,16 @@ struct CropView: View {
                 .onChange(of: preset) { _, preset in applyPreset(preset) }
                 .accessibilityIdentifier("ax.crop.preset")
                 Text(detected.isEmpty ? LocalizedStringKey("crop.none") : detected.count > 1 ? "crop.several \(detected.count)" : "crop.found")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(M3Type.bodySmall)
+                    .foregroundStyle(M3.onSurfaceVariant)
                     .multilineTextAlignment(.center)
                 VStack(spacing: 10) {
                     Button {
                         onDone(.one(rect: selection, shape: shape, size: suggestedSize))
                     } label: {
-                        Text("crop.use").font(.headline).frame(maxWidth: .infinity)
+                        Text("crop.use").font(M3Type.titleMedium).frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.m3Filled)
                     .accessibilityIdentifier("ax.crop.use")
                     if allowsAll, detected.count > 1 {
                         Button {
@@ -86,7 +86,7 @@ struct CropView: View {
                         } label: {
                             Text("crop.all \(detected.count)").frame(maxWidth: .infinity)
                         }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(.m3Outlined)
                         .accessibilityIdentifier("ax.crop.all")
                     }
                     Button("crop.whole") {
@@ -143,7 +143,7 @@ struct CropView: View {
                 .allowsHitTesting(false)
                 ForEach(Array(detected.enumerated()), id: \.offset) { index, widget in
                     outline(widget.shape)
-                        .stroke(index == selectedIndex ? Color.accentColor : Color.white.opacity(0.8),
+                        .stroke(index == selectedIndex ? M3.primary : Color.white.opacity(0.8),
                                 style: StrokeStyle(lineWidth: index == selectedIndex ? 3 : 2, dash: index == selectedIndex ? [] : [6, 4]))
                         .frame(width: widget.rect.width * scale, height: widget.rect.height * scale)
                         .offset(x: origin.x + widget.rect.minX * scale, y: origin.y + widget.rect.minY * scale)
@@ -158,7 +158,7 @@ struct CropView: View {
                 }
                 let box = view(selection, scale: scale, origin: origin)
                 Rectangle()
-                    .stroke(Color.accentColor, lineWidth: 2)
+                    .stroke(M3.primary, lineWidth: 2)
                     .frame(width: box.width, height: box.height)
                     .offset(x: box.minX, y: box.minY)
                     .allowsHitTesting(false)
@@ -175,7 +175,7 @@ struct CropView: View {
         switch shape {
         case .circle: AnyShape(Ellipse())
         case .capsule: AnyShape(Capsule())
-        case .roundedRect: AnyShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        case .roundedRect: AnyShape(RoundedRectangle(cornerRadius: M3Shape.medium, style: .continuous))
         case .none: AnyShape(Rectangle())
         }
     }
@@ -195,7 +195,7 @@ struct CropView: View {
         }
         return Circle()
             .fill(Color.white)
-            .overlay(Circle().stroke(Color.accentColor, lineWidth: 2))
+            .overlay(Circle().stroke(M3.primary, lineWidth: 2))
             .frame(width: 26, height: 26)
             .position(point)
             .gesture(DragGesture().onChanged { value in

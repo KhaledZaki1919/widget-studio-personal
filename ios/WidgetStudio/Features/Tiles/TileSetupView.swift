@@ -21,7 +21,7 @@ struct TileSetupView: View {
                     Image(systemName: recipe.symbol)
                         .font(.system(size: 34))
                         .frame(width: 64, height: 64)
-                        .background(Circle().fill(Color.accentColor.opacity(0.15)))
+                        .background(Circle().fill(M3.primary.opacity(0.15)))
                     Text(verbatim: name).font(.title2.weight(.semibold))
                     statusBadge
                 }
@@ -31,12 +31,12 @@ struct TileSetupView: View {
             if failed {
                 Section {
                     Label("tiles.failed", systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange)
-                        .font(.callout)
+                        .foregroundStyle(M3.warning)
+                        .font(M3Type.bodyMedium)
                 }
             }
             Section("tiles.why.title") {
-                Text("tiles.why").font(.callout)
+                Text("tiles.why").font(M3Type.bodyMedium)
             }
             Section {
                 HStack {
@@ -51,7 +51,7 @@ struct TileSetupView: View {
                     } label: {
                         Label(copied ? "tiles.copied" : "tiles.copy", systemImage: copied ? "checkmark" : "doc.on.doc")
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.m3Outlined)
                 }
             } header: {
                 Text("tiles.name.title")
@@ -66,7 +66,7 @@ struct TileSetupView: View {
                         Text(verbatim: "\(index + 1)")
                             .font(.caption.weight(.bold))
                             .frame(width: 22, height: 22)
-                            .background(Circle().fill(Color.accentColor.opacity(0.2)))
+                            .background(Circle().fill(M3.primary.opacity(0.2)))
                     }
                 }
             }
@@ -78,7 +78,7 @@ struct TileSetupView: View {
                     Label("tiles.openShortcuts", systemImage: "square.on.square")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.m3Filled)
                 .accessibilityIdentifier("ax.tiles.openShortcuts")
                 Button {
                     tiles.confirm(name)
@@ -87,7 +87,7 @@ struct TileSetupView: View {
                     Label("tiles.created", systemImage: "checkmark.circle")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.m3Outlined)
                 .accessibilityIdentifier("ax.tiles.created")
             } footer: {
                 Text("tiles.created.footer")
@@ -95,15 +95,16 @@ struct TileSetupView: View {
             .listRowBackground(Color.clear)
             .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
         }
+        .m3List()
         .navigationTitle("tiles.setup.title")
         .navigationBarTitleDisplayMode(.inline)
     }
 
     @ViewBuilder private var statusBadge: some View {
         switch tiles.status(name) {
-        case .ready: Label("tiles.status.ready", systemImage: "checkmark.circle.fill").foregroundStyle(.green).font(.footnote)
-        case .failed: Label("tiles.status.failed", systemImage: "xmark.circle.fill").foregroundStyle(.orange).font(.footnote)
-        case .notSetUp: Label("tiles.status.notSetUp", systemImage: "circle.dashed").foregroundStyle(.secondary).font(.footnote)
+        case .ready: Label("tiles.status.ready", systemImage: "checkmark.circle.fill").foregroundStyle(M3.success).font(M3Type.bodySmall)
+        case .failed: Label("tiles.status.failed", systemImage: "xmark.circle.fill").foregroundStyle(M3.warning).font(M3Type.bodySmall)
+        case .notSetUp: Label("tiles.status.notSetUp", systemImage: "circle.dashed").foregroundStyle(M3.onSurfaceVariant).font(M3Type.bodySmall)
         }
     }
 
@@ -146,6 +147,7 @@ struct TilesListView: View {
                 Text("tiles.list.footer")
             }
         }
+        .m3List()
         .navigationTitle("tiles.list.title")
     }
 
@@ -153,15 +155,15 @@ struct TilesListView: View {
         HStack {
             Image(systemName: ShortcutRecipe.forName(name).symbol)
                 .frame(width: 28)
-                .foregroundStyle(Color.accentColor)
+                .foregroundStyle(M3.primary)
             Text(verbatim: name)
             Spacer()
             switch tiles.status(name) {
-            case .ready: Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+            case .ready: Image(systemName: "checkmark.circle.fill").foregroundStyle(M3.success)
                 .accessibilityLabel(Text("tiles.status.ready"))
-            case .failed: Image(systemName: "xmark.circle.fill").foregroundStyle(.orange)
+            case .failed: Image(systemName: "xmark.circle.fill").foregroundStyle(M3.warning)
                 .accessibilityLabel(Text("tiles.status.failed"))
-            case .notSetUp: Text("tiles.status.notSetUp").font(.footnote).foregroundStyle(.secondary)
+            case .notSetUp: Text("tiles.status.notSetUp").font(M3Type.bodySmall).foregroundStyle(M3.onSurfaceVariant)
             }
         }
     }

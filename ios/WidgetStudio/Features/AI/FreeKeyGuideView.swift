@@ -6,7 +6,7 @@ struct FreeKeyGuideView: View {
     var body: some View {
         List {
             Section {
-                Text("keyguide.intro").font(.callout)
+                Text("keyguide.intro").font(M3Type.bodyMedium)
             }
             Section("keyguide.steps") {
                 step(1, "keyguide.step1")
@@ -31,6 +31,7 @@ struct FreeKeyGuideView: View {
                 Text("keyguide.footer")
             }
         }
+        .m3List()
         .navigationTitle("keyguide.title")
     }
 
@@ -41,7 +42,7 @@ struct FreeKeyGuideView: View {
             Text(verbatim: "\(number)")
                 .font(.caption.weight(.bold))
                 .frame(width: 24, height: 24)
-                .background(Circle().fill(Color.accentColor.opacity(0.2)))
+                .background(Circle().fill(M3.primary.opacity(0.2)))
                 .accessibilityHidden(true)
         }
     }

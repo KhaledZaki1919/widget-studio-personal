@@ -74,6 +74,7 @@ struct LayerDetailView: View {
                 .accessibilityIdentifier("ax.editor.layer.delete")
             }
         }
+        .m3List()
     }
 
     @ViewBuilder private func kindSection(_ layer: Binding<Layer>) -> some View {
@@ -83,7 +84,7 @@ struct LayerDetailView: View {
         case .icon(let icon):
             Section("editor.layer.kind.icon") {
                 LabeledContent {
-                    Text(verbatim: icon.symbol).foregroundStyle(.secondary)
+                    Text(verbatim: icon.symbol).foregroundStyle(M3.onSurfaceVariant)
                 } label: {
                     Text("editor.layer.symbol")
                 }

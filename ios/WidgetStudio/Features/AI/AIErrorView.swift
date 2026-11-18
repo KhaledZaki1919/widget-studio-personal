@@ -68,11 +68,11 @@ struct AIErrorView: View {
             VStack(alignment: .leading, spacing: 4) {
                 error.message(provider: provider).font(.callout.weight(.semibold))
                 error.nextStep(alternative: provider.alternativeModel)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(M3Type.bodySmall)
+                    .foregroundStyle(M3.onSurfaceVariant)
             }
         } icon: {
-            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(M3.warning)
         }
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("ax.ai.error")

@@ -13,23 +13,24 @@ struct LibraryView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: M3Space.xl) {
                 createCard
                 chips
                 ForEach(visibleCategories, id: \.self) { category in
                     section(category)
                 }
                 Text(verbatim: "Widget Studio \(AppInfo.versionText)")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(M3Type.bodySmall)
+                    .foregroundStyle(M3.onSurfaceVariant)
                     .frame(maxWidth: .infinity)
                     .padding(.top, 12)
                     .contentShape(Rectangle())
                     .onLongPressGesture(perform: onLongPressVersion)
                     .accessibilityIdentifier("ax.home.version")
             }
-            .padding(.vertical, 12)
+            .padding(.vertical, M3Space.m)
         }
+        .m3Screen()
         .accessibilityIdentifier("ax.library.list")
     }
 
@@ -38,21 +39,22 @@ struct LibraryView: View {
         Button {
             appState.isCreatingFromImage = true
         } label: {
-            HStack(spacing: 14) {
+            HStack(spacing: M3Space.l) {
                 Image(systemName: "sparkles")
                     .font(.title2)
-                    .foregroundStyle(Color.accentColor)
-                    .frame(width: 44, height: 44)
-                    .background(Circle().fill(Color.accentColor.opacity(0.15)))
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("create.button").font(.headline).foregroundStyle(.primary)
-                    Text("create.button.subtitle").font(.footnote).foregroundStyle(.secondary)
+                    .foregroundStyle(M3.onPrimaryContainer)
+                    .frame(width: 48, height: 48)
+                    .background(M3Shape.rounded(M3Shape.large).fill(M3.primaryContainer))
+                VStack(alignment: .leading, spacing: M3Space.xs) {
+                    Text("create.button").font(M3Type.titleMedium).foregroundStyle(M3.onSurface)
+                    Text("create.button.subtitle").font(M3Type.bodyMedium).foregroundStyle(M3.onSurfaceVariant)
                 }
                 Spacer(minLength: 0)
-                Image(systemName: "chevron.forward").foregroundStyle(.tertiary)
+                Image(systemName: "chevron.forward").foregroundStyle(M3.onSurfaceVariant)
             }
-            .padding(14)
-            .background(RoundedRectangle(cornerRadius: 16).fill(Color(uiColor: .secondarySystemBackground)))
+            .padding(M3Space.l)
+            // The one elevated card on the screen: the main way to make something new.
+            .m3Card(.elevated, radius: M3Shape.large)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -67,7 +69,7 @@ struct LibraryView: View {
 
     private var chips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+            HStack(spacing: M3Space.s) {
                 chip(title: Text("library.all"), selected: category == nil, id: "all") { category = nil }
                 ForEach(SpecCategory.allCases, id: \.self) { item in
                     chip(title: Text(verbatim: item.title.resolved(language: language)), selected: category == item,
@@ -79,15 +81,11 @@ struct LibraryView: View {
     }
 
     private func chip(title: Text, selected: Bool, id: String, action: @escaping () -> Void) -> some View {
+        // M3 filter chips: the selected one shows a check mark, not only a color.
         Button(action: action) {
             title
-                .font(.subheadline.weight(.medium))
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .foregroundStyle(selected ? Color(uiColor: .systemBackground) : .primary)
-                .background(Capsule().fill(selected ? Color.primary : Color(uiColor: .secondarySystemBackground)))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.m3Filter(selected: selected))
         .accessibilityIdentifier("ax.library.chip.\(id)")
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
@@ -96,9 +94,11 @@ struct LibraryView: View {
         let items = templates.filter { $0.category == category }
         let small = items.filter { $0.family == .small }
         let wide = items.filter { $0.family != .small }
-        return VStack(alignment: .leading, spacing: 12) {
+        return VStack(alignment: .leading, spacing: M3Space.m) {
             Text(verbatim: category.title.resolved(language: language))
-                .font(.title3.weight(.semibold))
+                .font(M3Type.titleLarge)
+                .foregroundStyle(M3.onSurface)
+                .accessibilityAddTraits(.isHeader)
                 .padding(.horizontal, 16)
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 16) {
                 ForEach(small, id: \.id) { cell($0) }
@@ -112,11 +112,11 @@ struct LibraryView: View {
         NavigationLink {
             TemplateDetailView(spec: spec)
         } label: {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: M3Space.s) {
                 SpecPreview(spec: spec, language: language)
                 Text(verbatim: spec.name.resolved(language: language))
-                    .font(.footnote.weight(.medium))
-                    .foregroundStyle(.primary)
+                    .font(M3Type.labelLarge)
+                    .foregroundStyle(M3.onSurface)
                     .lineLimit(2)
             }
             // The preview ignores touches (its buttons must not fire here), so the whole card

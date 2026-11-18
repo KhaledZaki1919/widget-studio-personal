@@ -113,31 +113,36 @@ struct TasksView: View {
 
     /// Asked once; a refusal is explained, with the way back.
     private var access: some View {
-        VStack(spacing: 14) {
+        // M3 empty state: what this means and the one next step.
+        VStack(spacing: M3Space.m) {
             Image(systemName: "checklist")
-                .font(.largeTitle)
-                .foregroundStyle(.secondary)
+                .font(.system(size: 36))
+                .foregroundStyle(M3.onSurfaceVariant)
+                .frame(width: 80, height: 80)
+                .background(Circle().fill(M3.surfaceContainerHigh))
                 .accessibilityHidden(true)
-            Text("tasks.access.title").font(.headline).multilineTextAlignment(.center)
+            Text("tasks.access.title").font(M3Type.titleLarge).foregroundStyle(M3.onSurface).multilineTextAlignment(.center)
             Text(model.isDenied ? "tasks.access.denied" : "tasks.access.body")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+                .font(M3Type.bodyMedium)
+                .foregroundStyle(M3.onSurfaceVariant)
                 .multilineTextAlignment(.center)
             if model.isDenied {
                 Button("tasks.access.settings") {
                     if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.m3Filled)
             } else {
                 Button("tasks.access.allow") {
                     Task { await model.requestAccess() }
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.m3Filled)
                 .accessibilityIdentifier("ax.tasks.allow")
             }
         }
-        .padding(24)
+        .padding(M3Space.xl)
+        .frame(maxWidth: 480)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .m3Screen()
     }
 
     private var list: some View {
@@ -153,12 +158,13 @@ struct TasksView: View {
             }
             .listRowBackground(Color.clear)
             if shown.isEmpty {
-                Text(emptyText).font(.footnote).foregroundStyle(.secondary)
+                Text(emptyText).font(M3Type.bodySmall).foregroundStyle(M3.onSurfaceVariant)
             }
             ForEach(shown) { task in
                 row(task)
             }
         }
+        .m3List()
         .accessibilityIdentifier("ax.tasks.list")
     }
 
@@ -177,7 +183,7 @@ struct TasksView: View {
             } label: {
                 Image(systemName: task.done ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundStyle(task.done ? Color.accentColor : .secondary)
+                    .foregroundStyle(task.done ? M3.primary : M3.onSurfaceVariant)
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Text(task.done ? "tasks.undone" : "tasks.complete"))
@@ -190,7 +196,7 @@ struct TasksView: View {
                         .foregroundStyle(task.done ? .secondary : .primary)
                     let detail = [TaskFormat.dueText(task, now: .now, calendar: .current, language: language), task.list ?? ""].filter { !$0.isEmpty }
                     if !detail.isEmpty {
-                        Text(verbatim: detail.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
+                        Text(verbatim: detail.joined(separator: " · ")).font(M3Type.labelMedium).foregroundStyle(M3.onSurfaceVariant)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -200,7 +206,7 @@ struct TasksView: View {
             if task.priority != .none {
                 Image(systemName: "exclamationmark")
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(task.priority == .high ? .red : .orange)
+                    .foregroundStyle(task.priority == .high ? M3.error : M3.warning)
                     .accessibilityHidden(true)
             }
         }
@@ -266,6 +272,7 @@ struct TaskEditorView: View {
                     }
                 }
             }
+            .m3List()
             .navigationTitle(isNew ? "tasks.new" : "tasks.edit")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

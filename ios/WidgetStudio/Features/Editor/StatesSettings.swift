@@ -63,7 +63,7 @@ struct StatesSettings: View {
             .accessibilityIdentifier("ax.editor.states.show")
             if let levelBinding {
                 VStack(alignment: .leading) {
-                    Text(verbatim: "\(Int(level * 100))%").font(.caption).foregroundStyle(.secondary)
+                    Text(verbatim: "\(Int(level * 100))%").font(M3Type.labelMedium).foregroundStyle(M3.onSurfaceVariant)
                     Slider(value: Binding(get: { level }, set: { value in
                         level = value
                         picked = ""
@@ -90,8 +90,8 @@ struct StatesSettings: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(verbatim: title(variant))
                         Text(verbatim: variant.when ?? String(localized: "editor.states.default"))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(M3Type.labelMedium)
+                            .foregroundStyle(M3.onSurfaceVariant)
                     }
                 }
             }
@@ -148,7 +148,7 @@ private struct VariantEditor: View {
                     Text("editor.states.when")
                 } footer: {
                     if let when = variant.when, SpecExpression(when) == nil {
-                        Text("editor.states.when.invalid").foregroundStyle(.red)
+                        Text("editor.states.when.invalid").foregroundStyle(M3.error)
                     } else {
                         Text("editor.states.when.hint")
                     }
@@ -171,6 +171,7 @@ private struct VariantEditor: View {
                 }
             }
         }
+        .m3List()
         .navigationTitle(variant?.title?.resolved(language: model.previewLanguage) ?? id)
         .navigationBarTitleDisplayMode(.inline)
     }

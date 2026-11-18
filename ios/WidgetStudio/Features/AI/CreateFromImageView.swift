@@ -178,7 +178,7 @@ struct CreateFromImageView: View {
                 Button(action: start) {
                     Label("create.generate", systemImage: "sparkles")
                         .frame(maxWidth: .infinity)
-                        .font(.headline)
+                        .font(M3Type.titleMedium)
                 }
                 .disabled(picked == nil || isLoadingImage || !network.isOnline)
                 .accessibilityIdentifier("ax.create.generate")
@@ -188,8 +188,8 @@ struct CreateFromImageView: View {
                 }
                 if !service.hasKey {
                     Label("create.noKey", systemImage: "key")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .font(M3Type.bodySmall)
+                        .foregroundStyle(M3.onSurfaceVariant)
                     keyGuideLink
                     settingsLink
                 }
@@ -197,6 +197,7 @@ struct CreateFromImageView: View {
                 Text("create.provider \(settings.providerName) \(settings.model)")
             }
         }
+        .m3List()
     }
 
     private var imageSection: some View {
@@ -207,7 +208,7 @@ struct CreateFromImageView: View {
                     .scaledToFit()
                     .frame(maxHeight: 220)
                     .frame(maxWidth: .infinity)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .clipShape(RoundedRectangle(cornerRadius: M3Shape.medium, style: .continuous))
                     .listRowBackground(Color.clear)
                     .accessibilityIdentifier("ax.create.image")
             }
@@ -233,7 +234,7 @@ struct CreateFromImageView: View {
             }
             if isLoadingImage { ProgressView() }
             if imageUnreadable {
-                Text("create.imageUnreadable").font(.footnote).foregroundStyle(.red)
+                Text("create.imageUnreadable").font(M3Type.bodySmall).foregroundStyle(M3.error)
             }
         } footer: {
             Text("create.pick.footer")
@@ -270,21 +271,21 @@ struct CreateFromImageView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(maxHeight: 160)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .clipShape(RoundedRectangle(cornerRadius: M3Shape.medium, style: .continuous))
                     .opacity(0.6)
             }
             ProgressView()
                 .controlSize(.large)
-            Text(step == .reviewing ? LocalizedStringKey("create.reviewing") : "create.generating").font(.headline)
+            Text(step == .reviewing ? LocalizedStringKey("create.reviewing") : "create.generating").font(M3Type.titleMedium)
             Text(step == .reviewing ? LocalizedStringKey("create.reviewing.detail") : "create.generating.detail \(settings.providerName)")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+                .font(M3Type.bodySmall)
+                .foregroundStyle(M3.onSurfaceVariant)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
             Button("common.cancel", role: .cancel) {
                 task?.cancel()
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.m3Outlined)
             .accessibilityIdentifier("ax.create.cancel")
             Spacer()
         }
@@ -317,6 +318,7 @@ struct CreateFromImageView: View {
                 if error.needsSettings { settingsLink }
             }
         }
+        .m3List()
     }
 
     // MARK: Actions
@@ -423,14 +425,14 @@ struct CreateFromImageView: View {
             if batch.finished {
                 Image(systemName: batch.created > 0 ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
                     .font(.system(size: 48))
-                    .foregroundStyle(batch.created > 0 ? Color.green : Color.orange)
+                    .foregroundStyle(batch.created > 0 ? M3.success : M3.warning)
                 Text("create.batch.done \(batch.created) \(batch.total)")
-                    .font(.headline)
+                    .font(M3Type.titleMedium)
                     .multilineTextAlignment(.center)
                 if batch.failed > 0 {
                     Text("create.batch.failed \(batch.failed)")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .font(M3Type.bodySmall)
+                        .foregroundStyle(M3.onSurfaceVariant)
                 }
                 Button {
                     dismiss()
@@ -438,22 +440,22 @@ struct CreateFromImageView: View {
                 } label: {
                     Text("create.batch.show").frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.m3Filled)
                 .accessibilityIdentifier("ax.create.batch.show")
             } else {
                 ProgressView(value: Double(batch.current), total: Double(max(batch.total, 1)))
                 Text("create.batch.progress \(batch.current + 1) \(batch.total)")
-                    .font(.headline)
+                    .font(M3Type.titleMedium)
                 Text("create.batch.note")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(M3Type.bodySmall)
+                    .foregroundStyle(M3.onSurfaceVariant)
                     .multilineTextAlignment(.center)
                 Button(role: .destructive) {
                     task?.cancel()
                 } label: {
                     Text("create.batch.stop").frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.m3Outlined)
                 .accessibilityIdentifier("ax.create.batch.stop")
             }
         }
@@ -551,21 +553,21 @@ private struct ConsentSheet: View {
                 VStack(alignment: .leading, spacing: 16) {
                     Image(systemName: "paperplane.circle.fill")
                         .font(.system(size: 44))
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(M3.primary)
                     Text("create.consent.body \(providerName)")
-                        .font(.body)
+                        .font(M3Type.bodyLarge)
                     Label("create.consent.points", systemImage: "photo.badge.checkmark")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .font(M3Type.bodySmall)
+                        .foregroundStyle(M3.onSurfaceVariant)
                     Label("create.consent.revoke", systemImage: "hand.raised")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .font(M3Type.bodySmall)
+                        .foregroundStyle(M3.onSurfaceVariant)
                     Button(action: onAllow) {
                         Text("create.consent.allow")
-                            .font(.headline)
+                            .font(M3Type.titleMedium)
                             .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.m3Filled)
                     .padding(.top, 8)
                     .accessibilityIdentifier("ax.create.consent.allow")
                 }

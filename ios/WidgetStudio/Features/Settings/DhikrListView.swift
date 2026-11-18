@@ -39,6 +39,7 @@ struct DhikrListView: View {
                 Button("tasbeeh.restore") { items = CounterState.defaultDhikrs.map { Item(text: $0) } }
             }
         }
+        .m3List()
         .navigationTitle("tasbeeh.list")
         .toolbar { EditButton() }
         .onAppear { items = live.settings.dhikrList.map { Item(text: $0) } }

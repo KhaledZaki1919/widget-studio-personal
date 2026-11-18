@@ -37,6 +37,7 @@ struct AISettingsView: View {
             consentSection
             diagnosticsSection
         }
+        .m3List()
         .navigationTitle("ai.title")
         .onAppear(perform: reload)
         .onChange(of: settings) { _, new in new.save() }
@@ -72,8 +73,8 @@ struct AISettingsView: View {
                 .accessibilityIdentifier("ax.ai.custom.url")
             if !settings.customBaseURL.isEmpty && CustomEndpoint.normalized(settings.customBaseURL) == nil {
                 Label("ai.custom.url.invalid", systemImage: "exclamationmark.triangle.fill")
-                    .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .font(M3Type.bodySmall)
+                    .foregroundStyle(M3.warning)
             }
         } header: {
             Text("ai.custom.url")
@@ -130,7 +131,7 @@ struct AISettingsView: View {
                 if !clean.isEmpty {
                     Text(verbatim: AIKeyStore.masked(clean))
                         .font(.footnote.monospaced())
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(M3.onSurfaceVariant)
                     keyWarnings(clean)
                 }
                 Button("ai.key.save") {
@@ -197,9 +198,9 @@ struct AISettingsView: View {
                 Label {
                     Text("ai.test.passed \(model)")
                 } icon: {
-                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(M3.success)
                 }
-                .font(.callout)
+                .font(M3Type.bodyMedium)
                 .accessibilityIdentifier("ax.ai.test.passed")
             case .failed(let error):
                 AIErrorView(error: error, provider: provider)
@@ -243,7 +244,7 @@ struct AISettingsView: View {
     private var consentSection: some View {
         Section {
             if settings.consented.isEmpty {
-                Text("ai.consent.none").foregroundStyle(.secondary)
+                Text("ai.consent.none").foregroundStyle(M3.onSurfaceVariant)
             }
             ForEach(AIProviderKind.allCases.filter { settings.hasConsent(for: $0) }) { kind in
                 Toggle(isOn: Binding(
@@ -286,9 +287,9 @@ struct AISettingsView: View {
             Label {
                 warningText(warning)
             } icon: {
-                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(M3.warning)
             }
-            .font(.footnote)
+            .font(M3Type.bodySmall)
             .accessibilityIdentifier("ax.ai.key.warning")
         }
     }
@@ -394,10 +395,10 @@ struct AIModelPickerView: View {
                                     .font(.caption2.weight(.semibold))
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
-                                    .background(Capsule().fill(Color.accentColor.opacity(0.18)))
+                                    .background(RoundedRectangle(cornerRadius: M3Shape.small, style: .continuous).fill(M3.secondaryContainer))
                             }
                             Spacer()
-                            if model == selection { Image(systemName: "checkmark").foregroundStyle(Color.accentColor) }
+                            if model == selection { Image(systemName: "checkmark").foregroundStyle(M3.primary) }
                         }
                     }
                 }
@@ -405,6 +406,7 @@ struct AIModelPickerView: View {
                 Text(isLiveList ? LocalizedStringKey("ai.model.liveFooter") : "ai.model.builtInFooter")
             }
         }
+        .m3List()
         .navigationTitle("ai.model")
     }
 }
@@ -429,9 +431,10 @@ struct AIDiagnosticView: View {
                     }
                 }
             } else {
-                Text("ai.diag.none").foregroundStyle(.secondary)
+                Text("ai.diag.none").foregroundStyle(M3.onSurfaceVariant)
             }
         }
+        .m3List()
         .navigationTitle("ai.diag.title")
     }
 }

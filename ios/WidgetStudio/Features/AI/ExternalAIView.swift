@@ -104,10 +104,11 @@ struct ExternalAIView: View {
             if fileUnreadable {
                 Section {
                     Label("create.external.error.file", systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(M3.warning)
                 }
             }
         }
+        .m3List()
         .navigationTitle("create.external.title")
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(item: $bulk) { BulkImportView(request: $0) }
@@ -132,7 +133,7 @@ struct ExternalAIView: View {
                     .scaledToFit()
                     .frame(maxHeight: 180)
                     .frame(maxWidth: .infinity)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .clipShape(RoundedRectangle(cornerRadius: M3Shape.medium, style: .continuous))
                     .listRowBackground(Color.clear)
             }
             PhotosPicker(selection: $photoItem, matching: .images) {
@@ -192,11 +193,11 @@ struct ExternalAIView: View {
     private func errorSection(_ error: ExternalAI.ImportError) -> some View {
         Section {
             Label(Self.message(error), systemImage: "exclamationmark.triangle.fill")
-                .foregroundStyle(.orange)
+                .foregroundStyle(M3.warning)
             if case .invalid(let problems) = error {
                 Text(verbatim: problems)
                     .font(.caption.monospaced())
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(M3.onSurfaceVariant)
                     .environment(\.layoutDirection, .leftToRight)
                     .textSelection(.enabled)
             }

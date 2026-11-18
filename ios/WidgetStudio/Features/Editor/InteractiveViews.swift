@@ -13,7 +13,7 @@ struct InteractiveSection: View {
         let summary = InteractiveSummary.build(model.design.spec, language: language)
         Section {
             if summary.isEmpty {
-                Text("interactive.empty").font(.footnote).foregroundStyle(.secondary)
+                Text("interactive.empty").font(M3Type.bodySmall).foregroundStyle(M3.onSurfaceVariant)
             }
             group("interactive.live", symbol: "waveform.path.ecg", items: summary.live)
             group("interactive.tap", symbol: "hand.tap.fill", items: summary.tappable)
@@ -28,7 +28,7 @@ struct InteractiveSection: View {
 
     @ViewBuilder private func group(_ title: LocalizedStringKey, symbol: String, items: [InteractiveSummary.Item]) -> some View {
         if !items.isEmpty {
-            Label(title, systemImage: symbol).font(.subheadline.weight(.semibold))
+            Label(title, systemImage: symbol).font(M3Type.titleSmall)
             ForEach(items) { item in row(item) }
         }
     }
@@ -37,7 +37,7 @@ struct InteractiveSection: View {
         let label = VStack(alignment: .leading, spacing: 2) {
             Text(verbatim: item.title)
             if let detail = item.detail {
-                Text(verbatim: detail).font(.caption).foregroundStyle(.secondary)
+                Text(verbatim: detail).font(M3Type.labelMedium).foregroundStyle(M3.onSurfaceVariant)
             }
         }
         if item.path.isEmpty {
@@ -47,7 +47,7 @@ struct InteractiveSection: View {
                 LayerDetailView(model: model, path: item.path)
             } label: {
                 LabeledContent {
-                    Text("interactive.change").font(.caption)
+                    Text("interactive.change").font(M3Type.labelMedium)
                 } label: {
                     label
                 }
@@ -96,6 +96,7 @@ struct CapabilityPicker: View {
                 }
             }
         }
+        .m3List()
         .searchable(text: $query)
         .navigationTitle("editor.layer.pick")
         .navigationBarTitleDisplayMode(.inline)
@@ -110,16 +111,16 @@ struct CapabilityPicker: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: capability.title.resolved(language: language)).foregroundStyle(.primary)
                     if let note = capability.note(on: .ios) {
-                        Text(verbatim: note).font(.caption).foregroundStyle(.secondary)
+                        Text(verbatim: note).font(M3Type.labelMedium).foregroundStyle(M3.onSurfaceVariant)
                     }
                 }
                 Spacer()
                 switch capability.support(on: .ios) {
-                case .shortcut: Image(systemName: "square.on.square").foregroundStyle(.secondary)
-                case .unsupported: Image(systemName: "nosign").foregroundStyle(.orange)
+                case .shortcut: Image(systemName: "square.on.square").foregroundStyle(M3.onSurfaceVariant)
+                case .unsupported: Image(systemName: "nosign").foregroundStyle(M3.warning)
                 default: EmptyView()
                 }
-                if capability.id == selected { Image(systemName: "checkmark").foregroundStyle(Color.accentColor) }
+                if capability.id == selected { Image(systemName: "checkmark").foregroundStyle(M3.primary) }
             }
         }
         .accessibilityIdentifier("ax.editor.capability.\(capability.id)")

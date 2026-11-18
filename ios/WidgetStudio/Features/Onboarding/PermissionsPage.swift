@@ -19,7 +19,7 @@ struct PermissionsPage: View {
                     .multilineTextAlignment(.center)
                     .accessibilityAddTraits(.isHeader)
                 Text("permissions.body")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(M3.onSurfaceVariant)
                     .multilineTextAlignment(.center)
                 PermissionCard(symbol: "location.fill", title: "permissions.location.title", reason: "permissions.location.reason",
                                state: locationState, action: locationAction)
@@ -28,8 +28,8 @@ struct PermissionsPage: View {
                                state: healthState, action: healthAction)
                     .accessibilityIdentifier("ax.permissions.health")
                 Text("permissions.later")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(M3Type.bodySmall)
+                    .foregroundStyle(M3.onSurfaceVariant)
                     .multilineTextAlignment(.center)
             }
             .padding(.horizontal, 24)
@@ -80,44 +80,44 @@ private struct PermissionCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Label {
-                Text(title).font(.headline)
+                Text(title).font(M3Type.titleMedium)
             } icon: {
-                Image(systemName: symbol).foregroundStyle(Color.accentColor).accessibilityHidden(true)
+                Image(systemName: symbol).foregroundStyle(M3.primary).accessibilityHidden(true)
             }
-            Text(reason).font(.footnote).foregroundStyle(.secondary)
+            Text(reason).font(M3Type.bodySmall).foregroundStyle(M3.onSurfaceVariant)
             HStack {
                 status
                 Spacer()
                 switch state {
                 case .notAsked:
                     Button("permissions.allow", action: action)
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.m3Tonal)
                         .accessibilityIdentifier("ax.permissions.allow")
                 case .denied:
-                    Button("settings.openSystemSettings", action: action).buttonStyle(.bordered)
+                    Button("settings.openSystemSettings", action: action).buttonStyle(.m3Outlined)
                 case .askedNoData:
-                    Button("permissions.askAgain", action: action).buttonStyle(.bordered)
+                    Button("permissions.askAgain", action: action).buttonStyle(.m3Outlined)
                 case .allowed:
                     EmptyView()
                 }
             }
         }
-        .padding(14)
+        .padding(M3Space.l)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color(uiColor: .secondarySystemBackground)))
+        .m3Card(.filled)
         .accessibilityElement(children: .contain)
     }
 
     @ViewBuilder private var status: some View {
         switch state {
         case .notAsked:
-            Text("settings.status.notAsked").font(.footnote).foregroundStyle(.secondary)
+            Text("settings.status.notAsked").font(M3Type.bodySmall).foregroundStyle(M3.onSurfaceVariant)
         case .allowed:
-            Label("settings.status.allowed", systemImage: "checkmark.circle.fill").font(.footnote).foregroundStyle(.green)
+            Label("settings.status.allowed", systemImage: "checkmark.circle.fill").font(M3Type.bodySmall).foregroundStyle(M3.success)
         case .denied:
-            Label("settings.status.denied", systemImage: "xmark.circle.fill").font(.footnote).foregroundStyle(.orange)
+            Label("settings.status.denied", systemImage: "xmark.circle.fill").font(M3Type.bodySmall).foregroundStyle(M3.warning)
         case .askedNoData:
-            Text("permissions.health.noData").font(.footnote).foregroundStyle(.secondary)
+            Text("permissions.health.noData").font(M3Type.bodySmall).foregroundStyle(M3.onSurfaceVariant)
         }
     }
 }
