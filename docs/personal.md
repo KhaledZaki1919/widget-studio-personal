@@ -23,7 +23,7 @@ Everything personal is in its own files, so upstream merges rarely conflict:
 | `ios/personal.yml` | XcodeGen overlay: `include: project.yml`, then bundle IDs, name, App Group, `WSRelayURL`. CI runs `xcodegen generate --spec personal.yml` |
 | `ios/WidgetKitCore/Sources/WidgetKitCore/Personal/` | `RelayCrypto` (6-character code, key derivation per purpose, AES-GCM, errors), `RelayPayload` (info / design items), `RelayClient`, `WidgetSlots` (widget side: `SlotID`, `SlotState`, `SlotSync`), `HomeWidgets` (app side: `HomeWidgetSender`, `KnownWidget`, `WidgetRelayStatus`) |
 | `ios/WidgetKitCore/Tests/WidgetKitCoreTests/Personal/` | Unit tests (in-memory relay, no network) |
-| `ios/WidgetStudioWidgets/Personal/` | `PersonalWidgets` bundle, `SlotWidgets` (Slot 1–5, Slot (choose), providers, code card), `Personal.xcstrings` |
+| `ios/WidgetStudioWidgets/Personal/` | `PersonalWidgets` bundle, `PersonalCheckWidget` ("Widget Studio P check", always listed), `SlotWidgets` (Slot 1–5, the unlisted Slot (choose), providers, code card), `Personal.xcstrings` |
 | `ios/WidgetStudio/Personal/` | `Theme/M3Theme.swift` (Material 3 theme), `SendToWidget` (sheet, editor section, My widgets and import buttons), `HomeScreenView` (My home screen, per-widget detail, Diagnostics section, design picker), `Personal.xcstrings` |
 | `relay/` | Cloudflare Worker (`src/relay.js`), `wrangler.toml`, `node --test` tests |
 | `.github/workflows/relay.yml` | Relay tests on change; deploy on manual run |
@@ -76,11 +76,18 @@ untouched.
 - **Fixed slots (the path that works on Fast Store):** five `StaticConfiguration` widgets, "Slot 1" … "Slot 5"
   (`WidgetStudio.slot.<n>`), each in small, medium, large and (Xcode 27 builds) 4 × 6. Every slot × size is its
   own widget with its own code: 5 per size, 20 in all. Two copies of the same slot in the same size share a code.
-- **Slot (choose)** (`WidgetStudio.slot.pick`): an `AppIntentConfiguration` whose Edit Widget picks slot A … E.
+- **Slot (choose)** (`WidgetStudio.slot.pick`): **not listed since 2026-11-18.** The first IPA with it (and the slots) made the
+  whole app vanish from the widget gallery on the Fast Store install; it was the only `AppIntentConfiguration` in a store
+  build, so it is out of `PersonalWidgets` (code kept, compiled). Original plan: an `AppIntentConfiguration` whose Edit Widget picks slot A … E.
   This is the experiment the owner asked for (Void Widgets' Edit Widget works on the same Fast Store install),
   against ADR-013's finding that every AppIntent-configured widget stayed gray there. If it renders, it adds 5
   slots per size; if it stays gray, use Slots 1–5. Either way the rest works the same.
 - No arrows, no lock, no design cycling, no pairing.
+
+**Check widget.** "Widget Studio P check" (`WidgetStudioP.check`, small/medium, first in `PersonalWidgets`, release
+builds too): if the gallery lists it, the extension loads; it shows the extension bundle ID, version, relay URL set,
+App Group and the render time. If the app is missing from the gallery entirely, the extension never loaded
+(install/signing: check Diagnostics → Signing), not one widget's drawing.
 
 **Flow.**
 ```

@@ -1,6 +1,57 @@
 {
   "sourceLanguage": "ar",
   "strings": {
+    "widget.check.description": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يظهر دائمًا: إن رأيته في المعرض فالإضافة تعمل."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Always listed: if you see it in the gallery, the widget extension loads."
+          }
+        }
+      }
+    },
+    "widget.check.loaded": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة الويدجت تعمل"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Widget extension loaded"
+          }
+        }
+      }
+    },
+    "widget.check.name": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فحص Widget Studio P"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Widget Studio P check"
+          }
+        }
+      }
+    },
     "widget.slot.code.hint": {
       "extractionState": "manual",
       "localizations": {
