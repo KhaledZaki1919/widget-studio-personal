@@ -3,6 +3,8 @@
 > **This is the owner's PERSONAL build, "Widget Studio P"** (`com.khaled.widgetstudio.personal`, App Group `group.com.khaled.widgetstudio.personal`), repo `KhaledZaki1919/widget-studio-personal`. Everything personal is described in `docs/personal.md`; read it first. Rules that override the official ones below:
 > - `origin` = github.com/KhaledZaki1919/widget-studio-personal (push here). `upstream` = the official github.com/KhaledZaki1919/widget-studio. **NEVER push to upstream** (its push URL is set to `DISABLED-never-push-to-upstream`; keep it that way).
 > - Personal code lives only in its own files: `ios/personal.yml`, `ios/**/Personal/`, `relay/`, `docs/personal.md`, `.github/workflows/relay.yml`. Official files get only small hook lines (listed in `docs/personal.md`), so upstream merges stay easy. Never move or reformat official code.
+> - Exception: the Material 3 redesign (2026-11-18) put theme roles (`M3.*`, `M3Type.*`, `.m3*`, from `ios/WidgetStudio/Personal/Theme/M3Theme.swift`) into the official screens. On merge conflicts take the official change and re-apply the role substitutions listed in `docs/personal.md` → Hook lines.
+> - Widget identity: "Slot 1–5" StaticConfiguration widgets (+ the "Slot (choose)" AppIntent experiment), one code per slot and size; the app sends designs to a code ("Send to widget"), "My home screen" lists them (`docs/personal.md` → Feature).
 > - CI generates the project with `xcodegen generate --spec personal.yml` (includes `project.yml` unchanged).
 > - Store mode, installed with Fast Store, like the official app.
 >

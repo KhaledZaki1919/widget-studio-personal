@@ -25,6 +25,7 @@ struct DiagnosticsView: View {
             }
             appGroupSection
             widgetSection
+            HomeWidgetsDiagnosticsSection() // Personal build: per-code delivery (docs/personal.md)
             locationSection
             healthSection
             Section("diag.section.battery") {

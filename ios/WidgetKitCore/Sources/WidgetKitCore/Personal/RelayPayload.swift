@@ -2,26 +2,42 @@ import CoreGraphics
 import Foundation
 import ImageIO
 
-/// Personal build: what one relay item holds once decrypted. `pair` items only confirm the
-/// pairing; size items carry a saved design and its photo (JPEG, or PNG for halftone/mono).
+/// Personal build: what one relay item holds once decrypted. `info` items are a widget slot
+/// announcing itself; `design` items carry a saved design and its photo (JPEG, or PNG for
+/// halftone/mono).
 public struct RelayPayload: Codable, Sendable, Equatable {
     public enum Kind: String, Codable, Sendable {
-        case pair, design
+        case info, design
+    }
+
+    /// A placed widget slot: its size and its slot name ("1"…"5", or "A"…"E" for the
+    /// configurable widget).
+    public struct WidgetInfo: Codable, Sendable, Equatable {
+        public var size: SpecFamily
+        public var slot: String
+
+        public init(size: SpecFamily, slot: String) {
+            self.size = size
+            self.slot = slot
+        }
     }
 
     public var kind: Kind
+    public var widget: WidgetInfo?
     public var design: SavedDesign?
     public var image: Data?
     public var sent: Date
 
-    public init(kind: Kind, design: SavedDesign? = nil, image: Data? = nil, sent: Date = .now) {
+    public init(kind: Kind, widget: WidgetInfo? = nil, design: SavedDesign? = nil, image: Data? = nil, sent: Date = .now) {
         self.kind = kind
+        self.widget = widget
         self.design = design
         self.image = image
         self.sent = sent
     }
 
-    /// The relay rejects items over 4 MiB (spec v2 designs can be large); leave room for the envelope and JSON.
+    /// The relay rejects items over 4 MiB (spec v2 designs can be large); leave room for the
+    /// envelope and JSON.
     public static let maxSealedBytes = 4_194_304
     static let budget = 4_000_000
 
@@ -49,7 +65,7 @@ public struct RelayPayload: Codable, Sendable, Equatable {
         let lossless = [ImageLayer.Filter.halftone, .mono].contains(design.imageLayer?.layer.filter ?? ImageLayer.Filter.none)
         var image = ImageProcessing.fit(photo, in: CGSize(width: ImageProcessing.maxSide, height: ImageProcessing.maxSide)) ?? photo
         var attempts: [(lossless: Bool, quality: Double)] = lossless ? [(true, 1)] : []
-        attempts += [(false, 0.8), (false, 0.6)]
+        attempts += [(false, 0.85), (false, 0.6)]
         for _ in 0..<4 {
             for attempt in attempts {
                 payload.image = encode(image, lossless: attempt.lossless, quality: attempt.quality)

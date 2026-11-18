@@ -117,11 +117,14 @@ public struct RelayClient: Sendable {
     }
 }
 
-/// Short readable text for an error (Diagnostics, the pairing screen).
+/// Short readable text for an error (Diagnostics, logs).
 public extension RelayError {
     var summary: String {
         switch self {
         case .notConfigured: "relay URL not set"
+        case .invalidCode: "not a widget code"
+        case .unknownCode: "no widget shows this code"
+        case .doesNotFit(let size): "too big for a \(size.rawValue) widget"
         case .crypto: "can't decrypt (wrong code?)"
         case .tooLarge: "too large"
         case .rateLimited: "rate limited, try again in a minute"

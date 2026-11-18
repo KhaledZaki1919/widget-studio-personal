@@ -46,7 +46,7 @@ struct EditorView: View {
                     }
                 }
                 // Personal build (docs/personal.md)
-                UseOnHomeScreenSection(design: model.design, photo: model.newPhoto ?? designs.image(for: model.design),
+                SendToWidgetSection(design: model.design, photo: model.newPhoto ?? designs.image(for: model.design),
                                        enabled: model.canSave)
                 Section("editor.name") {
                     TextField("editor.name", text: $model.design.name)

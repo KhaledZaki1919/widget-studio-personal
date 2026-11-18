@@ -2,16 +2,17 @@ import CommonCrypto
 import CryptoKit
 import Foundation
 
-// Personal build (docs/personal.md): pairing and end-to-end encryption for the Cloudflare relay.
-// The widget shows an 8-character code; the app gets it typed in once. Both derive, per slot, a
-// storage ID and a separate AES key from it. The relay only ever sees the ID (a one-way hash)
-// and ciphertext: it can't recover the code, the key or the design.
+// Personal build (docs/personal.md): one code per placed widget and end-to-end encryption for
+// the Cloudflare relay. Each widget slot shows its own 6-character code until a design is
+// assigned; the app gets it typed in (or picked from the widgets it already knows). Both sides
+// derive, per purpose, a storage ID and a separate AES key from the code. The relay only ever
+// sees the ID (a one-way hash) and ciphertext: it can't recover the code, the key or the design.
 
-/// The pairing code the widget shows: 8 characters from an alphabet without look-alikes
-/// (no 0/O, 1/I/L), shown as "ABCD-EFGH".
+/// A widget's code: 6 characters from an alphabet without look-alikes (no 0/O, 1/I/L), shown
+/// as "ABC-DEF".
 public enum RelayCode {
     public static let alphabet = Array("ABCDEFGHJKMNPQRSTUVWXYZ23456789")
-    public static let length = 8
+    public static let length = 6
 
     public static func generate() -> String {
         var generator = SystemRandomNumberGenerator()
@@ -25,28 +26,20 @@ public enum RelayCode {
         return code
     }
 
-    /// "ABCD-EFGH".
+    /// "ABC-DEF".
     public static func formatted(_ code: String) -> String {
         guard code.count == length else { return code }
         return "\(code.prefix(length / 2))-\(code.suffix(length / 2))"
     }
 }
 
-/// What one paired item is stored under: `pair` confirms the pairing, the sizes carry designs.
-public enum RelaySlot: String, Codable, Sendable, CaseIterable {
-    case pair, small, medium, large, xlarge
-
-    public init(_ family: SpecFamily) {
-        switch family {
-        case .small: self = .small
-        case .medium: self = .medium
-        case .large: self = .large
-        case .xlarge: self = .xlarge
-        }
-    }
+/// What an item under a code holds: `info` is the widget announcing itself (size, slot), so the
+/// app can check a typed code and learn the size; `design` is the design the widget shows.
+public enum RelayPurpose: String, Codable, Sendable, CaseIterable {
+    case info, design
 }
 
-/// The storage ID and the encryption key of one slot, both derived from the code.
+/// The storage ID and the encryption key of one purpose, both derived from the code.
 public struct RelayKeys: Sendable {
     /// 64 hex characters; the only thing the relay learns.
     public let id: String
@@ -54,20 +47,21 @@ public struct RelayKeys: Sendable {
 
     /// PBKDF2 stretches the short code (slows down guessing it from a stored ID), then HKDF
     /// gives independent outputs for the ID and the key: knowing one says nothing about the other.
-    public static func derive(code: String, slot: RelaySlot) -> RelayKeys {
+    public static func derive(code: String, purpose: RelayPurpose) -> RelayKeys {
         let root = SymmetricKey(data: stretched(code))
-        let id = HKDF<SHA256>.deriveKey(inputKeyMaterial: root, info: Data("id/\(slot.rawValue)".utf8), outputByteCount: 32)
-        let key = HKDF<SHA256>.deriveKey(inputKeyMaterial: root, info: Data("key/\(slot.rawValue)".utf8), outputByteCount: 32)
+        let id = HKDF<SHA256>.deriveKey(inputKeyMaterial: root, info: Data("id/\(purpose.rawValue)".utf8), outputByteCount: 32)
+        let key = HKDF<SHA256>.deriveKey(inputKeyMaterial: root, info: Data("key/\(purpose.rawValue)".utf8), outputByteCount: 32)
         return RelayKeys(id: id.withUnsafeBytes { Data($0) }.map { String(format: "%02x", $0) }.joined(), key: key)
     }
 
-    static let salt = Data("WidgetStudioP/relay/v1".utf8)
-    static let rounds: UInt32 = 100_000
+    /// v2: per-widget codes (v1 was one pairing code per phone with size slots).
+    static let salt = Data("WidgetStudioP/relay/v2".utf8)
+    static let rounds: UInt32 = 150_000
 
     private static let lock = NSLock()
     nonisolated(unsafe) private static var memo: [String: Data] = [:]
 
-    /// PBKDF2-HMAC-SHA256 of the code, memoized per process (the widget derives several slots).
+    /// PBKDF2-HMAC-SHA256 of the code, memoized per process (both purposes share it).
     static func stretched(_ code: String) -> Data {
         lock.lock()
         defer { lock.unlock() }
@@ -99,12 +93,18 @@ public struct RelayKeys: Sendable {
         }
     }
 
-    static let format: UInt8 = 1
+    static let format: UInt8 = 2
 }
 
 public enum RelayError: Error, Equatable, Sendable {
     /// No relay URL compiled in (`WSRelayURL`).
     case notConfigured
+    /// Not a valid code (length or characters).
+    case invalidCode
+    /// No widget has announced this code (typo, or the widget hasn't loaded yet).
+    case unknownCode
+    /// The design is bigger than the widget (it's never shrunk); the widget's size.
+    case doesNotFit(SpecFamily)
     /// Wrong code or damaged data.
     case crypto
     /// The design and photo don't fit in one item even after shrinking the photo.

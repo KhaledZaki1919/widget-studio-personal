@@ -147,6 +147,7 @@ struct BulkImportView: View {
                                 }
                             }
                             Spacer()
+                            SendToWidgetInlineButton(design: item.design) // Personal build (docs/personal.md)
                             Button("bulk.open") { opened = item.design }
                                 .buttonStyle(.borderless)
                                 .accessibilityIdentifier("ax.bulk.open")

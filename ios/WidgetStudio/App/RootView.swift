@@ -94,7 +94,7 @@ struct RootView: View {
             case "diagnostics":
                 appState.tab = .library
                 showDiagnostics = true
-            case "mywidgets":
+            case "mywidgets", "homescreen": // homescreen: Personal build, a slot widget's code card
                 appState.tab = .myWidgets
             case "settings":
                 appState.tab = .settings

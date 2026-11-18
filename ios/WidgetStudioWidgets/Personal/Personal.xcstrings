@@ -1,189 +1,206 @@
 {
   "sourceLanguage": "ar",
   "strings": {
-    "widget.switcher.description": {
+    "widget.slot.code.hint": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "بدّل التصاميم على الويدجت نفسها بـ ◀ ▶. القفل 🔒 يخفي الأسهم."
+            "value": "في التطبيق: افتح تصميمًا ← أرسل إلى ويدجت، واكتب هذا الرمز."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Switch designs right on the widget with ◀ ▶. 🔒 hides the arrows."
+            "value": "In the app: open a design → Send to widget, and type this code."
           }
         }
       }
     },
-    "widget.switcher.intent.lock": {
+    "widget.slot.description": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "قفل الأسهم أو فتحها"
+            "value": "تعرض رمزها الخاص حتى ترسل إليه تصميمًا من التطبيق. لكل خانة ولكل حجم رمز مختلف."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lock or unlock the arrows"
+            "value": "Shows its own code until you send a design to it from the app. Each slot and size has its own code."
           }
         }
       }
     },
-    "widget.switcher.intent.offset": {
+    "widget.slot.name %@": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الخطوة"
+            "value": "خانة %@"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Step"
+            "value": "Slot %@"
           }
         }
       }
     },
-    "widget.switcher.intent.size": {
+    "widget.slot.pick.a": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الحجم"
+            "value": "الخانة A"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Size"
+            "value": "Slot A"
           }
         }
       }
     },
-    "widget.switcher.intent.step": {
+    "widget.slot.pick.b": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تبديل التصميم"
+            "value": "الخانة B"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Switch design"
+            "value": "Slot B"
           }
         }
       }
     },
-    "widget.switcher.lock": {
+    "widget.slot.pick.c": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "إخفاء الأسهم"
+            "value": "الخانة C"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hide the arrows"
+            "value": "Slot C"
           }
         }
       }
     },
-    "widget.switcher.next": {
+    "widget.slot.pick.d": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "التصميم التالي"
+            "value": "الخانة D"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Next design"
+            "value": "Slot D"
           }
         }
       }
     },
-    "widget.switcher.pair.hint": {
+    "widget.slot.pick.description": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "في ستوديو الويدجت P: الإعدادات ← ربط الويدجت، ثم اكتب هذا الرمز."
+            "value": "تجربة: اختر الخانة من «تعديل الويدجت». إن بقيت رمادية فاستخدم الخانات 1–5."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "In Widget Studio P: Settings → Pair widget, then type this code."
+            "value": "Test: pick the slot in Edit Widget. If it stays gray, use Slots 1–5."
           }
         }
       }
     },
-    "widget.switcher.pair.title": {
+    "widget.slot.pick.e": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "اربط هذه الويدجت"
+            "value": "الخانة E"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pair this widget"
+            "value": "Slot E"
           }
         }
       }
     },
-    "widget.switcher.previous": {
+    "widget.slot.pick.intent": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "التصميم السابق"
+            "value": "خانة الويدجت"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Previous design"
+            "value": "Widget slot"
           }
         }
       }
     },
-    "widget.switcher.unlock": {
+    "widget.slot.pick.name": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "إظهار الأسهم"
+            "value": "خانة (اختيار)"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Show the arrows"
+            "value": "Slot (choose)"
+          }
+        }
+      }
+    },
+    "widget.slot.pick.param": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخانة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slot"
           }
         }
       }

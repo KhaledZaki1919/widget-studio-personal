@@ -1,24 +1,41 @@
 {
   "sourceLanguage": "ar",
   "strings": {
-    "mywidgets.home.button": {
+    "home.code %@": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "استخدم على الشاشة الرئيسية"
+            "value": "الرمز %@"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Use on home screen"
+            "value": "Code %@"
           }
         }
       }
     },
-    "mywidgets.home.design": {
+    "home.delivered %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "على الويدجت بعد %@ من الإرسال"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the widget %@ after sending"
+          }
+        }
+      }
+    },
+    "home.design": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
@@ -35,211 +52,75 @@
         }
       }
     },
-    "mywidgets.home.failed": {
+    "home.diag.bytes": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تعذّر إرسال التصميم."
+            "value": "الحجم"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couldn't send the design."
+            "value": "Size"
           }
         }
       }
     },
-    "mywidgets.home.footer": {
+    "home.diag.delay": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يذهب إلى ويدجت «Widget Studio» بهذا الحجم (أضِفها من معرض الويدجت). الأحجام الأصغر من التصميم غير متاحة. يُشفَّر التصميم والصورة على هذا الآيفون أولًا."
+            "value": "التأخير"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Goes to the “Widget Studio” widget of that size (add it from the widget gallery). Sizes smaller than the design aren't offered. The design and photo are encrypted on this iPhone first."
+            "value": "Delay"
           }
         }
       }
     },
-    "mywidgets.home.notPaired": {
+    "home.diag.downloaded": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "اربط الويدجت أولًا: أضِف ويدجت «Widget Studio» ثم اكتب الرمز الذي تعرضه."
+            "value": "آخر تنزيل من الويدجت"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pair the widget first: add the “Widget Studio” widget, then type the code it shows."
+            "value": "Last widget download"
           }
         }
       }
     },
-    "mywidgets.home.pick": {
+    "home.diag.lastSent": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أي ويدجت؟"
+            "value": "آخر إرسال (التطبيق)"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Which widget?"
+            "value": "Last send (app)"
           }
         }
       }
     },
-    "mywidgets.home.sent": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تم الإرسال. ستعرضه الويدجت خلال ثوانٍ."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sent. The widget shows it within a few seconds."
-          }
-        }
-      }
-    },
-    "settings.pair.button": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ربط"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pair"
-          }
-        }
-      }
-    },
-    "settings.pair.code": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الرمز من الويدجت"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Code from the widget"
-          }
-        }
-      }
-    },
-    "settings.pair.diag.footer": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "↑ وقت الرفع · ↓ آخر تنزيل من الويدجت. اسحب للأسفل للتحديث."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "↑ uploaded · ↓ last downloaded by the widget. Pull down to refresh."
-          }
-        }
-      }
-    },
-    "settings.pair.diag.lastError": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "آخر خطأ"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Last error"
-          }
-        }
-      }
-    },
-    "settings.pair.diag.lastUpload": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "آخر رفع"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Last upload"
-          }
-        }
-      }
-    },
-    "settings.pair.diag.paired": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تاريخ الربط"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Paired on"
-          }
-        }
-      }
-    },
-    "settings.pair.diag.refresh": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تحقّق الآن"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Check now"
-          }
-        }
-      }
-    },
-    "settings.pair.diag.relay": {
+    "home.diag.relay": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
@@ -256,223 +137,801 @@
         }
       }
     },
-    "settings.pair.diag.title": {
+    "home.diag.section": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "التشخيص"
+            "value": "ويدجتات الشاشة الرئيسية (الخادم الوسيط)"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diagnostics"
+            "value": "Home screen widgets (relay)"
           }
         }
       }
     },
-    "settings.pair.diag.widgetConfirmed": {
+    "home.diag.uploaded": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "رأت الويدجت الربط"
+            "value": "آخر رفع (الخادم الوسيط)"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Widget saw the pairing"
+            "value": "Last upload (relay)"
           }
         }
       }
     },
-    "settings.pair.failed": {
+    "home.diagnostics": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "فشل الربط."
+            "value": "التسليم"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pairing failed."
+            "value": "Delivery"
           }
         }
       }
     },
-    "settings.pair.footer": {
+    "home.empty.body": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أضِف ويدجت «Widget Studio» إلى الشاشة الرئيسية. قبل الربط تعرض رمزًا من 8 خانات: اكتبه هنا مرة واحدة. لا يرى الخادم الوسيط إلا بصمة الرمز وبيانات مشفّرة."
+            "value": "أضف خانة من ستوديو الويدجت P إلى شاشتك الرئيسية، ثم أرسل تصميمًا إلى الرمز الذي تعرضه."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add the “Widget Studio” widget to your home screen. Until it's paired it shows an 8-character code: type it here once. The relay only ever sees a hash of the code and encrypted data."
+            "value": "Add a Widget Studio P slot to your home screen, then send a design to the code it shows."
           }
         }
       }
     },
-    "settings.pair.invalid": {
+    "home.empty.title": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الرمز 8 حروف وأرقام، مثل ABCD-EFGH."
+            "value": "لا ويدجتات بعد"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The code has 8 letters and digits, like ABCD-EFGH."
+            "value": "No widgets yet"
           }
         }
       }
     },
-    "settings.pair.notConfigured": {
+    "home.howto": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "لا يحتوي هذا الإصدار على عنوان الخادم الوسيط."
+            "value": "كيف تعمل"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This build has no relay URL."
+            "value": "How it works"
           }
         }
       }
     },
-    "settings.pair.row.footer": {
+    "home.howto.1": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يرسل التصاميم إلى ويدجت «Widget Studio» عبر خادمك الوسيط على Cloudflare."
+            "value": "اضغط مطولًا على الشاشة الرئيسية ← تعديل ← إضافة ويدجت ← ستوديو الويدجت P ← «خانة 1» بأي حجم."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sends designs to the “Widget Studio” widget through your own Cloudflare relay."
+            "value": "Long-press the home screen → Edit → Add Widget → Widget Studio P → \"Slot 1\" in any size."
           }
         }
       }
     },
-    "settings.pair.status.paired": {
+    "home.howto.2": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "مربوطة"
+            "value": "تعرض الويدجت رمزها الخاص مثل ABC-DEF. لكل خانة ولكل حجم رمز مختلف."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Paired"
+            "value": "The widget shows its own code, like ABC-DEF. Each slot and size has its own code."
           }
         }
       }
     },
-    "settings.pair.status.unpaired": {
+    "home.howto.3": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "غير مربوطة"
+            "value": "افتح أي تصميم ← أرسل إلى ويدجت ← اكتب الرمز ← أرسل. تعرضه الويدجت خلال ثوانٍ."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Not paired"
+            "value": "Open any design → Send to widget → type the code → Send. The widget shows it within seconds."
           }
         }
       }
     },
-    "settings.pair.success": {
+    "home.howto.4": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تم الربط. ستخفي الويدجت رمزها خلال ثوانٍ."
+            "value": "لتغييره أرسل تصميمًا آخر إلى الرمز نفسه. «إزالة» تحرّر الرمز فتعود الويدجت لعرضه."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Paired. The widget hides its code within a few seconds."
+            "value": "To change it, send another design to the same code. Remove frees the code: the widget shows it again."
           }
         }
       }
     },
-    "settings.pair.title": {
+    "home.missing": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "ربط الويدجت"
+            "value": "غير موجود على الخادم الوسيط؛ أرسل التصميم مجددًا"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pair widget"
+            "value": "Not on the relay; send the design again"
           }
         }
       }
     },
-    "settings.pair.unpair": {
+    "home.noDesign": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "إلغاء الربط"
+            "value": "بلا تصميم بعد"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unpair"
+            "value": "No design yet"
           }
         }
       }
     },
-    "settings.pair.unpair.confirm": {
+    "home.pick.empty": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "نسيان الرمز على هذا الآيفون؟ تحتفظ الويدجت بتصاميمها."
+            "value": "لا يوجد تصميم مناسب"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Forget the code on this iPhone? The widget keeps its designs."
+            "value": "No design fits"
+          }
+        }
+      }
+    },
+    "home.pick.empty.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "احفظ تصميمًا بهذا الحجم أو أصغر في «ويدجتاتي»."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save a design of this size or smaller in My widgets."
+          }
+        }
+      }
+    },
+    "home.pick.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر تصميمًا"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick a design"
+          }
+        }
+      }
+    },
+    "home.remove": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        }
+      }
+    },
+    "home.remove.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعود الويدجت لعرض رمزها ويصبح الرمز متاحًا لتصميم آخر."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The widget shows its code again and the code is free for another design."
+          }
+        }
+      }
+    },
+    "home.remove.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّرت الإزالة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't remove"
+          }
+        }
+      }
+    },
+    "home.remove.title %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة %@؟"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove %@?"
+          }
+        }
+      }
+    },
+    "home.row.count %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld ويدجت برمز"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld widgets with a code"
+          }
+        }
+      }
+    },
+    "home.section": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الويدجتات"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Widgets"
+          }
+        }
+      }
+    },
+    "home.sendAnother": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أرسل تصميمًا آخر"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send another design"
+          }
+        }
+      }
+    },
+    "home.settings.footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الويدجتات على شاشتك الرئيسية التي تعرض تصاميم أُرسلت من هذا التطبيق، وحالة تسليمها."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Widgets on your home screen that show designs sent from this app, and how they were delivered."
+          }
+        }
+      }
+    },
+    "home.slot %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خانة %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slot %@"
+          }
+        }
+      }
+    },
+    "home.statusFailed %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر الوصول إلى الخادم الوسيط: %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't reach the relay: %@"
+          }
+        }
+      }
+    },
+    "home.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شاشتي الرئيسية"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My home screen"
+          }
+        }
+      }
+    },
+    "home.updated %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حُدّثت %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updated %@"
+          }
+        }
+      }
+    },
+    "home.waiting": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أُرسل، بانتظار الويدجت"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent, waiting for the widget"
+          }
+        }
+      }
+    },
+    "send.action": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أرسل"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send"
+          }
+        }
+      }
+    },
+    "send.another": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أرسل إلى ويدجت أخرى"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send to another widget"
+          }
+        }
+      }
+    },
+    "send.button": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أرسل إلى ويدجت"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send to widget"
+          }
+        }
+      }
+    },
+    "send.code": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رمز الويدجت"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Widget code"
+          }
+        }
+      }
+    },
+    "send.code.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأحرف الستة التي تظهر على الويدجت في الشاشة الرئيسية."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The 6 characters the widget shows on your home screen."
+          }
+        }
+      }
+    },
+    "send.error.fit": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا التصميم أكبر من تلك الويدجت. اختر ويدجت أكبر أو تصميمًا أصغر."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This design is bigger than that widget. Pick a larger widget or a smaller design."
+          }
+        }
+      }
+    },
+    "send.error.invalid": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الرمز ٦ أحرف وأرقام، مثل ABC-DEF."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A code has 6 letters and digits, like ABC-DEF."
+          }
+        }
+      }
+    },
+    "send.error.network %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر الإرسال (%@). تحقّق من الاتصال وحاول مجددًا."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't send (%@). Check the connection and try again."
+          }
+        }
+      }
+    },
+    "send.error.rate": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إرسالات كثيرة في دقيقة. حاول بعد قليل."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many sends in a minute. Try again shortly."
+          }
+        }
+      }
+    },
+    "send.error.tooLarge": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التصميم وصورته أكبر من أن يُرسلا."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The design and its photo are too large to send."
+          }
+        }
+      }
+    },
+    "send.error.unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد ويدجت تعرض هذا الرمز. تحقّق من الرمز على الشاشة الرئيسية؛ الويدجت المضافة للتو تحتاج بضع ثوانٍ."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No widget shows this code. Check the code on your home screen; a widget you just added needs a few seconds."
+          }
+        }
+      }
+    },
+    "send.known": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ويدجتاتك"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your widgets"
+          }
+        }
+      }
+    },
+    "send.notConfigured": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يوجد خادم وسيط في هذا الإصدار، فلا يمكن إرسال التصاميم إلى الويدجت."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No relay is set in this build, so designs can't reach the widgets."
+          }
+        }
+      }
+    },
+    "send.onThisPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "على هذا الهاتف"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On this phone"
+          }
+        }
+      }
+    },
+    "send.sending": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ الإرسال…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sending…"
+          }
+        }
+      }
+    },
+    "send.sent.body %@ %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ستعرضه الويدجت ذات الرمز %1$@ (الخانة %2$@) خلال ثوانٍ. لتغييره أرسل تصميمًا آخر إلى الرمز نفسه في أي وقت."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The widget with code %1$@ (slot %2$@) shows it within seconds. To change it, send another design to the same code at any time."
+          }
+        }
+      }
+    },
+    "send.sent.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم الإرسال"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent"
+          }
+        }
+      }
+    },
+    "send.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أرسل إلى ويدجت"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send to widget"
+          }
+        }
+      }
+    },
+    "send.tooBig": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا التصميم أكبر من هذه الويدجت"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This design is bigger than this widget"
           }
         }
       }

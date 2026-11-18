@@ -104,6 +104,7 @@ struct MyWidgetsView: View {
             } footer: {
                 Text("bulk.pick.hint").font(M3Type.bodySmall).foregroundStyle(M3.onSurfaceVariant)
             }
+            HomeScreenListRow() // Personal build: My home screen (docs/personal.md)
 
             ForEach(designs.designs) { design in
                 row(design)
@@ -141,7 +142,7 @@ struct MyWidgetsView: View {
         .sheet(item: $editing) { design in
             EditorView(design: design, isNew: false)
         }
-        .sheet(item: $sendingHome) { UseOnHomeScreenSheet(design: $0, photo: designs.image(for: $0)) }
+        .sheet(item: $sendingHome) { SendToWidgetSheet(design: $0, photo: designs.image(for: $0)) }
         .alert("mywidgets.rename.title", isPresented: renameBinding) {
             TextField("mywidgets.rename.placeholder", text: $newName)
                 .accessibilityIdentifier("ax.mywidgets.rename.field")
@@ -232,9 +233,9 @@ struct MyWidgetsView: View {
             Button { startRename(design) } label: { Label("mywidgets.rename", systemImage: "pencil") }
                 .tint(M3.outline)
         }
-        .swipeActions(edge: .leading) { UseOnHomeScreenButton { sendingHome = design }.tint(M3.inverseSurface) }
+        .swipeActions(edge: .leading) { SendToWidgetButton { sendingHome = design }.tint(M3.inverseSurface) }
         .contextMenu {
-            UseOnHomeScreenButton { sendingHome = design }
+            SendToWidgetButton { sendingHome = design }
             Button { editing = design } label: { Label("mywidgets.edit", systemImage: "slider.horizontal.3") }
             Button { startRename(design) } label: { Label("mywidgets.rename", systemImage: "pencil") }
             Button { designs.duplicate(design, name: copyName(design)) } label: {

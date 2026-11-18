@@ -3,10 +3,10 @@ import Foundation
 import Testing
 @testable import WidgetKitCore
 
-// Personal build (docs/personal.md): pairing code, key derivation, encryption, payload size,
-// the relay client against an in-memory relay, and the widget's sync.
+// Personal build (docs/personal.md): widget codes, key derivation, encryption, payload size, the
+// relay client against an in-memory relay, the widget slot's sync and the app's sender.
 
-/// An in-memory stand-in for the Worker (relay/src/relay.js): PUT, GET with ETag, status.
+/// An in-memory stand-in for the Worker (relay/src/relay.js): PUT, GET with ETag, DELETE, status.
 final class FakeRelayProtocol: URLProtocol {
     private static let lock = NSLock()
     nonisolated(unsafe) private static var items: [String: (data: Data, version: Int)] = [:]
@@ -53,6 +53,10 @@ final class FakeRelayProtocol: URLProtocol {
             }
             Self.clock += 1
             switch request.httpMethod ?? "GET" {
+            case "DELETE":
+                Self.items[id] = nil
+                Self.downloads[id] = nil
+                return Reply(status: 200, data: Data(#"{"deleted":true}"#.utf8), headers: [:])
             case "PUT":
                 if body.count > RelayPayload.maxSealedBytes { return .empty(413) }
                 Self.items[id] = (body, Self.clock)
@@ -123,53 +127,40 @@ private func noisyImage(side: Int) -> CGImage? {
     }
 }
 
+
 struct RelayCodeTests {
     @Test func generatedCodesUseTheAlphabet() {
-        let codes = (0..<50).map { _ in RelayCode.generate() }
-        for code in codes {
-            #expect(code.count == 8)
+        for _ in 0..<50 {
+            let code = RelayCode.generate()
+            #expect(code.count == 6)
             #expect(RelayCode.normalize(code) == code)
         }
-        #expect(Set(codes).count > 45)
     }
 
     @Test func normalizesWhatTheUserTypes() {
-        #expect(RelayCode.normalize("abcd-efgh") == "ABCDEFGH")
-        #expect(RelayCode.normalize(" AB CD EF GH ") == "ABCDEFGH")
-        #expect(RelayCode.normalize("ABCDEFG") == nil)
-        #expect(RelayCode.normalize("ABCDEFG0") == nil)
-        #expect(RelayCode.normalize("ABCDEFGI") == nil)
-        #expect(RelayCode.formatted("ABCDEFGH") == "ABCD-EFGH")
+        #expect(RelayCode.normalize("abc def") == "ABCDEF")
+        #expect(RelayCode.normalize(" a-b-c-d-e-f ") == "ABCDEF")
+        #expect(RelayCode.normalize("ABCDE0") == nil) // 0 is not in the alphabet
+        #expect(RelayCode.normalize("ABCDE") == nil)
+        #expect(RelayCode.formatted("ABCDEF") == "ABC-DEF")
     }
 }
 
 struct RelayKeysTests {
-    @Test func derivationIsStableAndSeparatesSlotsIDsAndKeys() throws {
-        let small = RelayKeys.derive(code: "ABCDEFGH", slot: .small)
-        #expect(small.id.count == 64)
-        #expect(small.id.allSatisfy { "0123456789abcdef".contains($0) })
-        #expect(RelayKeys.derive(code: "ABCDEFGH", slot: .small).id == small.id)
-        #expect(RelayKeys.derive(code: "ABCDEFGH", slot: .medium).id != small.id)
-        #expect(RelayKeys.derive(code: "ABCDEFGJ", slot: .small).id != small.id)
-        // The ID is not the key: the relay can't decrypt with what it stores under.
-        let idBytes = Data(stride(from: 0, to: 64, by: 2).compactMap { offset -> UInt8? in
-            let start = small.id.index(small.id.startIndex, offsetBy: offset)
-            return UInt8(small.id[start...small.id.index(after: start)], radix: 16)
-        })
-        #expect(small.key.withUnsafeBytes { Data($0) } != idBytes)
+    @Test func derivationIsStableAndSeparatesPurposesIDsAndKeys() throws {
+        let info = RelayKeys.derive(code: "ABCDEF", purpose: .info)
+        let design = RelayKeys.derive(code: "ABCDEF", purpose: .design)
+        #expect(info.id == RelayKeys.derive(code: "ABCDEF", purpose: .info).id)
+        #expect(info.id.count == 64)
+        #expect(info.id != design.id)
+        #expect(design.id != RelayKeys.derive(code: "ABCDEG", purpose: .design).id)
     }
 
-    @Test func sealOpensOnlyWithTheSameCodeAndSlot() throws {
-        let plaintext = Data("hello widget".utf8)
-        let sealed = try RelayKeys.derive(code: "ABCDEFGH", slot: .large).seal(plaintext)
-        #expect(sealed.first == 1)
-        #expect(sealed.range(of: plaintext) == nil)
-        #expect(try RelayKeys.derive(code: "ABCDEFGH", slot: .large).open(sealed) == plaintext)
-        #expect(throws: RelayError.crypto) { try RelayKeys.derive(code: "ABCDEFGJ", slot: .large).open(sealed) }
-        #expect(throws: RelayError.crypto) { try RelayKeys.derive(code: "ABCDEFGH", slot: .small).open(sealed) }
-        var tampered = sealed
-        tampered[tampered.count - 1] ^= 1
-        #expect(throws: RelayError.crypto) { try RelayKeys.derive(code: "ABCDEFGH", slot: .large).open(tampered) }
+    @Test func sealOpensOnlyWithTheSameCodeAndPurpose() throws {
+        let sealed = try RelayKeys.derive(code: "ABCDEF", purpose: .design).seal(Data("hello".utf8))
+        #expect(try RelayKeys.derive(code: "ABCDEF", purpose: .design).open(sealed) == Data("hello".utf8))
+        #expect(throws: RelayError.crypto) { try RelayKeys.derive(code: "ABCDEG", purpose: .design).open(sealed) }
+        #expect(throws: RelayError.crypto) { try RelayKeys.derive(code: "ABCDEF", purpose: .info).open(sealed) }
     }
 }
 
@@ -179,9 +170,10 @@ struct RelayPayloadTests {
         let design = SavedDesign.new(from: template, language: "en", now: fixedDate)
         let photo = try #require(noisyImage(side: 1600))
         let payload = try RelayPayload.design(design, photo: photo)
-        let sealed = try RelayKeys.derive(code: "ABCDEFGH", slot: .small).seal(try payload.encoded())
+        let keys = RelayKeys.derive(code: "ABCDEF", purpose: .design)
+        let sealed = try keys.seal(try payload.encoded())
         #expect(sealed.count <= RelayPayload.maxSealedBytes)
-        let decoded = try RelayPayload.decode(try RelayKeys.derive(code: "ABCDEFGH", slot: .small).open(sealed))
+        let decoded = try RelayPayload.decode(try keys.open(sealed))
         #expect(decoded.design == design)
         let image = try #require(decoded.cgImage)
         #expect(max(image.width, image.height) <= ImageProcessing.maxSide)
@@ -195,15 +187,15 @@ struct RelayPayloadTests {
     }
 }
 
+/// Everything that talks to the in-memory relay, one test at a time (shared state).
 @Suite(.serialized)
-struct RelaySyncTests {
+struct SlotRelayTests {
     init() {
         FakeRelayProtocol.reset()
     }
 
-    private func upload(_ payload: RelayPayload, code: String, slot: RelaySlot) async throws {
-        let keys = RelayKeys.derive(code: code, slot: slot)
-        try await client().upload(try keys.seal(try payload.encoded()), id: keys.id)
+    private func sender(_ cache: DataCache) throws -> HomeWidgetSender {
+        HomeWidgetSender(client: try client(), cache: cache)
     }
 
     @Test func clientTalksToTheRelay() async throws {
@@ -219,125 +211,126 @@ struct RelaySyncTests {
         #expect(try await relay.download(id: id, etag: etag) == .notModified)
         let status = try await relay.status(id: id)
         #expect(status.exists && status.size == 3 && status.lastDownloadDate != nil)
+        try await relay.delete(id: id)
+        #expect(try await relay.download(id: id, etag: nil) == .missing)
         await #expect(throws: RelayError.tooLarge) {
             try await relay.upload(Data(count: RelayPayload.maxSealedBytes + 1), id: id)
         }
     }
 
-    @Test func unpairedWidgetKeepsItsCodeUntilThePairItemArrives() async throws {
+    @Test func slotKeepsItsCodeAndAnnouncesItself() async throws {
         let cache = try tempCache()
-        let code = WidgetPairing.loadOrCreate(cache).code
-        #expect(WidgetPairing.loadOrCreate(cache).code == code)
+        let small = SlotID(slot: "2", size: .small)
+        let code = SlotState.load(small, cache).code
+        #expect(SlotState.load(small, cache).code == code)
+        // Another size of the same slot is another widget with another code.
+        #expect(SlotState.load(SlotID(slot: "2", size: .large), cache).code != code)
 
-        var outcome = await RelaySync.refresh(size: .small, client: try client(), cache: cache)
-        #expect(outcome == RelaySync.Outcome())
-        #expect(WidgetPairing.loadOrCreate(cache).isPaired == false)
+        let outcome = await SlotSync.refresh(small, client: try client(), cache: cache, now: fixedDate)
+        #expect(outcome.announced && outcome.error == nil && !outcome.newDesign)
+        #expect(SlotState.load(small, cache).design == nil)
 
-        try await upload(RelayPayload(kind: .pair), code: code, slot: .pair)
-        outcome = await RelaySync.refresh(size: .small, client: try client(), cache: cache)
-        #expect(outcome.error == nil)
-        #expect(WidgetPairing.loadOrCreate(cache).isPaired)
+        // The app checks the typed code and learns the size.
+        let info = try await sender(try tempCache()).lookup(RelayCode.formatted(code).lowercased())
+        #expect(info == RelayPayload.WidgetInfo(size: .small, slot: "2"))
+        // Announced once a week, not every timeline.
+        let again = await SlotSync.refresh(small, client: try client(), cache: cache, now: fixedDate.addingTimeInterval(60))
+        #expect(again.announced == false)
     }
 
-    @Test func newDesignIsCachedAndShown() async throws {
-        let cache = try tempCache()
-        let code = WidgetPairing.loadOrCreate(cache).code
-        let design = SavedDesign.new(from: try TemplateLibrary.load(id: "mono.photo.square").get(), language: "en", now: fixedDate)
-        try await upload(try RelayPayload.design(design, photo: noisyImage(side: 300)), code: code, slot: .medium)
+    @Test func sentDesignIsCachedShownAndReplaced() async throws {
+        let widgetCache = try tempCache()
+        let appCache = try tempCache()
+        let id = SlotID(slot: "1", size: .medium)
+        _ = await SlotSync.refresh(id, client: try client(), cache: widgetCache, now: fixedDate)
+        let code = SlotState.load(id, widgetCache).code
 
-        let outcome = await RelaySync.refresh(size: .medium, client: try client(), cache: cache)
+        let first = SavedDesign.new(from: try TemplateLibrary.load(id: "mono.photo.square").get(), language: "en", now: fixedDate)
+        let known = try await sender(appCache).send(first, photo: noisyImage(side: 300), to: code, now: fixedDate)
+        #expect(known.size == .medium && known.slot == "1" && known.designName == first.name)
+        #expect(known.widgetKind == "WidgetStudio.slot.1")
+        #expect(try sender(appCache).known() == [known])
+
+        var outcome = await SlotSync.refresh(id, client: try client(), cache: widgetCache)
         #expect(outcome.newDesign)
-        let store = RelayedStore(size: .medium, cache: cache)
-        let item = try #require(store.items.first)
-        #expect(item.design == design)
-        #expect(store.image(for: item) != nil)
-        #expect(SwitcherState.load(.medium, cache).current == item.key)
-        #expect(WidgetPairing.loadOrCreate(cache).lastDownload != nil)
+        var state = SlotState.load(id, widgetCache)
+        #expect(state.design == first)
+        #expect(state.imageData(widgetCache) != nil)
+        #expect(state.lastDownload != nil)
 
-        // Unchanged: a 304, nothing new. Other sizes don't see it.
-        #expect(await RelaySync.refresh(size: .medium, client: try client(), cache: cache).newDesign == false)
-        #expect(RelayedStore(size: .small, cache: cache).items.isEmpty)
+        // Unchanged: a 304, nothing new.
+        #expect(await SlotSync.refresh(id, client: try client(), cache: widgetCache).newDesign == false)
+
+        // Reassign: another design to the same code replaces it.
+        let second = SavedDesign.new(from: try TemplateLibrary.load(id: "mono.clock.digital").get(), language: "en", now: fixedDate)
+        try await sender(appCache).send(second, photo: nil, to: code)
+        outcome = await SlotSync.refresh(id, client: try client(), cache: widgetCache)
+        #expect(outcome.newDesign)
+        state = SlotState.load(id, widgetCache)
+        #expect(state.design == second && state.imageFile == nil)
+
+        // The relay's view: uploaded, downloaded after it, so a delay.
+        let status = try await sender(appCache).status(code)
+        #expect(status.exists && status.delay != nil && !status.waiting)
+    }
+
+    @Test func removeFreesTheCode() async throws {
+        let widgetCache = try tempCache()
+        let appCache = try tempCache()
+        let id = SlotID(slot: "3", size: .large)
+        _ = await SlotSync.refresh(id, client: try client(), cache: widgetCache)
+        let code = SlotState.load(id, widgetCache).code
+        let design = SavedDesign.new(from: try TemplateLibrary.load(id: "mono.clock.digital").get(), language: "en", now: fixedDate)
+        try await sender(appCache).send(design, photo: nil, to: code)
+        _ = await SlotSync.refresh(id, client: try client(), cache: widgetCache)
+        #expect(SlotState.load(id, widgetCache).design != nil)
+
+        try await sender(appCache).remove(code)
+        #expect(try sender(appCache).known().isEmpty)
+        let outcome = await SlotSync.refresh(id, client: try client(), cache: widgetCache)
+        #expect(outcome.removed)
+        let state = SlotState.load(id, widgetCache)
+        #expect(state.design == nil && state.code == code)
+    }
+
+    @Test func wrongCodesAndSizesAreRefused() async throws {
+        let appCache = try tempCache()
+        let design = SavedDesign.new(from: try TemplateLibrary.load(id: "mono.weather.forecast").get(), language: "en", now: fixedDate)
+        await #expect(throws: RelayError.invalidCode) { try await sender(appCache).send(design, photo: nil, to: "AB") }
+        await #expect(throws: RelayError.unknownCode) { try await sender(appCache).send(design, photo: nil, to: "ABCDEF") }
+
+        // A medium design never goes to a small widget (it would be shrunk).
+        let widgetCache = try tempCache()
+        let small = SlotID(slot: "4", size: .small)
+        _ = await SlotSync.refresh(small, client: try client(), cache: widgetCache)
+        let code = SlotState.load(small, widgetCache).code
+        await #expect(throws: RelayError.doesNotFit(.small)) { try await sender(appCache).send(design, photo: nil, to: code) }
+        #expect(try sender(appCache).known().first?.lastError != nil)
     }
 
     @Test func failuresKeepTheCacheAndReportTheError() async throws {
-        let cache = try tempCache()
+        let widgetCache = try tempCache()
+        let id = SlotID(slot: "5", size: .small)
+        _ = await SlotSync.refresh(id, client: try client(), cache: widgetCache)
+        let code = SlotState.load(id, widgetCache).code
+        let design = SavedDesign.new(from: try TemplateLibrary.load(id: "mono.clock.digital").get(), language: "en", now: fixedDate)
+        try await sender(try tempCache()).send(design, photo: nil, to: code)
+        _ = await SlotSync.refresh(id, client: try client(), cache: widgetCache)
+
         FakeRelayProtocol.failing = true
-        let outcome = await RelaySync.refresh(size: .large, client: try client(), cache: cache)
+        let outcome = await SlotSync.refresh(id, client: try client(), cache: widgetCache)
         #expect(outcome.error == "HTTP 500")
-        #expect(WidgetPairing.loadOrCreate(cache).lastError == "HTTP 500")
-        FakeRelayProtocol.failing = false
+        // Offline or failing: the cached design stays.
+        #expect(SlotState.load(id, widgetCache).design == design)
+        #expect(SlotState.load(id, widgetCache).lastError == "HTTP 500")
     }
 
-    @Test func itemsFromAnotherCodeAreRejected() async throws {
+    @Test func slotsInTheContainerAreListed() throws {
         let cache = try tempCache()
-        let code = WidgetPairing.loadOrCreate(cache).code
-        let keys = RelayKeys.derive(code: code, slot: .small)
-        // Garbage under the right ID (someone who only knows the ID can't plant a design).
-        try await client().upload(Data([1]) + Data(repeating: 7, count: 40), id: keys.id)
-        let outcome = await RelaySync.refresh(size: .small, client: try client(), cache: cache)
-        #expect(outcome.error != nil)
-        #expect(RelayedStore(size: .small, cache: cache).items.isEmpty)
-    }
-}
-
-struct SwitcherTests {
-    private let templates = ["mono.clock.analog", "mono.clock.digital", "mono.date.big"]
-
-    @Test func cyclesThroughPairingDesignsAndTemplates() {
-        let keys = SwitcherCatalog.keys(showsPairing: true, relayed: [], templateIDs: templates)
-        #expect(keys == ["pair", "t:mono.clock.analog", "t:mono.clock.digital", "t:mono.date.big"])
-        #expect(SwitcherCatalog.resolve(nil, keys: keys, size: .small) == "pair")
-        #expect(SwitcherCatalog.step(nil, by: 1, keys: keys, size: .small) == "t:mono.clock.analog")
-        #expect(SwitcherCatalog.step("pair", by: -1, keys: keys, size: .small) == "t:mono.date.big")
-        #expect(SwitcherCatalog.step("t:mono.date.big", by: 1, keys: keys, size: .small) == "pair")
-        #expect(SwitcherCatalog.position(of: "t:mono.clock.digital", in: keys) == "3/4")
-    }
-
-    @Test func pairedWidgetDefaultsToTheSizesTemplate() {
-        let keys = SwitcherCatalog.keys(showsPairing: false, relayed: [], templateIDs: templates)
-        #expect(SwitcherCatalog.resolve(nil, keys: keys, size: .small) == "t:mono.clock.digital")
-        // A key that's gone (an old pairing card, a dropped design) falls back the same way.
-        #expect(SwitcherCatalog.resolve("pair", keys: keys, size: .small) == "t:mono.clock.digital")
-        #expect(SwitcherCatalog.templateID("t:mono.date.big") == "mono.date.big")
-        #expect(SwitcherCatalog.templateID("d:x") == nil)
-    }
-
-    @Test func templatesFittingEachSize() {
-        let small = SwitcherCatalog.templateIDs(fitting: .small)
-        let large = SwitcherCatalog.templateIDs(fitting: .large)
-        #expect(!small.isEmpty)
-        #expect(large.count > small.count)
-        #expect(Set(small).isSubset(of: Set(large)))
-        #expect(small.contains(TemplateLibrary.defaultID(for: .small)))
-    }
-
-    @Test func relayedStoreKeepsTheNewestFive() throws {
-        let cache = try tempCache()
-        var store = RelayedStore(size: .small, cache: cache)
-        let template = try TemplateLibrary.load(id: "mono.clock.digital").get()
-        var designs: [SavedDesign] = []
-        for index in 0..<7 {
-            let design = SavedDesign(id: "d\(index)", name: "D\(index)", template: template)
-            designs.append(design)
-            try store.insert(design, image: Data([UInt8(index)]), etag: "\"\(index)\"", now: Date(timeIntervalSince1970: Double(index)))
-        }
-        try store.insert(designs[3], image: nil, etag: "\"9\"", now: .now)
-        let reopened = RelayedStore(size: .small, cache: cache)
-        #expect(reopened.items.map(\.design.id) == ["d3", "d6", "d5", "d4", "d2"])
-        #expect(reopened.etag == "\"9\"")
-        #expect(reopened.image(for: reopened.items[1]) == Data([6]))
-        let files = try FileManager.default.contentsOfDirectory(atPath: cache.directory.appendingPathComponent("Relayed").path)
-        #expect(files.filter { $0.hasSuffix(".img") }.count == 4)
-
-        let keys = SwitcherCatalog.keys(showsPairing: false, relayed: reopened.items, templateIDs: templates)
-        #expect(SwitcherCatalog.resolve(nil, keys: keys, size: .small) == "d:d3")
-    }
-
-    @Test func stateRoundTrips() throws {
-        let cache = try tempCache()
-        #expect(SwitcherState.load(.large, cache) == SwitcherState())
-        try SwitcherState(current: "t:mono.prayer.day", locked: true).save(.large, cache)
-        #expect(SwitcherState.load(.large, cache) == SwitcherState(current: "t:mono.prayer.day", locked: true))
-        #expect(SwitcherState.load(.small, cache) == SwitcherState())
+        _ = SlotState.load(SlotID(slot: "1", size: .small), cache)
+        _ = SlotState.load(SlotID(slot: "A", size: .xlarge), cache)
+        let all = SlotState.all(cache).map(\.0)
+        #expect(Set(all) == [SlotID(slot: "1", size: .small), SlotID(slot: "A", size: .xlarge)])
+        #expect(SlotID(slot: "A", size: .small).widgetKind == SlotCatalog.pickableKind)
     }
 }
