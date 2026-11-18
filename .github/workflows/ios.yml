@@ -260,12 +260,14 @@ jobs:
   ipa:
     name: Unsigned IPA
     # Personal build: after compile (both Xcodes) and unit tests; the Simulator tests run beside it (not `test`).
-    needs: [build, unit, xcode27]
+    needs: [build, unit]
     if: >-
       (github.event_name == 'workflow_dispatch' && inputs.mode != 'full') ||
       (github.event_name == 'push' && contains(github.event.head_commit.message, '[ipa]'))
-    # ADR-030: the IPA is built with Xcode 27 (iOS 27 SDK), so the 4 x 6 widget (systemExtraLargePortrait) is compiled in.
-    runs-on: xcode-27
+    # Built with Xcode 16.4 (macos-15): widgets from Xcode 27 IPAs never appeared in the owner's
+    # widget gallery (2026-11-18). The 4 x 6 widget is left out until that is solved; the
+    # xcode27 job still compiles it as a check.
+    runs-on: macos-15
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
@@ -281,7 +283,7 @@ jobs:
 
       - name: Build (unsigned, Release)
         run: |
-          xcodebuild build WS_EXTRA_CONDITIONS=WS_XL27 \
+          xcodebuild build \
             -project WidgetStudio.xcodeproj -scheme WidgetStudio \
             -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
             -derivedDataPath build/DerivedData \
