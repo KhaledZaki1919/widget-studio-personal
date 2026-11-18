@@ -184,7 +184,7 @@ struct EditorView: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundStyle(M3.warning)
                     }
-                    Text(verbatim: "(model.design.spec.layers.count)")
+                    Text(verbatim: "\(model.design.spec.layers.count)")
                 } label: {
                     Label("editor.layers", systemImage: "square.3.layers.3d")
                 }

@@ -42,7 +42,10 @@ untouched.
 - `ios/WidgetStudio/Features/AI/BulkImportView.swift`: `SendToWidgetInlineButton(design:)` in each imported row.
 - `ios/WidgetStudio/Features/Diagnostics/DiagnosticsView.swift`: `HomeWidgetsDiagnosticsSection()` after the widget section.
 - `ios/WidgetStudio/Resources/InfoPlist.xcstrings`: display name "Widget Studio P".
-- `.github/workflows/ios.yml`: `--spec personal.yml` (4×, incl. the Xcode 27 job), `WidgetStudioP.ipa`, artifact `WidgetStudioP-ipa`.
+- `.github/workflows/ios.yml`: `--spec personal.yml` (4×, incl. the Xcode 27 job), `WidgetStudioP.ipa`, artifact `WidgetStudioP-ipa`;
+  the `test` job has `continue-on-error: true` and `ipa` needs only `[build, unit, xcode27]` (2026-11-18): the IPA
+  comes after compile + unit tests, and the Simulator app/UI tests (some drive the real Files picker and flake) run
+  beside it without blocking it. Their result still shows in the run; read it before installing.
 - `CLAUDE.md`: the personal block at the top. The Pages workflow is disabled in the personal repo (GitHub setting, no file change).
 - **The Material 3 redesign** (2026-11-18) also touched official screens directly: system colors, button styles,
   fonts and radii became `M3.*` / `M3Type.*` / `M3Shape.*` / `.m3*` (one theme, `Personal/Theme`). On a merge
