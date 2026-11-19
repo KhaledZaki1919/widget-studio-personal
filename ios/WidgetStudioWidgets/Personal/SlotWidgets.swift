@@ -55,7 +55,9 @@ struct SlotPickWidget: Widget {
 enum SlotConfiguration {
     static func make(slot: String) -> some WidgetConfiguration {
         StaticConfiguration(kind: SlotCatalog.kind(slot: slot), provider: SlotProvider(slot: slot)) { SlotWidgetView(entry: $0) }
-            .configurationDisplayName(Text(personal: "widget.slot.name \(slot)"))
+            // A plain String: an interpolated Text here trips a WidgetKit assertion at launch, and the whole
+            // extension vanished from the widget gallery (crash log 2026-11-19).
+            .configurationDisplayName(String(format: String(localized: "widget.slot.name %@", table: "Personal"), slot))
             .description(Text(personal: "widget.slot.description"))
             .supportedFamilies(families)
             .contentMarginsDisabled()
